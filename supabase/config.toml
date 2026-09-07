@@ -1,0 +1,12 @@
+project_id = "sabor-gestao"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+
+[functions]
+# cada subpasta em supabase/functions/ vira uma função deployável:
+# supabase functions deploy <nome> --project-id SEU_PROJECT_ID

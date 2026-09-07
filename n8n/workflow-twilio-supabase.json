@@ -1,0 +1,137 @@
+{
+  "name": "WhatsApp Twilio → Supabase",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "webhook_trigger",
+      "name": "Webhook - Recebe Twilio",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300],
+      "webhookId": "seu-webhook-id-aqui",
+      "description": "Recebe POST do Twilio com a mensagem"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonData": "{\n  \"telefone\": \"{{ $json.From }}\",\n  \"mensagem\": \"{{ $json.Body }}\",\n  \"unidade_id\": \"2d7ce1e8-4a2e-4c59-a9ba-1234567890ab\"\n}"
+      },
+      "id": "parse_msg",
+      "name": "Parse - Extrai dados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [300, 300],
+      "description": "Transforma o payload do Twilio em variáveis usáveis"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://SEU-PROJETO.supabase.co/rest/v1/mensagens_whatsapp",
+        "authentication": "genericCredentialType",
+        "genericCredentials": {
+          "authenticationType": "headerAuth",
+          "headerAuth": {
+            "name": "Authorization",
+            "value": "Bearer SEU-ANON-KEY-SUPABASE"
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "body": "{\n  \"unidade_id\": \"{{ $json.unidade_id }}\",\n  \"telefone\": \"{{ $json.telefone }}\",\n  \"nome_cliente\": null,\n  \"mensagem\": \"{{ $json.mensagem }}\",\n  \"status\": \"nao_atendido\"\n}"
+      },
+      "id": "http_insert_supabase",
+      "name": "HTTP - Grava no Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 300],
+      "description": "Faz POST para a REST API do Supabase"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://SEU-PROJETO.supabase.co/functions/v1/twilio-resposta",
+        "authentication": "genericCredentialType",
+        "genericCredentials": {
+          "authenticationType": "headerAuth",
+          "headerAuth": {
+            "name": "Authorization",
+            "value": "Bearer SEU-ANON-KEY-SUPABASE"
+          }
+        },
+        "body": "{\n  \"phone\": \"{{ $json.telefone }}\",\n  \"message\": \"Recebemos sua mensagem! Um atendente vai responder em breve 👋\"\n}"
+      },
+      "id": "enviar_confirmacao",
+      "name": "HTTP - Envia confirmação p/ cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 300],
+      "description": "Chama uma Edge Function pra responder automaticamente via Twilio"
+    },
+    {
+      "parameters": {},
+      "id": "final_ok",
+      "name": "Responde 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "description": "Confirma pro Twilio que recebeu"
+    }
+  ],
+  "connections": {
+    "webhook_trigger": {
+      "main": [
+        [
+          {
+            "node": "parse_msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse_msg": {
+      "main": [
+        [
+          {
+            "node": "http_insert_supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "http_insert_supabase": {
+      "main": [
+        [
+          {
+            "node": "enviar_confirmacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_confirmacao": {
+      "main": [
+        [
+          {
+            "node": "final_ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

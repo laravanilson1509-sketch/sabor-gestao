@@ -1,0 +1,21 @@
+// lib/theme.ts
+export const c = {
+  bg: "#111316",
+  panel: "#1A1D22",
+  panelAlt: "#20242A",
+  border: "#2A2F37",
+  borderLight: "#343A42",
+  accent: "#F2A93B",
+  accentSoft: "#3A2E17",
+  success: "#5FBF77",
+  successSoft: "#1E2B20",
+  danger: "#E5606A",
+  dangerSoft: "#2E1C1F",
+  info: "#5B9DF2",
+  infoSoft: "#1B2530",
+  whats: "#3FBF5E",
+  whatsSoft: "#152A1B",
+  text: "#F2F3F5",
+  muted: "#9AA1AC",
+  faint: "#6B7178",
+};
