@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Sabor Gestão
 
 Sistema de gestão integrada para restaurante — vendas, PDV, cozinha/KDS,
@@ -78,3 +79,7 @@ Detalhes: `frontend/README.md`
 - 🔲 Demais módulos (PDV, Cozinha, Estoque etc.) — só protótipo em `previews/`, ainda não viraram páginas reais
 - 🔲 Login/autenticação
 - 🔲 Seleção de unidade (multiunidade)
+=======
+# sabor-gestao
+Sistema de gestão integrada para restaurante
+>>>>>>> add0826a937f02f290f5c95e90f841a6c562f1ec
