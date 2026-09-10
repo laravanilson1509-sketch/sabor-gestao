@@ -19,6 +19,9 @@ export default function RootLayout({
             <Link href="/estoque" className="text-white hover:text-blue-400 font-medium transition">
               📦 Estoque
             </Link>
+            <Link href="/cadastros" className="text-white hover:text-blue-400 font-medium transition">
+  📋 Cadastros
+</Link>
           </div>
         </nav>
         <main>{children}</main>
