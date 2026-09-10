@@ -1,7 +1,14 @@
-import { redirect } from "next/navigation";
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  // enquanto não existe login/dashboard multi-tela, entra direto na tela
-  // que está em uso agora. Troque para "/dashboard" quando ela existir.
-  redirect("/whatsapp");
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push('/whatsapp');
+  }, [router]);
+
+  return null;
 }
