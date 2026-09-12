@@ -1,104 +1,214 @@
-// supabase/functions/twilio-webhook/index.ts
-// Deploy: supabase functions deploy twilio-webhook
-//
-// Alternativa ao n8n — recebe direto de Twilio e grava no Supabase
-// URL deste webhook é o que você coloca em Twilio > Sandbox Settings
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+export const config = { cors: true };
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL");
-const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const supabase = createClient(supabaseUrl!, supabaseKey!);
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const UNIDADE_ID = Deno.env.get('UNIDADE_ID_PADRAO')!;
+const CHAVE_PIX = Deno.env.get('CHAVE_PIX') || 'chave-pix-nao-configurada';
 
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
-const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE");
+function twiml(mensagem: string) {
+  const escapada = mensagem
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  return new Response(
+    `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${escapada}</Message></Response>`,
+    { status: 200, headers: { 'Content-Type': 'application/xml' } }
+  );
+}
 
-serve(async (req) => {
-  // Twilio só aceita POST
-  if (req.method !== "POST") {
-    return new Response("OK", { status: 200 });
+export default async function handler(req: Request) {
+  if (req.method !== 'POST') return new Response('Not allowed', { status: 405 });
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+  const formData = await req.formData();
+  const from = String(formData.get('From') || '');
+  const body = String(formData.get('Body') || '').trim();
+
+  // registra a mensagem recebida (mantém o inbox humano funcionando também)
+  await supabase.from('mensagens_whatsapp').insert({
+    telefone: from,
+    mensagem: body,
+    status: 'nao_atendido',
+    unidade_id: UNIDADE_ID,
+    recebido_em: new Date().toISOString(),
+  });
+
+  // busca ou cria a conversa desse telefone
+  let { data: conversa } = await supabase
+    .from('conversas_whatsapp')
+    .select('*')
+    .eq('telefone', from)
+    .maybeSingle();
+
+  if (!conversa) {
+    const { data: nova } = await supabase
+      .from('conversas_whatsapp')
+      .insert({ telefone: from, unidade_id: UNIDADE_ID, estado: 'novo' })
+      .select('*')
+      .single();
+    conversa = nova;
   }
 
-  try {
-    // 1. Validar assinatura do Twilio (segurança)
-    const signature = req.headers.get("X-Twilio-Signature") || "";
-    const url = new URL(req.url).toString();
-    const body = await req.text();
+  async function atualizarConversa(campos: Record<string, unknown>) {
+    await supabase
+      .from('conversas_whatsapp')
+      .update({ ...campos, atualizado_em: new Date().toISOString() })
+      .eq('id', conversa.id);
+  }
 
-    // verificação simples (pra full security, implemente validação de assinatura)
-    if (!validarAssinaturaTwilio(signature, url, body, TWILIO_AUTH_TOKEN!)) {
-      console.warn("Assinatura Twilio inválida");
-      // mesmo assim processa (comentar se quiser ser strict)
+  async function buscarCatalogo() {
+    const { data } = await supabase
+      .from('ingredientes')
+      .select('id, nome, preco_venda')
+      .eq('tipo_produto', 'acabado')
+      .eq('ativo', true)
+      .not('preco_venda', 'is', null)
+      .order('nome');
+    return data || [];
+  }
+
+  // ===== ESTADO: novo -> manda cardápio e pede itens =====
+  if (conversa.estado === 'novo') {
+    const catalogo = await buscarCatalogo();
+    if (catalogo.length === 0) {
+      return twiml('Olá! No momento não temos produtos disponíveis. Tente novamente mais tarde.');
+    }
+    const lista = catalogo
+      .map((p: any, i: number) => `${i + 1}. ${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}`)
+      .join('\n');
+
+    await atualizarConversa({ estado: 'aguardando_itens', itens_pedido: catalogo });
+
+    return twiml(
+      `Olá! 🍕 Bem-vindo(a)! Aqui está nosso cardápio:\n\n${lista}\n\nMe diga os itens que deseja no formato:\nnúmero x quantidade, separados por vírgula.\n\nExemplo: 1x2, 3x1`
+    );
+  }
+
+  // ===== ESTADO: aguardando_itens -> processa o pedido =====
+  if (conversa.estado === 'aguardando_itens') {
+    const catalogo = conversa.itens_pedido as any[];
+    const partes = body.split(',').map((p) => p.trim());
+    const itensSelecionados: { nome: string; quantidade: number; preco_unitario: number; ingrediente_id: string }[] = [];
+    let erro = false;
+
+    for (const parte of partes) {
+      const match = parte.match(/^(\d+)\s*x\s*(\d+)$/i);
+      if (!match) { erro = true; break; }
+      const indice = parseInt(match[1], 10) - 1;
+      const quantidade = parseInt(match[2], 10);
+      const produto = catalogo[indice];
+      if (!produto || quantidade <= 0) { erro = true; break; }
+      itensSelecionados.push({
+        nome: produto.nome,
+        quantidade,
+        preco_unitario: produto.preco_venda,
+        ingrediente_id: produto.id,
+      });
     }
 
-    // 2. Parse do payload (form-urlencoded)
-    const params = new URLSearchParams(body);
-    const telefone = params.get("From");
-    const mensagem = params.get("Body");
-    const messageStatus = params.get("MessageStatus");
+    if (erro || itensSelecionados.length === 0) {
+      return twiml('Não entendi 😕. Use o formato número x quantidade, separado por vírgula.\nExemplo: 1x2, 3x1');
+    }
 
-    // ignora notificações de delivery/read (só processa mensagens novas)
-    if (messageStatus || !mensagem || !telefone) {
-      return new Response(
-        `<Response><Message>OK</Message></Response>`,
-        {
-          headers: { "Content-Type": "application/xml" },
-          status: 200,
-        }
+    const total = itensSelecionados.reduce((acc, i) => acc + i.quantidade * i.preco_unitario, 0);
+    const resumo = itensSelecionados
+      .map((i) => `${i.quantidade}x ${i.nome} - R$ ${(i.quantidade * i.preco_unitario).toFixed(2)}`)
+      .join('\n');
+
+    await atualizarConversa({
+      estado: 'aguardando_confirmacao_itens',
+      itens_pedido: itensSelecionados,
+    });
+
+    return twiml(`Seu pedido:\n\n${resumo}\n\nTotal: R$ ${total.toFixed(2)}\n\nConfirma? (sim/não)`);
+  }
+
+  // ===== ESTADO: aguardando_confirmacao_itens =====
+  if (conversa.estado === 'aguardando_confirmacao_itens') {
+    const resposta = body.toLowerCase();
+    if (resposta.includes('sim')) {
+      await atualizarConversa({ estado: 'aguardando_endereco' });
+      return twiml('Perfeito! Qual o endereço de entrega? (rua, número, bairro)');
+    }
+    if (resposta.includes('não') || resposta.includes('nao')) {
+      await atualizarConversa({ estado: 'novo', itens_pedido: [] });
+      return twiml('Sem problemas! Envie qualquer mensagem para começar de novo. 😊');
+    }
+    return twiml('Só preciso que confirme: responda "sim" ou "não".');
+  }
+
+  // ===== ESTADO: aguardando_endereco =====
+  if (conversa.estado === 'aguardando_endereco') {
+    if (body.length < 5) {
+      return twiml('Pode enviar o endereço completo, por favor? (rua, número, bairro)');
+    }
+    await atualizarConversa({ estado: 'aguardando_pagamento', endereco: body });
+    return twiml('Show! Como vai pagar?\n\n1. Pix\n2. Dinheiro\n3. Cartão (na entrega)');
+  }
+
+  // ===== ESTADO: aguardando_pagamento =====
+  if (conversa.estado === 'aguardando_pagamento') {
+    const escolha = body.trim();
+    let formaPagamento = '';
+    if (escolha === '1' || body.toLowerCase().includes('pix')) formaPagamento = 'pix';
+    else if (escolha === '2' || body.toLowerCase().includes('dinheiro')) formaPagamento = 'dinheiro';
+    else if (escolha === '3' || body.toLowerCase().includes('cart')) formaPagamento = 'cartao';
+    else return twiml('Escolha uma opção válida:\n\n1. Pix\n2. Dinheiro\n3. Cartão (na entrega)');
+
+    if (formaPagamento === 'pix') {
+      await atualizarConversa({ estado: 'aguardando_confirmacao_pix', forma_pagamento: 'pix' });
+      return twiml(
+        `Chave Pix: ${CHAVE_PIX}\n\nAssim que pagar, envie "paguei" aqui que já confirmamos seu pedido! 🙏`
       );
     }
 
-    // 3. Gravar no Supabase
-    const { error: insertError } = await supabase.from("mensagens_whatsapp").insert({
-      unidade_id: "2d7ce1e8-4a2e-4c59-a9ba-1234567890ab", // hardcoded por ora (ou ler de env)
-      telefone,
-      nome_cliente: null,
-      mensagem,
-      status: "nao_atendido",
-    });
-
-    if (insertError) {
-      console.error("Erro ao gravar no Supabase:", insertError);
-      throw insertError;
-    }
-
-    // 4. Responder ao cliente (automático)
-    const twiml = `<Response>
-      <Message>Recebemos sua mensagem! Um atendente vai responder em breve 👋</Message>
-    </Response>`;
-
-    return new Response(twiml, {
-      headers: { "Content-Type": "application/xml" },
-      status: 200,
-    });
-  } catch (err) {
-    console.error("Erro no webhook Twilio:", err);
-
-    // Twilio precisa de uma resposta XML válida
-    const twiml = `<Response><Message>Erro ao processar. Tente novamente.</Message></Response>`;
-    return new Response(twiml, {
-      headers: { "Content-Type": "application/xml" },
-      status: 200,
-    });
+    // dinheiro ou cartao -> finaliza direto (paga na entrega)
+    await finalizarPedido(supabase, conversa, formaPagamento, 'pendente');
+    return twiml('Pedido confirmado! ✅ Você paga na entrega. Já vamos preparar tudo. Obrigado! 🍕');
   }
-});
 
-// Validação de assinatura Twilio
-function validarAssinaturaTwilio(
-  signature: string,
-  url: string,
-  body: string,
-  authToken: string
-): boolean {
-  // implementação completa exige crypto (é mais complexo)
-  // por ora, retorna true (comentar em produção)
-  return true;
+  // ===== ESTADO: aguardando_confirmacao_pix =====
+  if (conversa.estado === 'aguardando_confirmacao_pix') {
+    if (body.toLowerCase().includes('pagu')) {
+      await finalizarPedido(supabase, conversa, 'pix', 'informado');
+      return twiml('Recebemos sua confirmação! ✅ Assim que o Pix cair vamos preparar seu pedido. Obrigado! 🍕');
+    }
+    return twiml(`Ainda aguardando o pagamento via Pix.\n\nChave: ${CHAVE_PIX}\n\nEnvie "paguei" assim que finalizar.`);
+  }
 
-  // Se quiser implementar de fato:
-  // const crypto = await import("https://deno.land/std/node/crypto.ts");
-  // const hmac = crypto.createHmac("sha1", authToken);
-  // hmac.update(url + body);
-  // const computed = btoa(hmac.digest("base64"));
-  // return signature === computed;
+  // ===== ESTADO: finalizado (conversa antiga, reinicia) =====
+  await atualizarConversa({ estado: 'novo', itens_pedido: [], endereco: null, forma_pagamento: null });
+  return twiml('Olá novamente! Envie qualquer mensagem para fazer um novo pedido. 😊');
+}
+
+async function finalizarPedido(
+  supabase: any,
+  conversa: any,
+  formaPagamento: string,
+  statusPagamento: string
+) {
+  const itens = conversa.itens_pedido as any[];
+  const total = itens.reduce((acc, i) => acc + i.quantidade * i.preco_unitario, 0);
+
+  await supabase.from('pedidos_delivery').insert({
+    unidade_id: conversa.unidade_id,
+    telefone_cliente: conversa.telefone,
+    endereco_entrega: conversa.endereco,
+    forma_pagamento: formaPagamento,
+    status_pagamento: statusPagamento,
+    itens,
+    valor_total: total,
+    status: 'novo',
+  });
+
+  await supabase
+    .from('conversas_whatsapp')
+    .update({
+      estado: 'finalizado',
+      atualizado_em: new Date().toISOString(),
+    })
+    .eq('id', conversa.id);
 }
