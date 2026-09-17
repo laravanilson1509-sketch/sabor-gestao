@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type TabelaCadastro = "fornecedores" | "clientes" | "funcionarios";
+export type TabelaCadastro = "fornecedores" | "clientes" | "funcionarios" | "motoboys";
 
 export async function listarCadastros(
   supabase: SupabaseClient,

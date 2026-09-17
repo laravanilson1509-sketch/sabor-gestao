@@ -27,6 +27,12 @@ const CADASTROS = [
     titulo: 'Funcionários',
     descricao: 'Equipe, cargos e dados de contato',
   },
+  {
+    href: '/cadastros/motoboys',
+    emoji: '🛵',
+    titulo: 'Motoboys',
+    descricao: 'Entregadores e dados de contato',
+  },
 ];
 
 export default function CadastrosPage() {

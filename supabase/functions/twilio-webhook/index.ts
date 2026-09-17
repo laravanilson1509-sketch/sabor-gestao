@@ -26,6 +26,15 @@ export default async function handler(req: Request) {
   const formData = await req.formData();
   const from = String(formData.get('From') || '');
   const body = String(formData.get('Body') || '').trim();
+  // Palavras-chave que transferem pro atendente humano
+const palavrasHumano = ['atendente', 'humano', 'ajuda', 'suporte', 'cancelar'];
+if (palavrasHumano.some(p => body.toLowerCase().includes(p))) {
+  await supabase
+    .from('conversas_whatsapp')
+    .update({ estado: 'novo', itens_pedido: [], endereco: null, forma_pagamento: null, atualizado_em: new Date().toISOString() })
+    .eq('telefone', from);
+  return twiml('Transferindo para um atendente humano... 👨‍💼\n\nEm breve alguém vai te responder por aqui!');
+}
 
   // registra a mensagem recebida (mantém o inbox humano funcionando também)
   await supabase.from('mensagens_whatsapp').insert({
