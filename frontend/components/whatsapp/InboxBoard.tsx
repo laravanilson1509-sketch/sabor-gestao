@@ -102,6 +102,25 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
   async function descartar(id: string) {
     try {
       await descartarMensagem(supabase, id, "Descartado manualmente");
+        const [limpando, setLimpando] = useState(false);
+
+  async function limparTudo() {
+    if (!confirm("Descartar todas as mensagens não atendidas?")) return;
+    setLimpando(true);
+    try {
+      const naoAtendidasIds = mensagens
+        .filter((m) => m.status === "nao_atendido")
+        .map((m) => m.id);
+      for (const msgId of naoAtendidasIds) {
+        await descartarMensagem(supabase, msgId, "Limpo em massa");
+      }
+      await carregar();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLimpando(false);
+    }
+  }
     } catch (e: any) {
       setErro(e.message ?? "Erro ao descartar");
     }
@@ -170,14 +189,14 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
             Responda direto por aqui — a mensagem sai pelo seu número Twilio
           </p>
         </div>
-        {naoAtendidos > 0 && (
-          <span
-            className="font-body text-xs font-medium px-2.5 py-1 rounded-full"
-            style={{ backgroundColor: c.dangerSoft, color: c.danger }}
-          >
-            {naoAtendidos} pendente{naoAtendidos > 1 ? "s" : ""}
-          </span>
-        )}
+       {naoAtendidos > 0 && (
+  <span
+    className="font-body text-xs font-medium px-2.5 py-1 rounded-full"
+    style={{ backgroundColor: c.dangerSoft, color: c.danger }}
+  >
+    {naoAtendidos} pendente{naoAtendidos > 1 ? "s" : ""}
+  </span>
+)}
       </div>
 
       {erro && (
