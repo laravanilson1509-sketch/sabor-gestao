@@ -38,6 +38,9 @@ export default function RootLayout({
             </Link>
             <Link href="/delivery" className="text-white hover:text-blue-400 font-medium transition">
   🛵 Delivery
+  <Link href="/compras" className="text-white hover:text-blue-400 font-medium transition">
+  🛒 Compras
+</Link>
 </Link>
             <button
               onClick={handleSair}
