@@ -189,14 +189,26 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
             Responda direto por aqui — a mensagem sai pelo seu número Twilio
           </p>
         </div>
-       {naoAtendidos > 0 && (
-  <span
-    className="font-body text-xs font-medium px-2.5 py-1 rounded-full"
-    style={{ backgroundColor: c.dangerSoft, color: c.danger }}
-  >
-    {naoAtendidos} pendente{naoAtendidos > 1 ? "s" : ""}
-  </span>
-)}
+               <div className="flex items-center gap-2">
+          {naoAtendidos > 0 && (
+            <span
+              className="font-body text-xs font-medium px-2.5 py-1 rounded-full"
+              style={{ backgroundColor: c.dangerSoft, color: c.danger }}
+            >
+              {naoAtendidos} pendente{naoAtendidos > 1 ? "s" : ""}
+            </span>
+          )}
+          {mensagens.length > 0 && (
+            <button
+              onClick={limparTudo}
+              disabled={limpando}
+              className="font-body text-xs font-medium px-2.5 py-1 rounded-full disabled:opacity-50"
+              style={{ backgroundColor: c.faint + "20", color: c.muted }}
+            >
+              {limpando ? "Limpando..." : "🗑️ Limpar tudo"}
+            </button>
+          )}
+        </div>
       </div>
 
       {erro && (
