@@ -42,6 +42,9 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
   const [respostas, setRespostas] = useState<Record<string, string>>({});
   const [enviando, setEnviando] = useState<string | null>(null);
 
+  // limpar tudo
+  const [limpando, setLimpando] = useState(false);
+
   // conversão em pedido
   const [conversaoAberta, setConversaoAberta] = useState<string | null>(null);
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -102,7 +105,10 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
   async function descartar(id: string) {
     try {
       await descartarMensagem(supabase, id, "Descartado manualmente");
-        const [limpando, setLimpando] = useState(false);
+    } catch (e: any) {
+      setErro(e.message ?? "Erro ao descartar");
+    }
+  }
 
   async function limparTudo() {
     if (!confirm("Descartar todas as mensagens não atendidas?")) return;
@@ -119,10 +125,6 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
       console.error(err);
     } finally {
       setLimpando(false);
-    }
-  }
-    } catch (e: any) {
-      setErro(e.message ?? "Erro ao descartar");
     }
   }
 
@@ -189,7 +191,7 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
             Responda direto por aqui — a mensagem sai pelo seu número Twilio
           </p>
         </div>
-               <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
           {naoAtendidos > 0 && (
             <span
               className="font-body text-xs font-medium px-2.5 py-1 rounded-full"
