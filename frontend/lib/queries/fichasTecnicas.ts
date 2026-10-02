@@ -9,24 +9,23 @@ export type ItemFicha = {
   custo_unitario: number;
 };
 
-export async function listarProdutosAcabados(supabase: SupabaseClient, unidadeId: string) {
+export async function listarPratos(supabase: SupabaseClient, unidadeId: string) {
   const { data, error } = await supabase
     .from("ingredientes")
     .select("id, nome, preco_venda, ativo")
-    .eq("tipo_produto", "acabado")
+    .eq("tipo_produto", "prato")
     .order("nome");
   if (error) throw error;
   return data || [];
 }
 
-export async function getFichaTecnica(supabase: SupabaseClient, produtoAcabadoId: string, unidadeId: string) {
+export async function getFichaTecnica(supabase: SupabaseClient, produtoId: string, unidadeId: string) {
   const { data: itens, error } = await supabase
     .from("ficha_tecnica_itens")
     .select("id, ingrediente_id, quantidade, unidade, ingredientes(nome)")
-    .eq("produto_acabado_id", produtoAcabadoId);
+    .eq("produto_acabado_id", produtoId);
   if (error) throw error;
 
-  // busca o custo unitario de cada ingrediente no estoque
   const ids = (itens || []).map((i: any) => i.ingrediente_id);
   let custos: Record<string, number> = {};
   if (ids.length > 0) {
@@ -54,7 +53,7 @@ export async function listarIngredientesConsumo(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("ingredientes")
     .select("id, nome, unidade_padrao")
-    .eq("tipo_produto", "consumo")
+    .eq("tipo_produto", "ingrediente")
     .eq("ativo", true)
     .order("nome");
   if (error) throw error;
@@ -71,6 +70,14 @@ export async function adicionarItemFicha(
 
 export async function removerItemFicha(supabase: SupabaseClient, itemId: string) {
   const { error } = await supabase.from("ficha_tecnica_itens").delete().eq("id", itemId);
+  if (error) throw error;
+}
+
+export async function salvarPrecoVenda(supabase: SupabaseClient, produtoId: string, preco: number) {
+  const { error } = await supabase
+    .from("ingredientes")
+    .update({ preco_venda: preco })
+    .eq("id", produtoId);
   if (error) throw error;
 }
 

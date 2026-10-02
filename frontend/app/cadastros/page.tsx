@@ -33,6 +33,12 @@ const CADASTROS = [
     titulo: 'Motoboys',
     descricao: 'Entregadores e dados de contato',
   },
+    {
+    href: '/cadastros/fichas-tecnicas',
+    emoji: '🧾',
+    titulo: 'Fichas Técnicas',
+    descricao: 'Monte a receita dos pratos e defina o preço de venda',
+  },
 ];
 
 export default function CadastrosPage() {

@@ -42,9 +42,8 @@ export default function RootLayout({
   🛒 Compras
 </Link>
 </Link>
-<Link href="/fichas-tecnicas" className="text-white hover:text-blue-400 font-medium transition">
-  🧾 Fichas
-</Link>
+
+
             <button
               onClick={handleSair}
               className="ml-auto text-sm text-gray-400 hover:text-red-400 transition"

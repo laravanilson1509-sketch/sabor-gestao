@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export async function getEstoqueComStatus(
   supabase: SupabaseClient,
   unidadeId: string,
-  filtros?: { tipo?: "consumo" | "acabado" | "todos"; ativo?: "ativo" | "inativo" | "todos" }
+  filtros?: { tipo?: "ingrediente" | "prato" | "acabado" | "todos"; ativo?: "ativo" | "inativo" | "todos" }
 ) {
   let query = supabase
     .from("estoque_saldo")
@@ -70,7 +70,7 @@ export async function criarIngredienteComEstoque(
   supabase: SupabaseClient,
   params: {
     nome: string;
-    tipo_produto: "consumo" | "acabado";
+    tipo_produto: "ingrediente" | "prato" | "acabado";
     unidade_padrao: string;
     ativo: boolean;
     quantidade_disponivel: number;
@@ -105,13 +105,30 @@ export async function criarIngredienteComEstoque(
 
   return novo.id;
 }
+export async function criarPratoSimples(
+  supabase: SupabaseClient,
+  params: { nome: string; ativo: boolean }
+) {
+  const { data, error } = await supabase
+    .from("ingredientes")
+    .insert({
+      nome: params.nome,
+      tipo_produto: "prato",
+      ativo: params.ativo,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw error;
+  return data.id as string;
+}
 
 export async function atualizarIngrediente(
   supabase: SupabaseClient,
   ingredienteId: string,
   params: {
     nome: string;
-    tipo_produto: "consumo" | "acabado";
+        tipo_produto: "ingrediente" | "prato" | "acabado";
     ativo: boolean;
     custo_unitario: number;
     estoque_minimo: number;

@@ -31,7 +31,7 @@ export default function EstoquePage() {
   const [loading, setLoading] = useState(true);
 
   // filtros
-  const [filtroTipo, setFiltroTipo] = useState<'todos' | 'consumo' | 'acabado'>('todos');
+  const [filtroTipo, setFiltroTipo] = useState<'todos' | 'ingrediente' | 'prato' | 'acabado'>('todos');
   const [filtroAtivo, setFiltroAtivo] = useState<'todos' | 'ativo' | 'inativo'>('ativo');
 
   // modal de movimentação
@@ -129,7 +129,7 @@ export default function EstoquePage() {
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Tipo</label>
             <div className="flex gap-1">
-              {(['todos', 'consumo', 'acabado'] as const).map((t) => (
+              {(['todos', 'ingrediente', 'prato', 'acabado'] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setFiltroTipo(t)}
@@ -139,7 +139,7 @@ export default function EstoquePage() {
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  {t === 'todos' ? 'Todos' : t === 'consumo' ? '🧂 Consumo' : '🍕 Acabado'}
+                  {t === 'todos' ? 'Todos' : t === 'ingrediente' ? '🧂 Ingrediente' : t === 'prato' ? '🍽️ Prato' : '🍕 Acabado'}
                 </button>
               ))}
             </div>
@@ -208,7 +208,7 @@ export default function EstoquePage() {
                         {item.ingredientes?.nome || 'N/A'}
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-600">
-                        {item.ingredientes?.tipo_produto === 'acabado' ? '🍕 Acabado' : '🧂 Consumo'}
+                        {item.ingredientes?.tipo_produto === 'acabado' ? '🍕 Acabado' : item.ingredientes?.tipo_produto === 'prato' ? '🍽️ Prato' : '🧂 Ingrediente'}
                       </td>
                       <td className="px-4 py-4 text-right text-sm text-gray-600">
                         {item.quantidade_disponivel?.toFixed(2)} {item.unidade}

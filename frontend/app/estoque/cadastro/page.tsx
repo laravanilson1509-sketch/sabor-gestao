@@ -6,6 +6,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import {
   getIngredientePorId,
   criarIngredienteComEstoque,
+  criarPratoSimples,
   atualizarIngrediente,
 } from '@/lib/queries/estoque';
 
@@ -26,7 +27,7 @@ function CadastroEstoquePageInner() {
   const [erro, setErro] = useState<string | null>(null);
 
   const [nome, setNome] = useState('');
-  const [tipoProduto, setTipoProduto] = useState<'consumo' | 'acabado'>('consumo');
+    const [tipoProduto, setTipoProduto] = useState<'ingrediente' | 'prato' | 'acabado'>('ingrediente');
   const [unidade, setUnidade] = useState('kg');
   const [quantidade, setQuantidade] = useState('0');
   const [custo, setCusto] = useState('');
@@ -40,7 +41,7 @@ function CadastroEstoquePageInner() {
       try {
         const { ingrediente, estoque } = await getIngredientePorId(supabase, id!);
         setNome(ingrediente.nome || '');
-        setTipoProduto(ingrediente.tipo_produto || 'consumo');
+        setTipoProduto(ingrediente.tipo_produto || 'ingrediente');
         setAtivo(ingrediente.ativo ?? true);
         setUnidade(estoque?.unidade || 'kg');
         setQuantidade(String(estoque?.quantidade_disponivel || 0));
@@ -60,19 +61,33 @@ function CadastroEstoquePageInner() {
     e.preventDefault();
     setErro(null);
 
-    if (!nome.trim() || !custo) {
-      setErro('Preenche nome e custo unitário.');
+    if (!nome.trim()) {
+      setErro('Preenche o nome.');
+      return;
+    }
+
+    if (tipoProduto !== 'prato' && !custo) {
+      setErro('Preenche o custo unitário.');
       return;
     }
 
     setSalvando(true);
     try {
+      if (tipoProduto === 'prato' && !editando) {
+        const novoId = await criarPratoSimples(supabase, {
+          nome: nome.trim(),
+          ativo,
+        });
+        router.push('/cadastros/fichas-tecnicas/' + novoId);
+        return;
+      }
+
       if (editando) {
         await atualizarIngrediente(supabase, id!, {
           nome: nome.trim(),
           tipo_produto: tipoProduto,
           ativo,
-          custo_unitario: parseFloat(custo),
+          custo_unitario: parseFloat(custo) || 0,
           estoque_minimo: parseFloat(estoqueMinimo) || 0,
         });
       } else {
@@ -141,36 +156,48 @@ function CadastroEstoquePageInner() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Tipo de produto
             </label>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setTipoProduto('consumo')}
-                className={`flex-1 py-3 rounded-lg border-2 font-medium text-sm transition ${
-                  tipoProduto === 'consumo'
+                onClick={() => setTipoProduto('ingrediente')}
+                className={`flex-1 py-3 rounded-lg border-2 font-medium text-xs transition ${
+                  tipoProduto === 'ingrediente'
                     ? 'border-blue-600 bg-blue-50 text-blue-700'
                     : 'border-gray-200 text-gray-600 hover:border-gray-300'
                 }`}
               >
-                🧂 Produto de Consumo
-                <p className="text-xs font-normal mt-1 opacity-70">Ingrediente/insumo</p>
+                🧂 Ingrediente
+                <p className="text-xs font-normal mt-1 opacity-70">Insumo de estoque</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTipoProduto('prato')}
+                className={`flex-1 py-3 rounded-lg border-2 font-medium text-xs transition ${
+                  tipoProduto === 'prato'
+                    ? 'border-blue-600 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                🍽️ Prato
+                <p className="text-xs font-normal mt-1 opacity-70">Feito na casa (ficha técnica)</p>
               </button>
               <button
                 type="button"
                 onClick={() => setTipoProduto('acabado')}
-                className={`flex-1 py-3 rounded-lg border-2 font-medium text-sm transition ${
+                className={`flex-1 py-3 rounded-lg border-2 font-medium text-xs transition ${
                   tipoProduto === 'acabado'
                     ? 'border-blue-600 bg-blue-50 text-blue-700'
                     : 'border-gray-200 text-gray-600 hover:border-gray-300'
                 }`}
               >
-                🍕 Produto Acabado
-                <p className="text-xs font-normal mt-1 opacity-70">Pronto pra venda</p>
+                🍕 Acabado
+                <p className="text-xs font-normal mt-1 opacity-70">Pronto, revenda direta</p>
               </button>
             </div>
           </div>
 
-          {/* Unidade + Quantidade (só no cadastro novo) */}
-          {!editando && (
+          {/* Unidade + Quantidade (só no cadastro novo, e não para Prato) */}
+          {!editando && tipoProduto !== 'prato' && (
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -206,7 +233,8 @@ function CadastroEstoquePageInner() {
             </div>
           )}
 
-          {/* Custo + Estoque mínimo */}
+          {/* Custo + Estoque mínimo (não aparece para Prato) */}
+          {tipoProduto !== 'prato' && (
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -238,6 +266,7 @@ function CadastroEstoquePageInner() {
               />
             </div>
           </div>
+          )}
 
           {/* Status */}
           <div>

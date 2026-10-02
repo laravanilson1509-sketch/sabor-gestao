@@ -8,6 +8,7 @@ import {
   listarIngredientesConsumo,
   adicionarItemFicha,
   removerItemFicha,
+  salvarPrecoVenda,
   calcularMargem,
 } from '@/lib/queries/fichasTecnicas';
 
@@ -37,6 +38,9 @@ export default function EditarFichaTecnicaPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [removendo, setRemovendo] = useState<string | null>(null);
 
+  const [precoInput, setPrecoInput] = useState('');
+  const [salvandoPreco, setSalvandoPreco] = useState(false);
+
   async function carregar() {
     setLoading(true);
     try {
@@ -46,6 +50,7 @@ export default function EditarFichaTecnicaPage() {
         .eq('id', produtoId)
         .single();
       setProduto(prod);
+      setPrecoInput(prod && prod.preco_venda ? String(prod.preco_venda) : '');
 
       const resultado = await getFichaTecnica(supabase, produtoId, unidadeId);
       setItens(resultado.itens);
@@ -117,6 +122,23 @@ export default function EditarFichaTecnicaPage() {
     }
   }
 
+  async function handleSalvarPreco() {
+    const valor = parseFloat(precoInput);
+    if (!valor || valor <= 0) {
+      alert('Informa um preco valido.');
+      return;
+    }
+    setSalvandoPreco(true);
+    try {
+      await salvarPrecoVenda(supabase, produtoId, valor);
+      await carregar();
+    } catch (err: any) {
+      alert('Erro: ' + err.message);
+    } finally {
+      setSalvandoPreco(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -131,33 +153,18 @@ export default function EditarFichaTecnicaPage() {
   const margemPct = margemCalculo.margemPct;
   const corMargem = margemPct >= 50 ? 'text-green-600' : margemPct >= 20 ? 'text-yellow-600' : 'text-red-600';
 
+  const custoSugerido50 = custoTotal > 0 ? custoTotal / 0.5 : 0;
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => router.push('/fichas-tecnicas')} className="text-gray-500 hover:text-gray-700 text-xl">
+          <button onClick={() => router.push('/cadastros/fichas-tecnicas')} className="text-gray-500 hover:text-gray-700 text-xl">
             {'<-'}
           </button>
           <h1 className="text-2xl font-bold text-gray-900">
-            Ficha: {produto ? produto.nome : ''}
+            {produto ? produto.nome : ''}
           </h1>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4 mb-4 grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p className="text-xs text-gray-500">Custo da receita</p>
-            <p className="text-lg font-bold text-gray-900">R$ {custoTotal.toFixed(2)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Preco de venda</p>
-            <p className="text-lg font-bold text-gray-900">{preco > 0 ? 'R$ ' + preco.toFixed(2) : '-'}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Margem</p>
-            <p className={'text-lg font-bold ' + corMargem}>
-              {preco > 0 ? margemPct.toFixed(0) + '%' : '-'}
-            </p>
-          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-4 mb-4">
@@ -188,7 +195,7 @@ export default function EditarFichaTecnicaPage() {
           )}
         </div>
 
-        <form onSubmit={handleAdicionar} className="bg-white rounded-lg shadow p-4 space-y-3">
+        <form onSubmit={handleAdicionar} className="bg-white rounded-lg shadow p-4 space-y-3 mb-4">
           <h2 className="font-semibold text-gray-900">Adicionar ingrediente</h2>
           <div className="flex gap-2">
             <select
@@ -234,6 +241,47 @@ export default function EditarFichaTecnicaPage() {
             {salvando ? 'Adicionando...' : 'Adicionar'}
           </button>
         </form>
+
+        <div className="bg-white rounded-lg shadow p-4">
+          <h2 className="font-semibold text-gray-900 mb-3">Preco de venda</h2>
+
+          <div className="grid grid-cols-2 gap-4 text-center mb-4">
+            <div>
+              <p className="text-xs text-gray-500">Custo da receita</p>
+              <p className="text-lg font-bold text-gray-900">R$ {custoTotal.toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Sugestao (margem 50%)</p>
+              <p className="text-lg font-bold text-blue-600">
+                {custoSugerido50 > 0 ? 'R$ ' + custoSugerido50.toFixed(2) : '-'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 mb-3">
+            <input
+              type="number"
+              step="0.01"
+              value={precoInput}
+              onChange={(e) => setPrecoInput(e.target.value)}
+              placeholder="Defina o preco final"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            />
+            <button
+              onClick={handleSalvarPreco}
+              disabled={salvandoPreco}
+              className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium"
+            >
+              {salvandoPreco ? 'Salvando...' : 'Salvar preco'}
+            </button>
+          </div>
+
+          {preco > 0 && (
+            <p className={'text-sm font-semibold ' + corMargem}>
+              Margem atual: {margemPct.toFixed(0)}% (R$ {margemReais.toFixed(2)})
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
