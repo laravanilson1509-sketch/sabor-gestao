@@ -76,7 +76,7 @@ export default function FornecedoresPage() {
             <p className="text-gray-600">Nenhum fornecedor cadastrado</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-lg shadow overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-100 border-b">
                 <tr>
