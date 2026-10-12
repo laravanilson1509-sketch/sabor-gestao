@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import {
@@ -9,10 +10,20 @@ import {
   adicionarItemFicha,
   removerItemFicha,
   salvarPrecoVenda,
-  calcularMargem,
 } from '@/lib/queries/fichasTecnicas';
+import {
+  getConfigFinanceira,
+  listarCustosFixos,
+  calcularCustoFixoPorPrato,
+  calcularPrecoSugerido,
+  type ConfigFinanceira,
+} from '@/lib/queries/financeiro';
 
 type IngredienteConsumo = { id: string; nome: string; unidade_padrao: string | null };
+
+function moeda(v: number) {
+  return 'R$ ' + v.toFixed(2);
+}
 
 export default function EditarFichaTecnicaPage() {
   const router = useRouter();
@@ -31,6 +42,9 @@ export default function EditarFichaTecnicaPage() {
   const [custoTotal, setCustoTotal] = useState(0);
   const [ingredientesDisponiveis, setIngredientesDisponiveis] = useState<IngredienteConsumo[]>([]);
 
+  const [config, setConfig] = useState<ConfigFinanceira | null>(null);
+  const [custoFixoPrato, setCustoFixoPrato] = useState(0);
+
   const [ingredienteSelecionado, setIngredienteSelecionado] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [unidade, setUnidade] = useState('kg');
@@ -43,6 +57,7 @@ export default function EditarFichaTecnicaPage() {
 
   async function carregar() {
     setLoading(true);
+
     try {
       const { data: prod } = await supabase
         .from('ingredientes')
@@ -51,16 +66,35 @@ export default function EditarFichaTecnicaPage() {
         .single();
       setProduto(prod);
       setPrecoInput(prod && prod.preco_venda ? String(prod.preco_venda) : '');
+    } catch (err) {
+      console.error(err);
+    }
 
+    try {
       const resultado = await getFichaTecnica(supabase, produtoId, unidadeId);
       setItens(resultado.itens);
       setCustoTotal(resultado.custoTotal);
+    } catch (err) {
+      console.error(err);
+    }
 
+    try {
       const disponiveis = await listarIngredientesConsumo(supabase);
       setIngredientesDisponiveis(disponiveis);
     } catch (err) {
       console.error(err);
     }
+
+    try {
+      const cfg = await getConfigFinanceira(supabase, unidadeId);
+      const custos = await listarCustosFixos(supabase, unidadeId);
+      const rateio = calcularCustoFixoPorPrato(custos, cfg.vendas_previstas_mes);
+      setConfig(cfg);
+      setCustoFixoPrato(rateio.porPrato);
+    } catch (err) {
+      console.error(err);
+    }
+
     setLoading(false);
   }
 
@@ -81,13 +115,13 @@ export default function EditarFichaTecnicaPage() {
     setErro(null);
 
     if (!ingredienteSelecionado || !quantidade || parseFloat(quantidade) <= 0) {
-      setErro('Escolhe um ingrediente e informa a quantidade.');
+      setErro('Escolha um ingrediente e informe a quantidade.');
       return;
     }
 
     const jaExiste = itens.some((i) => i.ingrediente_id === ingredienteSelecionado);
     if (jaExiste) {
-      setErro('Esse ingrediente ja esta na receita.');
+      setErro('Esse ingrediente já está na receita.');
       return;
     }
 
@@ -125,7 +159,7 @@ export default function EditarFichaTecnicaPage() {
   async function handleSalvarPreco() {
     const valor = parseFloat(precoInput);
     if (!valor || valor <= 0) {
-      alert('Informa um preco valido.');
+      alert('Informe um preço válido.');
       return;
     }
     setSalvandoPreco(true);
@@ -147,24 +181,30 @@ export default function EditarFichaTecnicaPage() {
     );
   }
 
-  const preco = Number(produto && produto.preco_venda ? produto.preco_venda : 0);
-  const margemCalculo = calcularMargem(custoTotal, preco);
-  const margemReais = margemCalculo.margemReais;
-  const margemPct = margemCalculo.margemPct;
-  const corMargem = margemPct >= 50 ? 'text-green-600' : margemPct >= 20 ? 'text-yellow-600' : 'text-red-600';
+  const precoSalvo = Number(produto && produto.preco_venda ? produto.preco_venda : 0);
+  const custoBase = custoTotal + custoFixoPrato;
+  const sugestao = config
+    ? calcularPrecoSugerido({ custoIngredientes: custoTotal, custoFixoPorPrato: custoFixoPrato, config })
+    : null;
 
-  const custoSugerido50 = custoTotal > 0 ? custoTotal / 0.5 : 0;
+  const deducoesPct = config ? config.impostos_pct + config.taxa_cartao_pct + config.taxa_app_pct : 0;
+  const lucro = precoSalvo > 0 ? precoSalvo * (1 - deducoesPct / 100) - custoBase : 0;
+  const margemPct = precoSalvo > 0 ? (lucro / precoSalvo) * 100 : 0;
+  const alvo = config ? config.margem_lucro_pct : 50;
+  const corMargem =
+    margemPct >= alvo ? 'text-green-600' : margemPct >= alvo / 2 ? 'text-yellow-600' : 'text-red-600';
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => router.push('/cadastros/fichas-tecnicas')} className="text-gray-500 hover:text-gray-700 text-xl">
+          <button
+            onClick={() => router.push('/cadastros/fichas-tecnicas')}
+            className="text-gray-500 hover:text-gray-700 text-xl"
+          >
             {'<-'}
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {produto ? produto.nome : ''}
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">{produto ? produto.nome : ''}</h1>
         </div>
 
         <div className="bg-white rounded-lg shadow p-4 mb-4">
@@ -177,10 +217,13 @@ export default function EditarFichaTecnicaPage() {
                 <div key={item.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
                   <div>
                     <span className="font-medium">{item.ingredientes ? item.ingredientes.nome : ''}</span>
-                    <span className="text-gray-500"> - {item.quantidade} {item.unidade}</span>
+                    <span className="text-gray-500">
+                      {' '}
+                      - {item.quantidade} {item.unidade}
+                    </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-gray-600">R$ {(item.quantidade * item.custo_unitario).toFixed(2)}</span>
+                    <span className="text-gray-600">{moeda(item.quantidade * item.custo_unitario)}</span>
                     <button
                       onClick={() => handleRemover(item.id)}
                       disabled={removendo === item.id}
@@ -207,7 +250,9 @@ export default function EditarFichaTecnicaPage() {
               {ingredientesDisponiveis
                 .filter((ing) => !itens.some((i) => i.ingrediente_id === ing.id))
                 .map((ing) => (
-                  <option key={ing.id} value={ing.id}>{ing.nome}</option>
+                  <option key={ing.id} value={ing.id}>
+                    {ing.nome}
+                  </option>
                 ))}
             </select>
             <input
@@ -243,42 +288,99 @@ export default function EditarFichaTecnicaPage() {
         </form>
 
         <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="font-semibold text-gray-900 mb-3">Preco de venda</h2>
-
-          <div className="grid grid-cols-2 gap-4 text-center mb-4">
-            <div>
-              <p className="text-xs text-gray-500">Custo da receita</p>
-              <p className="text-lg font-bold text-gray-900">R$ {custoTotal.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Sugestao (margem 50%)</p>
-              <p className="text-lg font-bold text-blue-600">
-                {custoSugerido50 > 0 ? 'R$ ' + custoSugerido50.toFixed(2) : '-'}
-              </p>
-            </div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-gray-900">Formação do preço</h2>
+            <Link href="/financeiro" className="text-xs text-blue-600 hover:underline">
+              Alterar parâmetros no Financeiro
+            </Link>
           </div>
 
-          <div className="flex gap-2 mb-3">
+          {!config ? (
+            <p className="text-sm text-red-600 mb-3">
+              Não foi possível ler os parâmetros do Financeiro. Abra a tela Financeiro e salve os parâmetros.
+            </p>
+          ) : (
+            <div className="text-sm space-y-1 mb-4">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Custo dos ingredientes</span>
+                <span>{moeda(custoTotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Custo fixo por prato (rateio)</span>
+                <span>{moeda(custoFixoPrato)}</span>
+              </div>
+              <div className="flex justify-between font-medium border-t pt-1">
+                <span>Custo base</span>
+                <span>{moeda(custoBase)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600 pt-2">
+                <span>Margem de lucro</span>
+                <span>{config.margem_lucro_pct}%</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Impostos</span>
+                <span>{config.impostos_pct}%</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Taxa de cartão</span>
+                <span>{config.taxa_cartao_pct}%</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Taxa de apps de delivery</span>
+                <span>{config.taxa_app_pct}%</span>
+              </div>
+              <div className="flex justify-between font-semibold text-blue-600 border-t pt-2">
+                <span>Preço sugerido</span>
+                <span>
+                  {sugestao && sugestao.valido && sugestao.preco > 0 ? moeda(sugestao.preco) : '-'}
+                </span>
+              </div>
+              {sugestao && !sugestao.valido && (
+                <p className="text-xs text-red-600">
+                  A soma dos percentuais chegou a {sugestao.percentuais}%. Ajuste no Financeiro (precisa ser
+                  menor que 100%).
+                </p>
+              )}
+              {config.vendas_previstas_mes === 0 && (
+                <p className="text-xs text-yellow-700 bg-yellow-50 rounded-lg p-2 mt-2">
+                  Defina as vendas previstas por mês no Financeiro para o custo fixo entrar no preço.
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="flex gap-2 mb-2 flex-wrap">
             <input
               type="number"
               step="0.01"
               value={precoInput}
               onChange={(e) => setPrecoInput(e.target.value)}
-              placeholder="Defina o preco final"
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              placeholder="Defina o preço final"
+              className="flex-1 min-w-40 border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
+            <button
+              type="button"
+              onClick={() => {
+                if (sugestao && sugestao.valido && sugestao.preco > 0) {
+                  setPrecoInput(sugestao.preco.toFixed(2));
+                }
+              }}
+              className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium"
+            >
+              Usar sugerido
+            </button>
             <button
               onClick={handleSalvarPreco}
               disabled={salvandoPreco}
               className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium"
             >
-              {salvandoPreco ? 'Salvando...' : 'Salvar preco'}
+              {salvandoPreco ? 'Salvando...' : 'Salvar preço'}
             </button>
           </div>
 
-          {preco > 0 && (
+          {precoSalvo > 0 && (
             <p className={'text-sm font-semibold ' + corMargem}>
-              Margem atual: {margemPct.toFixed(0)}% (R$ {margemReais.toFixed(2)})
+              Preço salvo: {moeda(precoSalvo)} | Lucro: {moeda(lucro)} ({margemPct.toFixed(0)}% do preço)
             </p>
           )}
         </div>
