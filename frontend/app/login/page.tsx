@@ -1,89 +1,120 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
-  const router = useRouter();
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+function LoginForm() {
+  const router = useRouter()
+  const params = useSearchParams()
+  const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
+  const [mostrar, setMostrar] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+  const [carregando, setCarregando] = useState(false)
 
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [erro, setErro] = useState<string | null>(null);
-  const [entrando, setEntrando] = useState(false);
-
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setErro(null);
-    setEntrando(true);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password: senha,
-    });
-
+  async function entrar(e: React.FormEvent) {
+    e.preventDefault()
+    setErro(null)
+    setCarregando(true)
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
     if (error) {
-      setErro('Email ou senha incorretos.');
-      setEntrando(false);
-      return;
+      setErro('E-mail ou senha incorretos.')
+      setCarregando(false)
+      return
     }
-
-    router.push('/whatsapp');
-    router.refresh();
+    const destino = params.get('next') || params.get('redirectTo') || '/'
+    router.push(destino.startsWith('/') ? destino : '/')
+    router.refresh()
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white">🍕 Sabor Gestão</h1>
-          <p className="text-gray-400 text-sm mt-1">Entre para continuar</p>
+    <div className="min-h-screen flex items-center justify-center bg-[#EEF2F4] px-4">
+      <form
+        onSubmit={entrar}
+        className="w-full max-w-md rounded-2xl bg-white border border-[#DCE3E7] p-8 shadow-sm space-y-5"
+      >
+        <div>
+          <p className="text-lg font-bold text-[#16252B]">Sabor Gestão</p>
+          <h1 className="mt-4 text-2xl font-bold text-[#16252B]">Entrar</h1>
+          <p className="mt-1 text-sm text-[#5B6B73]">Use o e-mail e a senha criados para você.</p>
         </div>
 
-        <form onSubmit={handleLogin} className="bg-white rounded-lg shadow-xl p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <div className="space-y-2">
+          <label htmlFor="email" className="block text-sm font-medium text-[#2B3C44]">
+            E-mail
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="voce@restaurante.com"
+            className="w-full h-12 rounded-xl border border-[#C9D3D8] bg-white px-4 text-[#16252B] placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+        <div className="space-y-2">
+          <label htmlFor="senha" className="block text-sm font-medium text-[#2B3C44]">
+            Senha
+          </label>
+          <div className="relative">
             <input
-              type="password"
+              id="senha"
+              type={mostrar ? 'text' : 'password'}
+              required
+              autoComplete="current-password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
-              placeholder="••••••••"
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Sua senha"
+              className="w-full h-12 rounded-xl border border-[#C9D3D8] bg-white pl-4 pr-12 text-[#16252B] placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
             />
+            <button
+              type="button"
+              onClick={() => setMostrar((v) => !v)}
+              aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
+              className="absolute right-1 top-1 h-10 w-10 flex items-center justify-center rounded-lg text-[#5B6B73] hover:text-[#0E6B7E]"
+            >
+              {mostrar ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M17.9 17.9A10.9 10.9 0 0 1 12 19c-6.5 0-10-7-10-7a18 18 0 0 1 4.1-4.9M9.9 5.2A9.9 9.9 0 0 1 12 5c6.5 0 10 7 10 7a18 18 0 0 1-2.2 3.2M1 1l22 22" />
+                  <path d="M14.1 14.1a3 3 0 1 1-4.2-4.2" />
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
+            </button>
           </div>
+        </div>
 
-          {erro && (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              ⚠️ {erro}
-            </div>
-          )}
+        {erro && (
+          <p role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+            {erro}
+          </p>
+        )}
 
-          <button
-            type="submit"
-            disabled={entrando}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2.5 rounded-lg font-medium transition"
-          >
-            {entrando ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
-      </div>
+        <button
+          type="submit"
+          disabled={carregando}
+          className="w-full h-12 rounded-xl bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-60 text-white font-semibold"
+        >
+          {carregando ? 'Entrando...' : 'Entrar'}
+        </button>
+      </form>
     </div>
-  );
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  )
 }
