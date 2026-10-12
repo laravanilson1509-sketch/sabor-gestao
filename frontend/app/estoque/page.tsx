@@ -181,7 +181,7 @@ export default function EstoquePage() {
 
         {loading ? (
           <p className="text-center py-12 text-gray-600">Carregando...</p>
-        ) : itens.length === 0 ? (
+                ) : itens.length === 0 && pratos.length > 0 ? null : itens.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-gray-600">Nenhum item encontrado</p>
             <p className="text-sm text-gray-500 mt-2">
@@ -317,6 +317,27 @@ export default function EstoquePage() {
                         </Link>
                         <Link
                           href={'/estoque/cadastro?id=' + p.id}
+                                                  <button
+                          onClick={() =>
+                            setItemParaDeletar({
+                              id: p.id,
+                              quantidade_disponivel: 0,
+                              custo_unitario: 0,
+                              estoque_minimo: 0,
+                              unidade: '',
+                              ingredientes: {
+                                id: p.id,
+                                nome: p.nome,
+                                tipo_produto: 'prato',
+                                ativo: p.ativo,
+                              },
+                            })
+                          }
+                          className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded"
+                          title="Excluir"
+                        >
+                          🗑️
+                        </button>
                           className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-1 rounded"
                         >
                           ✏️
