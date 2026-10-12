@@ -29,6 +29,7 @@ export default function EstoquePage() {
 
   const [itens, setItens] = useState<ItemEstoque[]>([]);
   const [loading, setLoading] = useState(true);
+    const [pratos, setPratos] = useState<any[]>([]);
 
   // filtros
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'ingrediente' | 'prato' | 'acabado'>('todos');
@@ -56,6 +57,19 @@ export default function EstoquePage() {
         ativo: filtroAtivo,
       });
       setItens(data as any);
+            if (filtroTipo === 'todos' || filtroTipo === 'prato') {
+        const { data: listaPratos } = await supabase
+          .from('ingredientes')
+          .select('id, nome, preco_venda, ativo')
+          .eq('tipo_produto', 'prato')
+          .order('nome');
+        const filtrados = (listaPratos || []).filter(
+          (p: any) => filtroAtivo === 'todos' || p.ativo === (filtroAtivo === 'ativo')
+        );
+        setPratos(filtrados);
+      } else {
+        setPratos([]);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -269,6 +283,53 @@ export default function EstoquePage() {
           </div>
         )}
       </div>
+            {pratos.length > 0 && (
+        <div className="max-w-6xl mx-auto mt-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">🍽️ Pratos</h2>
+          <p className="text-xs text-gray-500 mb-3">
+            Pratos são feitos na casa e não têm saldo próprio. O consumo vem dos ingredientes da ficha técnica.
+          </p>
+          <div className="bg-white rounded-lg shadow overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-100 border-b">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Prato</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Preço de venda</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {pratos.map((p) => (
+                  <tr key={p.id} className={'hover:bg-gray-50 ' + (p.ativo ? '' : 'opacity-50')}>
+                    <td className="px-4 py-4 text-sm font-medium text-gray-900">{p.nome}</td>
+                    <td className="px-4 py-4 text-right text-sm text-gray-600">
+                      {Number(p.preco_venda) > 0 ? 'R$ ' + Number(p.preco_venda).toFixed(2) : 'Não definido'}
+                    </td>
+                    <td className="px-4 py-4 text-sm">{p.ativo ? '✅ Ativo' : '⏸️ Inativo'}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex gap-1 justify-center">
+                        <Link
+                          href={'/cadastros/fichas-tecnicas/' + p.id}
+                          className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded"
+                        >
+                          🧾 Ficha
+                        </Link>
+                        <Link
+                          href={'/estoque/cadastro?id=' + p.id}
+                          className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-1 rounded"
+                        >
+                          ✏️
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: Entrada/Consumo */}
       {itemMovimentacao && (
