@@ -20,6 +20,29 @@ type ItemEstoque = {
   ingredientes: { id: string; nome: string; tipo_produto: string; ativo: boolean } | null;
 };
 
+type Prato = {
+  id: string;
+  nome: string;
+  preco_venda: number | null;
+  ativo: boolean;
+};
+
+type FiltroTipo = 'todos' | 'ingrediente' | 'prato' | 'acabado';
+type FiltroAtivo = 'todos' | 'ativo' | 'inativo';
+
+function rotuloTipo(t: FiltroTipo) {
+  if (t === 'todos') return 'Todos';
+  if (t === 'ingrediente') return '🧂 Ingrediente';
+  if (t === 'prato') return '🍽️ Prato';
+  return '🍕 Acabado';
+}
+
+function rotuloAtivo(s: FiltroAtivo) {
+  if (s === 'todos') return 'Todos';
+  if (s === 'ativo') return '✅ Ativos';
+  return '⏸️ Inativos';
+}
+
 export default function EstoquePage() {
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,24 +51,20 @@ export default function EstoquePage() {
   const unidadeId = process.env.NEXT_PUBLIC_UNIDADE_ID!;
 
   const [itens, setItens] = useState<ItemEstoque[]>([]);
+  const [pratos, setPratos] = useState<Prato[]>([]);
   const [loading, setLoading] = useState(true);
-    const [pratos, setPratos] = useState<any[]>([]);
 
-  // filtros
-  const [filtroTipo, setFiltroTipo] = useState<'todos' | 'ingrediente' | 'prato' | 'acabado'>('todos');
-  const [filtroAtivo, setFiltroAtivo] = useState<'todos' | 'ativo' | 'inativo'>('ativo');
+  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos');
+  const [filtroAtivo, setFiltroAtivo] = useState<FiltroAtivo>('ativo');
 
-  // modal de movimentação
   const [itemMovimentacao, setItemMovimentacao] = useState<ItemEstoque | null>(null);
   const [tipoMovimentacao, setTipoMovimentacao] = useState<'entrada' | 'consumo'>('entrada');
   const [qtdMov, setQtdMov] = useState('');
   const [obsMov, setObsMov] = useState('');
 
-  // modal de histórico
   const [showHistorico, setShowHistorico] = useState<ItemEstoque | null>(null);
   const [historico, setHistorico] = useState<any[]>([]);
 
-  // modal de confirmação de exclusão
   const [itemParaDeletar, setItemParaDeletar] = useState<ItemEstoque | null>(null);
   const [deletando, setDeletando] = useState(false);
 
@@ -57,7 +76,8 @@ export default function EstoquePage() {
         ativo: filtroAtivo,
       });
       setItens(data as any);
-            if (filtroTipo === 'todos' || filtroTipo === 'prato') {
+
+      if (filtroTipo === 'todos' || filtroTipo === 'prato') {
         const { data: listaPratos } = await supabase
           .from('ingredientes')
           .select('id, nome, preco_venda, ativo')
@@ -66,7 +86,7 @@ export default function EstoquePage() {
         const filtrados = (listaPratos || []).filter(
           (p: any) => filtroAtivo === 'todos' || p.ativo === (filtroAtivo === 'ativo')
         );
-        setPratos(filtrados);
+        setPratos(filtrados as Prato[]);
       } else {
         setPratos([]);
       }
@@ -82,7 +102,7 @@ export default function EstoquePage() {
 
   async function handleMovimentacao(e: React.FormEvent) {
     e.preventDefault();
-    if (!itemMovimentacao?.ingredientes || !qtdMov) return;
+    if (!itemMovimentacao || !itemMovimentacao.ingredientes || !qtdMov) return;
     try {
       await registrarMovimentacao(supabase, {
         ingrediente_id: itemMovimentacao.ingredientes.id,
@@ -105,14 +125,30 @@ export default function EstoquePage() {
     const { data } = await supabase
       .from('movimentacoes_estoque')
       .select('*')
-      .eq('ingrediente_id', item.ingredientes?.id)
+      .eq('ingrediente_id', item.ingredientes ? item.ingredientes.id : '')
       .order('criado_em', { ascending: false })
       .limit(20);
     setHistorico(data || []);
   }
 
+  function pedirExclusaoPrato(p: Prato) {
+    setItemParaDeletar({
+      id: p.id,
+      quantidade_disponivel: 0,
+      custo_unitario: 0,
+      estoque_minimo: 0,
+      unidade: '',
+      ingredientes: {
+        id: p.id,
+        nome: p.nome,
+        tipo_produto: 'prato',
+        ativo: p.ativo,
+      },
+    });
+  }
+
   async function confirmarExclusao() {
-    if (!itemParaDeletar?.ingredientes) return;
+    if (!itemParaDeletar || !itemParaDeletar.ingredientes) return;
     setDeletando(true);
     try {
       await deletarIngrediente(supabase, itemParaDeletar.ingredientes.id);
@@ -124,6 +160,9 @@ export default function EstoquePage() {
       setDeletando(false);
     }
   }
+
+  const mostrarVazio = itens.length === 0 && pratos.length === 0;
+  const mostrarTabela = itens.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -138,22 +177,22 @@ export default function EstoquePage() {
           </Link>
         </div>
 
-        {/* FILTROS */}
         <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Tipo</label>
-            <div className="flex gap-1">
-              {(['todos', 'ingrediente', 'prato', 'acabado'] as const).map((t) => (
+            <div className="flex gap-1 flex-wrap">
+              {(['todos', 'ingrediente', 'prato', 'acabado'] as FiltroTipo[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setFiltroTipo(t)}
-                  className={`text-sm px-3 py-1.5 rounded-lg font-medium transition ${
-                    filtroTipo === t
+                  className={
+                    'text-sm px-3 py-1.5 rounded-lg font-medium transition ' +
+                    (filtroTipo === t
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                  }
                 >
-                  {t === 'todos' ? 'Todos' : t === 'ingrediente' ? '🧂 Ingrediente' : t === 'prato' ? '🍽️ Prato' : '🍕 Acabado'}
+                  {rotuloTipo(t)}
                 </button>
               ))}
             </div>
@@ -161,18 +200,19 @@ export default function EstoquePage() {
 
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
-            <div className="flex gap-1">
-              {(['todos', 'ativo', 'inativo'] as const).map((s) => (
+            <div className="flex gap-1 flex-wrap">
+              {(['todos', 'ativo', 'inativo'] as FiltroAtivo[]).map((s) => (
                 <button
                   key={s}
                   onClick={() => setFiltroAtivo(s)}
-                  className={`text-sm px-3 py-1.5 rounded-lg font-medium transition ${
-                    filtroAtivo === s
+                  className={
+                    'text-sm px-3 py-1.5 rounded-lg font-medium transition ' +
+                    (filtroAtivo === s
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                  }
                 >
-                  {s === 'todos' ? 'Todos' : s === 'ativo' ? '✅ Ativos' : '⏸️ Inativos'}
+                  {rotuloAtivo(s)}
                 </button>
               ))}
             </div>
@@ -181,183 +221,184 @@ export default function EstoquePage() {
 
         {loading ? (
           <p className="text-center py-12 text-gray-600">Carregando...</p>
-                ) : itens.length === 0 && pratos.length > 0 ? null : itens.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-600">Nenhum item encontrado</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Tenta mudar os filtros ou cadastra um novo produto
-            </p>
-          </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Produto</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Tipo</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Quantidade</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Mínimo</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Custo (R$)</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Total (R$)</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {itens.map((item) => {
-                  const total = (item.quantidade_disponivel || 0) * (item.custo_unitario || 0);
-                  const status = calcularStatus(item.quantidade_disponivel, item.estoque_minimo);
-                  const statusInfo = getStatusDisplay(status);
-                  const inativo = item.ingredientes?.ativo === false;
+          <>
+            {mostrarVazio && (
+              <div className="bg-white rounded-lg shadow p-8 text-center">
+                <p className="text-gray-600">Nenhum item encontrado</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Tenta mudar os filtros ou cadastra um novo produto
+                </p>
+              </div>
+            )}
 
-                  return (
-                    <tr key={item.id} className={`hover:bg-gray-50 ${inativo ? 'opacity-50' : ''}`}>
-                      <td className="px-4 py-4 text-sm">
-                        <span className={statusInfo.cor}>
-                          {statusInfo.emoji} {statusInfo.label}
-                        </span>
-                        {inativo && <span className="ml-1 text-xs text-gray-400">(inativo)</span>}
-                      </td>
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                        {item.ingredientes?.nome || 'N/A'}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-600">
-                        {item.ingredientes?.tipo_produto === 'acabado' ? '🍕 Acabado' : item.ingredientes?.tipo_produto === 'prato' ? '🍽️ Prato' : '🧂 Ingrediente'}
-                      </td>
-                      <td className="px-4 py-4 text-right text-sm text-gray-600">
-                        {item.quantidade_disponivel?.toFixed(2)} {item.unidade}
-                      </td>
-                      <td className="px-4 py-4 text-right text-sm text-gray-500">
-                        {item.estoque_minimo?.toFixed(2)} {item.unidade}
-                      </td>
-                      <td className="px-4 py-4 text-right text-sm text-gray-600">
-                        R$ {(item.custo_unitario || 0).toFixed(2)}
-                      </td>
-                      <td className="px-4 py-4 text-right text-sm font-semibold text-gray-900">
-                        R$ {total.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex gap-1 justify-center flex-wrap">
-                          <button
-                            onClick={() => { setItemMovimentacao(item); setTipoMovimentacao('entrada'); }}
-                            className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded"
-                            title="Registrar entrada"
-                          >
-                            ➕
-                          </button>
-                          <button
-                            onClick={() => { setItemMovimentacao(item); setTipoMovimentacao('consumo'); }}
-                            className="text-xs bg-orange-100 hover:bg-orange-200 text-orange-700 px-2 py-1 rounded"
-                            title="Registrar consumo"
-                          >
-                            ➖
-                          </button>
-                          <button
-                            onClick={() => abrirHistorico(item)}
-                            className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
-                            title="Ver histórico"
-                          >
-                            📋
-                          </button>
-                          <Link
-                            href={`/estoque/cadastro?id=${item.ingredientes?.id}`}
-                            className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-1 rounded"
-                            title="Editar"
-                          >
-                            ✏️
-                          </Link>
-                          <button
-                            onClick={() => setItemParaDeletar(item)}
-                            className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded"
-                            title="Excluir"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </td>
+            {mostrarTabela && (
+              <div className="bg-white rounded-lg shadow overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-100 border-b">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Produto</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Tipo</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Quantidade</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Mínimo</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Custo (R$)</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Total (R$)</th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">Ações</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="divide-y">
+                    {itens.map((item) => {
+                      const total = (item.quantidade_disponivel || 0) * (item.custo_unitario || 0);
+                      const status = calcularStatus(item.quantidade_disponivel, item.estoque_minimo);
+                      const statusInfo = getStatusDisplay(status);
+                      const inativo = item.ingredientes ? item.ingredientes.ativo === false : false;
+                      const tipo = item.ingredientes ? item.ingredientes.tipo_produto : '';
+                      const rotulo =
+                        tipo === 'acabado' ? '🍕 Acabado' : tipo === 'prato' ? '🍽️ Prato' : '🧂 Ingrediente';
+
+                      return (
+                        <tr key={item.id} className={'hover:bg-gray-50 ' + (inativo ? 'opacity-50' : '')}>
+                          <td className="px-4 py-4 text-sm">
+                            <span className={statusInfo.cor}>
+                              {statusInfo.emoji} {statusInfo.label}
+                            </span>
+                            {inativo && <span className="ml-1 text-xs text-gray-400">(inativo)</span>}
+                          </td>
+                          <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                            {item.ingredientes ? item.ingredientes.nome : 'N/A'}
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-600">{rotulo}</td>
+                          <td className="px-4 py-4 text-right text-sm text-gray-600">
+                            {Number(item.quantidade_disponivel).toFixed(2)} {item.unidade}
+                          </td>
+                          <td className="px-4 py-4 text-right text-sm text-gray-500">
+                            {Number(item.estoque_minimo).toFixed(2)} {item.unidade}
+                          </td>
+                          <td className="px-4 py-4 text-right text-sm text-gray-600">
+                            R$ {(item.custo_unitario || 0).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-4 text-right text-sm font-semibold text-gray-900">
+                            R$ {total.toFixed(2)}
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex gap-1 justify-center flex-wrap">
+                              <button
+                                onClick={() => {
+                                  setItemMovimentacao(item);
+                                  setTipoMovimentacao('entrada');
+                                }}
+                                className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded"
+                                title="Registrar entrada"
+                              >
+                                ➕
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setItemMovimentacao(item);
+                                  setTipoMovimentacao('consumo');
+                                }}
+                                className="text-xs bg-orange-100 hover:bg-orange-200 text-orange-700 px-2 py-1 rounded"
+                                title="Registrar consumo"
+                              >
+                                ➖
+                              </button>
+                              <button
+                                onClick={() => abrirHistorico(item)}
+                                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
+                                title="Ver histórico"
+                              >
+                                📋
+                              </button>
+                              <Link
+                                href={'/estoque/cadastro?id=' + (item.ingredientes ? item.ingredientes.id : '')}
+                                className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-1 rounded"
+                                title="Editar"
+                              >
+                                ✏️
+                              </Link>
+                              <button
+                                onClick={() => setItemParaDeletar(item)}
+                                className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded"
+                                title="Excluir"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {pratos.length > 0 && (
+              <div className="mt-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-1">🍽️ Pratos</h2>
+                <p className="text-xs text-gray-500 mb-3">
+                  Pratos são feitos na casa e não têm saldo próprio. O consumo vem dos ingredientes da ficha técnica.
+                </p>
+                <div className="bg-white rounded-lg shadow overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-100 border-b">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Prato</th>
+                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Preço de venda</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {pratos.map((p) => (
+                        <tr key={p.id} className={'hover:bg-gray-50 ' + (p.ativo ? '' : 'opacity-50')}>
+                          <td className="px-4 py-4 text-sm font-medium text-gray-900">{p.nome}</td>
+                          <td className="px-4 py-4 text-right text-sm text-gray-600">
+                            {Number(p.preco_venda) > 0 ? 'R$ ' + Number(p.preco_venda).toFixed(2) : 'Não definido'}
+                          </td>
+                          <td className="px-4 py-4 text-sm">{p.ativo ? '✅ Ativo' : '⏸️ Inativo'}</td>
+                          <td className="px-4 py-4">
+                            <div className="flex gap-1 justify-center">
+                              <Link
+                                href={'/cadastros/fichas-tecnicas/' + p.id}
+                                className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded"
+                              >
+                                🧾 Ficha
+                              </Link>
+                              <Link
+                                href={'/estoque/cadastro?id=' + p.id}
+                                className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-1 rounded"
+                                title="Editar"
+                              >
+                                ✏️
+                              </Link>
+                              <button
+                                onClick={() => pedirExclusaoPrato(p)}
+                                className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded"
+                                title="Excluir"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
-            {pratos.length > 0 && (
-        <div className="max-w-6xl mx-auto mt-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">🍽️ Pratos</h2>
-          <p className="text-xs text-gray-500 mb-3">
-            Pratos são feitos na casa e não têm saldo próprio. O consumo vem dos ingredientes da ficha técnica.
-          </p>
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Prato</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Preço de venda</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {pratos.map((p) => (
-                  <tr key={p.id} className={'hover:bg-gray-50 ' + (p.ativo ? '' : 'opacity-50')}>
-                    <td className="px-4 py-4 text-sm font-medium text-gray-900">{p.nome}</td>
-                    <td className="px-4 py-4 text-right text-sm text-gray-600">
-                      {Number(p.preco_venda) > 0 ? 'R$ ' + Number(p.preco_venda).toFixed(2) : 'Não definido'}
-                    </td>
-                    <td className="px-4 py-4 text-sm">{p.ativo ? '✅ Ativo' : '⏸️ Inativo'}</td>
-                    <td className="px-4 py-4">
-                      <div className="flex gap-1 justify-center">
-                        <Link
-                          href={'/cadastros/fichas-tecnicas/' + p.id}
-                          className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded"
-                        >
-                          🧾 Ficha
-                        </Link>
-                        <Link
-                          href={'/estoque/cadastro?id=' + p.id}
-                                                  <button
-                          onClick={() =>
-                            setItemParaDeletar({
-                              id: p.id,
-                              quantidade_disponivel: 0,
-                              custo_unitario: 0,
-                              estoque_minimo: 0,
-                              unidade: '',
-                              ingredientes: {
-                                id: p.id,
-                                nome: p.nome,
-                                tipo_produto: 'prato',
-                                ativo: p.ativo,
-                              },
-                            })
-                          }
-                          className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded"
-                          title="Excluir"
-                        >
-                          🗑️
-                        </button>
-                          className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-1 rounded"
-                        >
-                          ✏️
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
-      {/* MODAL: Entrada/Consumo */}
       {itemMovimentacao && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <form onSubmit={handleMovimentacao} className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
             <h2 className="text-lg font-bold mb-4">
-              {tipoMovimentacao === 'entrada' ? '➕ Entrada' : '➖ Consumo'} — {itemMovimentacao.ingredientes?.nome}
+              {tipoMovimentacao === 'entrada' ? '➕ Entrada' : '➖ Consumo'} —{' '}
+              {itemMovimentacao.ingredientes ? itemMovimentacao.ingredientes.nome : ''}
             </h2>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -386,12 +427,19 @@ export default function EstoquePage() {
               />
             </div>
             <div className="flex gap-3">
-              <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium">
+              <button
+                type="submit"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium"
+              >
                 Confirmar
               </button>
               <button
                 type="button"
-                onClick={() => { setItemMovimentacao(null); setQtdMov(''); setObsMov(''); }}
+                onClick={() => {
+                  setItemMovimentacao(null);
+                  setQtdMov('');
+                  setObsMov('');
+                }}
                 className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-medium"
               >
                 Cancelar
@@ -401,13 +449,19 @@ export default function EstoquePage() {
         </div>
       )}
 
-      {/* MODAL: Histórico */}
       {showHistorico && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">📋 Histórico — {showHistorico.ingredientes?.nome}</h2>
-              <button onClick={() => setShowHistorico(null)} className="text-gray-500 hover:text-gray-700 text-xl">✕</button>
+              <h2 className="text-lg font-bold">
+                📋 Histórico — {showHistorico.ingredientes ? showHistorico.ingredientes.nome : ''}
+              </h2>
+              <button
+                onClick={() => setShowHistorico(null)}
+                className="text-gray-500 hover:text-gray-700 text-xl"
+              >
+                ✕
+              </button>
             </div>
             {historico.length === 0 ? (
               <p className="text-gray-500 text-center py-8">Nenhuma movimentação ainda</p>
@@ -427,7 +481,9 @@ export default function EstoquePage() {
                       <td className="px-3 py-2">{mov.tipo === 'entrada' ? '➕ Entrada' : '➖ Consumo'}</td>
                       <td className="px-3 py-2 text-right">{mov.quantidade}</td>
                       <td className="px-3 py-2 text-gray-500">{mov.observacao || '-'}</td>
-                      <td className="px-3 py-2 text-gray-500">{new Date(mov.criado_em).toLocaleString('pt-BR')}</td>
+                      <td className="px-3 py-2 text-gray-500">
+                        {new Date(mov.criado_em).toLocaleString('pt-BR')}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -437,14 +493,17 @@ export default function EstoquePage() {
         </div>
       )}
 
-      {/* MODAL: Confirmação de exclusão */}
       {itemParaDeletar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
             <h2 className="text-lg font-bold mb-2 text-red-700">🗑️ Excluir produto?</h2>
             <p className="text-sm text-gray-600 mb-6">
-              Tem certeza que quer excluir <strong>{itemParaDeletar.ingredientes?.nome}</strong>?
-              Isso vai apagar o produto, o estoque e todo o histórico de movimentações. Essa ação não pode ser desfeita.
+              Tem certeza que quer excluir{' '}
+              <strong>{itemParaDeletar.ingredientes ? itemParaDeletar.ingredientes.nome : ''}</strong>?
+              {itemParaDeletar.ingredientes && itemParaDeletar.ingredientes.tipo_produto === 'prato'
+                ? ' Isso apaga o prato e a ficha técnica dele.'
+                : ' Isso apaga o produto, o estoque e todo o histórico de movimentações.'}{' '}
+              Essa ação não pode ser desfeita.
             </p>
             <div className="flex gap-3">
               <button
