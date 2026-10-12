@@ -7,12 +7,12 @@ import { createBrowserClient } from '@supabase/ssr';
 import './globals.css';
 
 const LINKS = [
-  { href: '/whatsapp', label: '💬 WhatsApp' },
-  { href: '/estoque', label: '📦 Estoque' },
-  { href: '/cadastros', label: '📋 Cadastros' },
-  { href: '/delivery', label: '🛵 Delivery' },
-  { href: '/compras', label: '🛒 Compras' },
-    { href: '/financeiro', label: '💰 Financeiro' },
+  { href: '/whatsapp', label: 'WhatsApp' },
+  { href: '/estoque', label: 'Estoque' },
+  { href: '/cadastros', label: 'Cadastros' },
+  { href: '/delivery', label: 'Delivery' },
+  { href: '/compras', label: 'Compras' },
+  { href: '/financeiro', label: 'Financeiro' },
 ];
 
 export default function RootLayout({
@@ -41,68 +41,73 @@ export default function RootLayout({
   function classeLink(href: string) {
     const ativo = pathname.startsWith(href);
     return (
-      'font-medium transition ' +
-      (ativo ? 'text-blue-400' : 'text-white hover:text-blue-400')
+      'block rounded-lg px-3 py-2.5 text-[15px] transition ' +
+      (ativo
+        ? 'bg-[#DCEEF2] text-[#0B4F5E] font-semibold'
+        : 'text-[#5B6B73] hover:bg-[#F1F5F7] hover:text-[#16252B]')
+    );
+  }
+
+  if (naLogin) {
+    return (
+      <html lang="pt-BR">
+        <body className="bg-[#EEF2F4]">
+          <main>{children}</main>
+        </body>
+      </html>
     );
   }
 
   return (
     <html lang="pt-BR">
-      <body className="bg-gray-900">
-        {!naLogin && (
-          <nav className="bg-gray-800 border-b border-gray-700">
-            <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6">
-              <div className="hidden md:flex items-center gap-6 flex-1">
-                {LINKS.map((l) => (
-                  <Link key={l.href} href={l.href} className={classeLink(l.href)}>
-                    {l.label}
-                  </Link>
-                ))}
-              </div>
+      <body className="bg-[#EEF2F4] text-[#16252B]">
+        <div className="min-h-screen md:flex">
+          {/* Barra superior (celular) */}
+          <header className="md:hidden sticky top-0 z-30 flex items-center justify-between bg-white border-b border-[#DCE3E7] px-4 h-14">
+            <span className="font-bold text-[#16252B]">Sabor Gestão</span>
+            <button
+              onClick={() => setAberto((v) => !v)}
+              className="h-10 w-10 text-2xl text-[#16252B]"
+              aria-label={aberto ? 'Fechar menu' : 'Abrir menu'}
+            >
+              {aberto ? '✕' : '☰'}
+            </button>
+          </header>
 
-              <span className="md:hidden text-white font-semibold flex-1">
-                Sabor Gestão
-              </span>
-
-              <button
-                onClick={() => setAberto((v) => !v)}
-                className="md:hidden text-white text-2xl px-2"
-                aria-label="Abrir menu"
-              >
-                {aberto ? '✕' : '☰'}
-              </button>
-
-              <button
-                onClick={handleSair}
-                className="hidden md:block text-sm text-gray-400 hover:text-red-400 transition"
-              >
-                Sair
-              </button>
-            </div>
-
-            {aberto && (
-              <div className="md:hidden border-t border-gray-700 px-4 py-2 flex flex-col">
-                {LINKS.map((l) => (
-                  <Link
-                    key={l.href}
-                    href={l.href}
-                    onClick={() => setAberto(false)}
-                    className={'py-3 ' + classeLink(l.href)}
-                  >
-                    {l.label}
-                  </Link>
-                ))}
-                <button
-                  onClick={handleSair}
-                  className="py-3 text-left text-gray-400 hover:text-red-400"
+          {/* Menu lateral */}
+          <aside
+            className={
+              (aberto ? 'block ' : 'hidden ') +
+              'md:flex md:flex-col md:w-60 md:shrink-0 md:sticky md:top-0 md:h-screen ' +
+              'bg-white border-r border-[#DCE3E7] p-4'
+            }
+          >
+            <p className="hidden md:block px-3 pt-2 pb-6 text-lg font-bold text-[#16252B]">
+              Sabor Gestão
+            </p>
+            <nav className="flex flex-col gap-1">
+              {LINKS.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setAberto(false)}
+                  className={classeLink(l.href)}
                 >
-                  Sair
-                </button>
-              </div>
-            )}
-          </nav>
-        )}
-        <main>{children}</main>
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
+            <button
+              onClick={handleSair}
+              className="mt-4 md:mt-auto rounded-lg px-3 py-2.5 text-left text-[15px] text-[#5B6B73] hover:bg-[#FADBD6] hover:text-[#B3261E] transition"
+            >
+              Sair
+            </button>
+          </aside>
+
+          {/* Conteúdo */}
+          <main className="tema-claro flex-1 min-w-0">{children}</main>
+        </div>
       </body>
     </html>
   );

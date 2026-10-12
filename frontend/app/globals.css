@@ -1,3 +1,60 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* ===== Tema claro (ponte) ===== */
+.tema-claro { color: #16252B; }
+.tema-claro .bg-gray-900 { background-color: #EEF2F4; }
+.tema-claro .bg-gray-800 { background-color: #FFFFFF; }
+.tema-claro .bg-gray-700 { background-color: #F1F5F7; }
+.tema-claro .bg-gray-600 { background-color: #E3E9EC; }
+.tema-claro .hover\:bg-gray-700:hover { background-color: #E8EEF1; }
+.tema-claro .hover\:bg-gray-800:hover { background-color: #F1F5F7; }
+.tema-claro .border-gray-700,
+.tema-claro .border-gray-600,
+.tema-claro .border-gray-800 { border-color: #DCE3E7; }
+.tema-claro .divide-gray-700 > :not([hidden]) ~ :not([hidden]) { border-color: #DCE3E7; }
+
+.tema-claro .text-white { color: #16252B; }
+.tema-claro .text-gray-100,
+.tema-claro .text-gray-200 { color: #16252B; }
+.tema-claro .text-gray-300 { color: #2B3C44; }
+.tema-claro .text-gray-400,
+.tema-claro .text-gray-500 { color: #5B6B73; }
+.tema-claro .placeholder-gray-400::placeholder,
+.tema-claro .placeholder-gray-500::placeholder { color: #8FA0A8; }
+
+/* azul vira petróleo */
+.tema-claro .text-blue-400,
+.tema-claro .text-blue-300 { color: #0E6B7E; }
+.tema-claro .bg-blue-600,
+.tema-claro .bg-blue-500 { background-color: #0E6B7E; }
+.tema-claro .hover\:bg-blue-700:hover,
+.tema-claro .hover\:bg-blue-600:hover { background-color: #0B5A6A; }
+
+/* botões coloridos mantêm texto branco */
+.tema-claro [class*="bg-blue-5"].text-white,
+.tema-claro [class*="bg-blue-6"].text-white,
+.tema-claro [class*="bg-blue-7"].text-white,
+.tema-claro [class*="bg-green-5"].text-white,
+.tema-claro [class*="bg-green-6"].text-white,
+.tema-claro [class*="bg-green-7"].text-white,
+.tema-claro [class*="bg-red-5"].text-white,
+.tema-claro [class*="bg-red-6"].text-white,
+.tema-claro [class*="bg-red-7"].text-white,
+.tema-claro [class*="bg-orange-5"].text-white,
+.tema-claro [class*="bg-orange-6"].text-white,
+.tema-claro [class*="bg-yellow-6"].text-white { color: #FFFFFF; }
+
+/* selos de status (verde / amarelo / vermelho) */
+.tema-claro [class*="bg-green-9"],
+.tema-claro [class*="bg-green-8"] { background-color: #D9F0E3; }
+.tema-claro [class*="bg-yellow-9"],
+.tema-claro [class*="bg-yellow-8"] { background-color: #FFF0C7; }
+.tema-claro [class*="bg-red-9"],
+.tema-claro [class*="bg-red-8"] { background-color: #FADBD6; }
+.tema-claro .text-green-300,
+.tema-claro .text-green-400 { color: #1E6B3F; }
+.tema-claro .text-yellow-300,
+.tema-claro .text-yellow-400 { color: #8A5F00; }
+.tema-claro .text-red-300,
+.tema-claro .text-red-400 { color: #B3261E; }
