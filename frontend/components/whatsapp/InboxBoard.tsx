@@ -207,7 +207,7 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
               className="font-body text-xs font-medium px-2.5 py-1 rounded-full disabled:opacity-50"
               style={{ backgroundColor: c.faint + "20", color: c.muted }}
             >
-              {limpando ? "Limpando..." : "🗑️ Limpar tudo"}
+              {limpando ? "Limpando..." : "Limpar tudo"}
             </button>
           )}
         </div>
@@ -219,7 +219,7 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {COLUNAS.map((col) => {
           const itensColuna = mensagens.filter((m) => m.status === col.key);
           return (

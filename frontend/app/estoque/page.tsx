@@ -20,28 +20,72 @@ type ItemEstoque = {
   ingredientes: { id: string; nome: string; tipo_produto: string; ativo: boolean } | null;
 };
 
-type Prato = {
-  id: string;
-  nome: string;
-  preco_venda: number | null;
-  ativo: boolean;
-};
-
-type FiltroTipo = 'todos' | 'ingrediente' | 'prato' | 'acabado';
+type FiltroTipo = 'todos' | 'ingrediente' | 'acabado';
 type FiltroAtivo = 'todos' | 'ativo' | 'inativo';
 
 function rotuloTipo(t: FiltroTipo) {
   if (t === 'todos') return 'Todos';
-  if (t === 'ingrediente') return '🧂 Ingrediente';
-  if (t === 'prato') return '🍽️ Prato';
-  return '🍕 Acabado';
+  if (t === 'ingrediente') return 'Ingrediente';
+  return 'Acabado';
 }
 
 function rotuloAtivo(s: FiltroAtivo) {
   if (s === 'todos') return 'Todos';
-  if (s === 'ativo') return '✅ Ativos';
-  return '⏸️ Inativos';
+  if (s === 'ativo') return 'Ativos';
+  return 'Inativos';
 }
+
+const svgProps = {
+  width: 16,
+  height: 16,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 2,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+  'aria-hidden': true,
+};
+
+function IconPlus() {
+  return (
+    <svg {...svgProps}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+function IconMinus() {
+  return (
+    <svg {...svgProps}>
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+function IconList() {
+  return (
+    <svg {...svgProps}>
+      <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+    </svg>
+  );
+}
+function IconEdit() {
+  return (
+    <svg {...svgProps}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+    </svg>
+  );
+}
+function IconTrash() {
+  return (
+    <svg {...svgProps}>
+      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
+const BTN_ACAO =
+  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#DCE3E7] bg-white text-[#5B6B73] hover:bg-[#F1F5F7] hover:text-[#0E6B7E] transition';
 
 export default function EstoquePage() {
   const supabase = createBrowserClient(
@@ -51,7 +95,6 @@ export default function EstoquePage() {
   const unidadeId = process.env.NEXT_PUBLIC_UNIDADE_ID!;
 
   const [itens, setItens] = useState<ItemEstoque[]>([]);
-  const [pratos, setPratos] = useState<Prato[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos');
@@ -76,20 +119,6 @@ export default function EstoquePage() {
         ativo: filtroAtivo,
       });
       setItens(data as any);
-
-      if (filtroTipo === 'todos' || filtroTipo === 'prato') {
-        const { data: listaPratos } = await supabase
-          .from('ingredientes')
-          .select('id, nome, preco_venda, ativo')
-          .eq('tipo_produto', 'prato')
-          .order('nome');
-        const filtrados = (listaPratos || []).filter(
-          (p: any) => filtroAtivo === 'todos' || p.ativo === (filtroAtivo === 'ativo')
-        );
-        setPratos(filtrados as Prato[]);
-      } else {
-        setPratos([]);
-      }
     } catch (err) {
       console.error(err);
     }
@@ -131,22 +160,6 @@ export default function EstoquePage() {
     setHistorico(data || []);
   }
 
-  function pedirExclusaoPrato(p: Prato) {
-    setItemParaDeletar({
-      id: p.id,
-      quantidade_disponivel: 0,
-      custo_unitario: 0,
-      estoque_minimo: 0,
-      unidade: '',
-      ingredientes: {
-        id: p.id,
-        nome: p.nome,
-        tipo_produto: 'prato',
-        ativo: p.ativo,
-      },
-    });
-  }
-
   async function confirmarExclusao() {
     if (!itemParaDeletar || !itemParaDeletar.ingredientes) return;
     setDeletando(true);
@@ -161,35 +174,35 @@ export default function EstoquePage() {
     }
   }
 
-  const mostrarVazio = itens.length === 0 && pratos.length === 0;
-  const mostrarTabela = itens.length > 0;
-
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">📦 Estoque</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-[#16252B]">Estoque</h1>
+            <p className="text-sm text-[#5B6B73] mt-1">Ingredientes e produtos acabados</p>
+          </div>
           <Link
             href="/estoque/cadastro"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition"
+            className="bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white px-4 py-2.5 rounded-lg font-medium transition"
           >
             + Novo produto
           </Link>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4">
+        <div className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-6 flex flex-wrap gap-6">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Tipo</label>
-            <div className="flex gap-1 flex-wrap">
-              {(['todos', 'ingrediente', 'prato', 'acabado'] as FiltroTipo[]).map((t) => (
+            <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Tipo</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {(['todos', 'ingrediente', 'acabado'] as FiltroTipo[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setFiltroTipo(t)}
                   className={
-                    'text-sm px-3 py-1.5 rounded-lg font-medium transition ' +
+                    'text-sm px-3.5 py-1.5 rounded-full font-medium transition ' +
                     (filtroTipo === t
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                      ? 'bg-[#0E6B7E] text-white'
+                      : 'bg-[#F1F5F7] text-[#5B6B73] hover:bg-[#E3E9EC]')
                   }
                 >
                   {rotuloTipo(t)}
@@ -199,17 +212,17 @@ export default function EstoquePage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
-            <div className="flex gap-1 flex-wrap">
+            <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Status</label>
+            <div className="flex gap-1.5 flex-wrap">
               {(['todos', 'ativo', 'inativo'] as FiltroAtivo[]).map((s) => (
                 <button
                   key={s}
                   onClick={() => setFiltroAtivo(s)}
                   className={
-                    'text-sm px-3 py-1.5 rounded-lg font-medium transition ' +
+                    'text-sm px-3.5 py-1.5 rounded-full font-medium transition ' +
                     (filtroAtivo === s
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                      ? 'bg-[#0E6B7E] text-white'
+                      : 'bg-[#F1F5F7] text-[#5B6B73] hover:bg-[#E3E9EC]')
                   }
                 >
                   {rotuloAtivo(s)}
@@ -220,188 +233,131 @@ export default function EstoquePage() {
         </div>
 
         {loading ? (
-          <p className="text-center py-12 text-gray-600">Carregando...</p>
+          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
+        ) : itens.length === 0 ? (
+          <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
+            <p className="text-[#16252B]">Nenhum item encontrado</p>
+            <p className="text-sm text-[#5B6B73] mt-2">
+              Tente mudar os filtros ou cadastre um novo produto
+            </p>
+          </div>
         ) : (
-          <>
-            {mostrarVazio && (
-              <div className="bg-white rounded-lg shadow p-8 text-center">
-                <p className="text-gray-600">Nenhum item encontrado</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Tenta mudar os filtros ou cadastra um novo produto
-                </p>
-              </div>
-            )}
+          <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Produto</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Tipo</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Quantidade</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Mínimo</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Custo (R$)</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Total (R$)</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E6ECEF]">
+                {itens.map((item) => {
+                  const total = (item.quantidade_disponivel || 0) * (item.custo_unitario || 0);
+                  const status = calcularStatus(item.quantidade_disponivel, item.estoque_minimo);
+                  const statusInfo = getStatusDisplay(status);
+                  const inativo = item.ingredientes ? item.ingredientes.ativo === false : false;
+                  const tipo = item.ingredientes ? item.ingredientes.tipo_produto : '';
+                  const rotulo = tipo === 'acabado' ? 'Acabado' : 'Ingrediente';
 
-            {mostrarTabela && (
-              <div className="bg-white rounded-lg shadow overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-100 border-b">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Produto</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Tipo</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Quantidade</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Mínimo</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Custo (R$)</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Total (R$)</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">Ações</th>
+                  return (
+                    <tr key={item.id} className={'hover:bg-[#F8FAFB] ' + (inativo ? 'opacity-50' : '')}>
+                      <td className="px-4 py-4 text-sm">
+                        <span className={'inline-flex items-center font-medium ' + statusInfo.cor}>
+                          <span className="inline-block h-2 w-2 rounded-full bg-current mr-2" />
+                          {statusInfo.label}
+                        </span>
+                        {inativo && <span className="ml-1 text-xs text-[#8FA0A8]">(inativo)</span>}
+                      </td>
+                      <td className="px-4 py-4 text-sm font-medium text-[#16252B]">
+                        {item.ingredientes ? item.ingredientes.nome : 'N/A'}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-[#5B6B73]">{rotulo}</td>
+                      <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">
+                        {Number(item.quantidade_disponivel).toFixed(2)} {item.unidade}
+                      </td>
+                      <td className="px-4 py-4 text-right text-sm text-[#5B6B73]">
+                        {Number(item.estoque_minimo).toFixed(2)} {item.unidade}
+                      </td>
+                      <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">
+                        R$ {(item.custo_unitario || 0).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-4 text-right text-sm font-semibold text-[#16252B]">
+                        R$ {total.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex gap-1.5 justify-center flex-wrap">
+                          <button
+                            onClick={() => {
+                              setItemMovimentacao(item);
+                              setTipoMovimentacao('entrada');
+                            }}
+                            className={BTN_ACAO}
+                            title="Registrar entrada"
+                            aria-label="Registrar entrada"
+                          >
+                            <IconPlus />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setItemMovimentacao(item);
+                              setTipoMovimentacao('consumo');
+                            }}
+                            className={BTN_ACAO}
+                            title="Registrar consumo"
+                            aria-label="Registrar consumo"
+                          >
+                            <IconMinus />
+                          </button>
+                          <button
+                            onClick={() => abrirHistorico(item)}
+                            className={BTN_ACAO}
+                            title="Ver histórico"
+                            aria-label="Ver histórico"
+                          >
+                            <IconList />
+                          </button>
+                          <Link
+                            href={'/estoque/cadastro?id=' + (item.ingredientes ? item.ingredientes.id : '')}
+                            className={BTN_ACAO}
+                            title="Editar"
+                            aria-label="Editar"
+                          >
+                            <IconEdit />
+                          </Link>
+                          <button
+                            onClick={() => setItemParaDeletar(item)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#DCE3E7] bg-white text-[#5B6B73] hover:bg-[#FADBD6] hover:text-[#B3261E] transition"
+                            title="Excluir"
+                            aria-label="Excluir"
+                          >
+                            <IconTrash />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {itens.map((item) => {
-                      const total = (item.quantidade_disponivel || 0) * (item.custo_unitario || 0);
-                      const status = calcularStatus(item.quantidade_disponivel, item.estoque_minimo);
-                      const statusInfo = getStatusDisplay(status);
-                      const inativo = item.ingredientes ? item.ingredientes.ativo === false : false;
-                      const tipo = item.ingredientes ? item.ingredientes.tipo_produto : '';
-                      const rotulo =
-                        tipo === 'acabado' ? '🍕 Acabado' : tipo === 'prato' ? '🍽️ Prato' : '🧂 Ingrediente';
-
-                      return (
-                        <tr key={item.id} className={'hover:bg-gray-50 ' + (inativo ? 'opacity-50' : '')}>
-                          <td className="px-4 py-4 text-sm">
-                            <span className={statusInfo.cor}>
-                              {statusInfo.emoji} {statusInfo.label}
-                            </span>
-                            {inativo && <span className="ml-1 text-xs text-gray-400">(inativo)</span>}
-                          </td>
-                          <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                            {item.ingredientes ? item.ingredientes.nome : 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 text-sm text-gray-600">{rotulo}</td>
-                          <td className="px-4 py-4 text-right text-sm text-gray-600">
-                            {Number(item.quantidade_disponivel).toFixed(2)} {item.unidade}
-                          </td>
-                          <td className="px-4 py-4 text-right text-sm text-gray-500">
-                            {Number(item.estoque_minimo).toFixed(2)} {item.unidade}
-                          </td>
-                          <td className="px-4 py-4 text-right text-sm text-gray-600">
-                            R$ {(item.custo_unitario || 0).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-4 text-right text-sm font-semibold text-gray-900">
-                            R$ {total.toFixed(2)}
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="flex gap-1 justify-center flex-wrap">
-                              <button
-                                onClick={() => {
-                                  setItemMovimentacao(item);
-                                  setTipoMovimentacao('entrada');
-                                }}
-                                className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded"
-                                title="Registrar entrada"
-                              >
-                                ➕
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setItemMovimentacao(item);
-                                  setTipoMovimentacao('consumo');
-                                }}
-                                className="text-xs bg-orange-100 hover:bg-orange-200 text-orange-700 px-2 py-1 rounded"
-                                title="Registrar consumo"
-                              >
-                                ➖
-                              </button>
-                              <button
-                                onClick={() => abrirHistorico(item)}
-                                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
-                                title="Ver histórico"
-                              >
-                                📋
-                              </button>
-                              <Link
-                                href={'/estoque/cadastro?id=' + (item.ingredientes ? item.ingredientes.id : '')}
-                                className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-1 rounded"
-                                title="Editar"
-                              >
-                                ✏️
-                              </Link>
-                              <button
-                                onClick={() => setItemParaDeletar(item)}
-                                className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded"
-                                title="Excluir"
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {pratos.length > 0 && (
-              <div className="mt-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-1">🍽️ Pratos</h2>
-                <p className="text-xs text-gray-500 mb-3">
-                  Pratos são feitos na casa e não têm saldo próprio. O consumo vem dos ingredientes da ficha técnica.
-                </p>
-                <div className="bg-white rounded-lg shadow overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-100 border-b">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Prato</th>
-                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Preço de venda</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {pratos.map((p) => (
-                        <tr key={p.id} className={'hover:bg-gray-50 ' + (p.ativo ? '' : 'opacity-50')}>
-                          <td className="px-4 py-4 text-sm font-medium text-gray-900">{p.nome}</td>
-                          <td className="px-4 py-4 text-right text-sm text-gray-600">
-                            {Number(p.preco_venda) > 0 ? 'R$ ' + Number(p.preco_venda).toFixed(2) : 'Não definido'}
-                          </td>
-                          <td className="px-4 py-4 text-sm">{p.ativo ? '✅ Ativo' : '⏸️ Inativo'}</td>
-                          <td className="px-4 py-4">
-                            <div className="flex gap-1 justify-center">
-                              <Link
-                                href={'/cadastros/fichas-tecnicas/' + p.id}
-                                className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded"
-                              >
-                                🧾 Ficha
-                              </Link>
-                              <Link
-                                href={'/estoque/cadastro?id=' + p.id}
-                                className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-1 rounded"
-                                title="Editar"
-                              >
-                                ✏️
-                              </Link>
-                              <button
-                                onClick={() => pedirExclusaoPrato(p)}
-                                className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded"
-                                title="Excluir"
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       {itemMovimentacao && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <form onSubmit={handleMovimentacao} className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">
-              {tipoMovimentacao === 'entrada' ? '➕ Entrada' : '➖ Consumo'} —{' '}
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <form onSubmit={handleMovimentacao} className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold text-[#16252B] mb-4">
+              {tipoMovimentacao === 'entrada' ? 'Entrada' : 'Consumo'} —{' '}
               {itemMovimentacao.ingredientes ? itemMovimentacao.ingredientes.nome : ''}
             </h2>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-[#2B3C44] mb-1">
                 Quantidade ({itemMovimentacao.unidade})
               </label>
               <input
@@ -409,27 +365,27 @@ export default function EstoquePage() {
                 step="0.01"
                 value={qtdMov}
                 onChange={(e) => setQtdMov(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="w-full border border-[#C9D3D8] rounded-lg px-3 py-2 text-sm text-[#16252B] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
                 placeholder="0.00"
                 autoFocus
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-[#2B3C44] mb-1">
                 Observação (opcional)
               </label>
               <input
                 type="text"
                 value={obsMov}
                 onChange={(e) => setObsMov(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="w-full border border-[#C9D3D8] rounded-lg px-3 py-2 text-sm text-[#16252B] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
                 placeholder="Ex: Uso no almoço de segunda"
               />
             </div>
             <div className="flex gap-3">
               <button
                 type="submit"
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium"
+                className="flex-1 bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white py-2.5 rounded-lg font-medium"
               >
                 Confirmar
               </button>
@@ -440,7 +396,7 @@ export default function EstoquePage() {
                   setQtdMov('');
                   setObsMov('');
                 }}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-medium"
+                className="flex-1 bg-[#F1F5F7] hover:bg-[#E3E9EC] text-[#2B3C44] py-2.5 rounded-lg font-medium"
               >
                 Cancelar
               </button>
@@ -450,38 +406,39 @@ export default function EstoquePage() {
       )}
 
       {showHistorico && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">
-                📋 Histórico — {showHistorico.ingredientes ? showHistorico.ingredientes.nome : ''}
+              <h2 className="text-lg font-bold text-[#16252B]">
+                Histórico — {showHistorico.ingredientes ? showHistorico.ingredientes.nome : ''}
               </h2>
               <button
                 onClick={() => setShowHistorico(null)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
+                className="text-[#5B6B73] hover:text-[#16252B] text-xl h-9 w-9"
+                aria-label="Fechar"
               >
                 ✕
               </button>
             </div>
             {historico.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">Nenhuma movimentação ainda</p>
+              <p className="text-[#5B6B73] text-center py-8">Nenhuma movimentação ainda</p>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-gray-100">
+                <thead className="bg-[#F4F7F8]">
                   <tr>
-                    <th className="px-3 py-2 text-left">Tipo</th>
-                    <th className="px-3 py-2 text-right">Quantidade</th>
-                    <th className="px-3 py-2 text-left">Observação</th>
-                    <th className="px-3 py-2 text-left">Data</th>
+                    <th className="px-3 py-2 text-left text-[#5B6B73]">Tipo</th>
+                    <th className="px-3 py-2 text-right text-[#5B6B73]">Quantidade</th>
+                    <th className="px-3 py-2 text-left text-[#5B6B73]">Observação</th>
+                    <th className="px-3 py-2 text-left text-[#5B6B73]">Data</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-[#E6ECEF]">
                   {historico.map((mov) => (
-                    <tr key={mov.id} className="hover:bg-gray-50">
-                      <td className="px-3 py-2">{mov.tipo === 'entrada' ? '➕ Entrada' : '➖ Consumo'}</td>
-                      <td className="px-3 py-2 text-right">{mov.quantidade}</td>
-                      <td className="px-3 py-2 text-gray-500">{mov.observacao || '-'}</td>
-                      <td className="px-3 py-2 text-gray-500">
+                    <tr key={mov.id}>
+                      <td className="px-3 py-2 text-[#16252B]">{mov.tipo === 'entrada' ? 'Entrada' : 'Consumo'}</td>
+                      <td className="px-3 py-2 text-right text-[#16252B]">{mov.quantidade}</td>
+                      <td className="px-3 py-2 text-[#5B6B73]">{mov.observacao || '-'}</td>
+                      <td className="px-3 py-2 text-[#5B6B73]">
                         {new Date(mov.criado_em).toLocaleString('pt-BR')}
                       </td>
                     </tr>
@@ -494,28 +451,28 @@ export default function EstoquePage() {
       )}
 
       {itemParaDeletar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-2 text-red-700">🗑️ Excluir produto?</h2>
-            <p className="text-sm text-gray-600 mb-6">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold mb-2 text-[#B3261E]">Excluir produto?</h2>
+            <p className="text-sm text-[#5B6B73] mb-6">
               Tem certeza que quer excluir{' '}
-              <strong>{itemParaDeletar.ingredientes ? itemParaDeletar.ingredientes.nome : ''}</strong>?
-              {itemParaDeletar.ingredientes && itemParaDeletar.ingredientes.tipo_produto === 'prato'
-                ? ' Isso apaga o prato e a ficha técnica dele.'
-                : ' Isso apaga o produto, o estoque e todo o histórico de movimentações.'}{' '}
-              Essa ação não pode ser desfeita.
+              <strong className="text-[#16252B]">
+                {itemParaDeletar.ingredientes ? itemParaDeletar.ingredientes.nome : ''}
+              </strong>
+              ? Isso apaga o produto, o estoque e todo o histórico de movimentações. Essa ação não
+              pode ser desfeita.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={confirmarExclusao}
                 disabled={deletando}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-2 rounded-lg font-medium"
+                className="flex-1 bg-[#B3261E] hover:bg-[#971F18] disabled:opacity-50 text-white py-2.5 rounded-lg font-medium"
               >
                 {deletando ? 'Excluindo...' : 'Sim, excluir'}
               </button>
               <button
                 onClick={() => setItemParaDeletar(null)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-medium"
+                className="flex-1 bg-[#F1F5F7] hover:bg-[#E3E9EC] text-[#2B3C44] py-2.5 rounded-lg font-medium"
               >
                 Cancelar
               </button>
