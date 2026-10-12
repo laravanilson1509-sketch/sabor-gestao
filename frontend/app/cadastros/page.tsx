@@ -34,6 +34,18 @@ const CADASTROS = [
     descricao: 'Entregadores e dados de contato',
   },
     {
+    href: '/cadastros/pratos',
+    emoji: '🍽️',
+    titulo: 'Pratos',
+    descricao: 'Cadastre os pratos do cardápio: nome, pausar e excluir',
+  },
+  {
+    href: '/cadastros/fichas-tecnicas',
+    emoji: '🧾',
+    titulo: 'Fichas Técnicas',
+    descricao: 'Monte a receita dos pratos e defina o preço de venda',
+  },
+    {
     href: '/cadastros/fichas-tecnicas',
     emoji: '🧾',
     titulo: 'Fichas Técnicas',
