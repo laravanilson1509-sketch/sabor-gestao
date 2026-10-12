@@ -12,6 +12,7 @@ const LINKS = [
   { href: '/cadastros', label: '📋 Cadastros' },
   { href: '/delivery', label: '🛵 Delivery' },
   { href: '/compras', label: '🛒 Compras' },
+    { href: '/financeiro', label: '💰 Financeiro' },
 ];
 
 export default function RootLayout({
