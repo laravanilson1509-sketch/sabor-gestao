@@ -22,7 +22,7 @@ export async function listarPratos(supabase: SupabaseClient, unidadeId: string) 
 export async function getFichaTecnica(supabase: SupabaseClient, produtoId: string, unidadeId: string) {
   const { data: itens, error } = await supabase
     .from("ficha_tecnica_itens")
-    .select("id, ingrediente_id, quantidade, unidade, ingredientes(nome)")
+    .select("id, ingrediente_id, quantidade, unidade, ingredientes!ingrediente_id(nome)")
     .eq("produto_acabado_id", produtoId);
   if (error) throw error;
 
