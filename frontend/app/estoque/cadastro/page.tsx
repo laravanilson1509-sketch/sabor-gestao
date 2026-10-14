@@ -6,9 +6,12 @@ import { createBrowserClient } from '@supabase/ssr';
 import {
   getIngredientePorId,
   criarIngredienteComEstoque,
-  criarPratoSimples,
   atualizarIngrediente,
 } from '@/lib/queries/estoque';
+
+const INPUT =
+  'w-full border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
+const LABEL = 'block text-sm font-medium text-[#2B3C44] mb-1';
 
 function CadastroEstoquePageInner() {
   const router = useRouter();
@@ -27,7 +30,7 @@ function CadastroEstoquePageInner() {
   const [erro, setErro] = useState<string | null>(null);
 
   const [nome, setNome] = useState('');
-    const [tipoProduto, setTipoProduto] = useState<'ingrediente' | 'prato' | 'acabado'>('ingrediente');
+  const [tipoProduto, setTipoProduto] = useState<'ingrediente' | 'acabado'>('ingrediente');
   const [unidade, setUnidade] = useState('kg');
   const [quantidade, setQuantidade] = useState('0');
   const [custo, setCusto] = useState('');
@@ -40,8 +43,15 @@ function CadastroEstoquePageInner() {
     async function carregarDados() {
       try {
         const { ingrediente, estoque } = await getIngredientePorId(supabase, id!);
+
+        // Pratos agora são cadastrados e editados em Cadastros > Pratos
+        if (ingrediente.tipo_produto === 'prato') {
+          router.replace('/cadastros/pratos');
+          return;
+        }
+
         setNome(ingrediente.nome || '');
-        setTipoProduto(ingrediente.tipo_produto || 'ingrediente');
+        setTipoProduto(ingrediente.tipo_produto === 'acabado' ? 'acabado' : 'ingrediente');
         setAtivo(ingrediente.ativo ?? true);
         setUnidade(estoque?.unidade || 'kg');
         setQuantidade(String(estoque?.quantidade_disponivel || 0));
@@ -62,26 +72,17 @@ function CadastroEstoquePageInner() {
     setErro(null);
 
     if (!nome.trim()) {
-      setErro('Preenche o nome.');
+      setErro('Preencha o nome.');
       return;
     }
 
-    if (tipoProduto !== 'prato' && !custo) {
-      setErro('Preenche o custo unitário.');
+    if (!custo) {
+      setErro('Preencha o custo unitário.');
       return;
     }
 
     setSalvando(true);
     try {
-      if (tipoProduto === 'prato' && !editando) {
-        const novoId = await criarPratoSimples(supabase, {
-          nome: nome.trim(),
-          ativo,
-        });
-        router.push('/cadastros/fichas-tecnicas/' + novoId);
-        return;
-      }
-
       if (editando) {
         await atualizarIngrediente(supabase, id!, {
           nome: nome.trim(),
@@ -112,101 +113,93 @@ function CadastroEstoquePageInner() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Carregando...</p>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <p className="text-[#5B6B73]">Carregando...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
-
         {/* Cabeçalho */}
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.push('/estoque')}
-            className="text-gray-500 hover:text-gray-700 text-xl"
+            className="h-10 w-10 rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition"
+            aria-label="Voltar"
           >
             ←
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {editando ? '✏️ Editar produto' : '+ Novo produto'}
+          <h1 className="text-2xl font-bold text-[#16252B]">
+            {editando ? 'Editar produto' : 'Novo produto'}
           </h1>
         </div>
 
-        <form onSubmit={handleSalvar} className="bg-white rounded-lg shadow p-6 space-y-5">
-
+        <form
+          onSubmit={handleSalvar}
+          className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-5"
+        >
           {/* Nome */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nome do produto <span className="text-red-500">*</span>
+            <label className={LABEL}>
+              Nome do produto <span className="text-[#B3261E]">*</span>
             </label>
             <input
               type="text"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              placeholder="Ex: Farinha de Trigo ou Pizza Congelada"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ex: Farinha de trigo ou Refrigerante lata"
+              className={INPUT}
             />
           </div>
 
           {/* Tipo de produto */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#2B3C44] mb-2">
               Tipo de produto
             </label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setTipoProduto('ingrediente')}
-                className={`flex-1 py-3 rounded-lg border-2 font-medium text-xs transition ${
+                className={`py-3 px-4 rounded-lg border-2 text-left transition ${
                   tipoProduto === 'ingrediente'
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'border-[#0E6B7E] bg-[#DCEEF2] text-[#0B4F5E]'
+                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
                 }`}
               >
-                🧂 Ingrediente
-                <p className="text-xs font-normal mt-1 opacity-70">Insumo de estoque</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setTipoProduto('prato')}
-                className={`flex-1 py-3 rounded-lg border-2 font-medium text-xs transition ${
-                  tipoProduto === 'prato'
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                🍽️ Prato
-                <p className="text-xs font-normal mt-1 opacity-70">Feito na casa (ficha técnica)</p>
+                <span className="block text-sm font-semibold">Ingrediente</span>
+                <span className="block text-xs font-normal mt-1 opacity-80">
+                  Insumo usado nas fichas técnicas
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => setTipoProduto('acabado')}
-                className={`flex-1 py-3 rounded-lg border-2 font-medium text-xs transition ${
+                className={`py-3 px-4 rounded-lg border-2 text-left transition ${
                   tipoProduto === 'acabado'
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'border-[#0E6B7E] bg-[#DCEEF2] text-[#0B4F5E]'
+                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
                 }`}
               >
-                🍕 Acabado
-                <p className="text-xs font-normal mt-1 opacity-70">Pronto, revenda direta</p>
+                <span className="block text-sm font-semibold">Acabado</span>
+                <span className="block text-xs font-normal mt-1 opacity-80">
+                  Pronto para revenda direta
+                </span>
               </button>
             </div>
           </div>
 
-          {/* Unidade + Quantidade (só no cadastro novo, e não para Prato) */}
-          {!editando && tipoProduto !== 'prato' && (
-            <div className="grid grid-cols-2 gap-4">
+          {/* Unidade + Quantidade (só no cadastro novo) */}
+          {!editando && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Unidade de medida
-                </label>
+                <label className={LABEL}>Unidade de medida</label>
                 <select
                   value={unidade}
                   onChange={(e) => setUnidade(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={INPUT}
                 >
                   <option value="kg">kg — quilograma</option>
                   <option value="g">g — grama</option>
@@ -218,27 +211,24 @@ function CadastroEstoquePageInner() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Quantidade inicial
-                </label>
+                <label className={LABEL}>Quantidade inicial</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={quantidade}
                   onChange={(e) => setQuantidade(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={INPUT}
                 />
               </div>
             </div>
           )}
 
-          {/* Custo + Estoque mínimo (não aparece para Prato) */}
-          {tipoProduto !== 'prato' && (
-          <div className="grid grid-cols-2 gap-4">
+          {/* Custo + Estoque mínimo */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Custo unitário (R$) <span className="text-red-500">*</span>
+              <label className={LABEL}>
+                Custo unitário (R$) <span className="text-[#B3261E]">*</span>
               </label>
               <input
                 type="number"
@@ -247,13 +237,13 @@ function CadastroEstoquePageInner() {
                 value={custo}
                 onChange={(e) => setCusto(e.target.value)}
                 placeholder="0.00"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={INPUT}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={LABEL}>
                 Estoque mínimo
-                <span className="ml-1 text-xs text-gray-400">(alerta 🟡)</span>
+                <span className="ml-1 text-xs text-[#8FA0A8]">(dispara o alerta)</span>
               </label>
               <input
                 type="number"
@@ -262,47 +252,47 @@ function CadastroEstoquePageInner() {
                 value={estoqueMinimo}
                 onChange={(e) => setEstoqueMinimo(e.target.value)}
                 placeholder="Ex: 10"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={INPUT}
               />
             </div>
           </div>
-          )}
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
-            </label>
-            <div className="flex gap-3">
+            <label className="block text-sm font-medium text-[#2B3C44] mb-2">Status</label>
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setAtivo(true)}
-                className={`flex-1 py-2.5 rounded-lg border-2 font-medium text-sm transition ${
+                className={`py-2.5 rounded-lg border-2 font-medium text-sm transition ${
                   ativo
-                    ? 'border-green-600 bg-green-50 text-green-700'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'border-[#0E6B7E] bg-[#DCEEF2] text-[#0B4F5E]'
+                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
                 }`}
               >
-                ✅ Ativo
+                Ativo
               </button>
               <button
                 type="button"
                 onClick={() => setAtivo(false)}
-                className={`flex-1 py-2.5 rounded-lg border-2 font-medium text-sm transition ${
+                className={`py-2.5 rounded-lg border-2 font-medium text-sm transition ${
                   !ativo
-                    ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'border-[#B58300] bg-[#FFF0C7] text-[#7A5A0A]'
+                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
                 }`}
               >
-                ⏸️ Inativo
+                Inativo
               </button>
             </div>
           </div>
 
           {/* Erro */}
           {erro && (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              ⚠️ {erro}
+            <div
+              role="alert"
+              className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2"
+            >
+              {erro}
             </div>
           )}
 
@@ -311,14 +301,14 @@ function CadastroEstoquePageInner() {
             <button
               type="submit"
               disabled={salvando}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2.5 rounded-lg font-medium transition"
+              className="flex-1 bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white py-2.5 rounded-lg font-medium transition"
             >
               {salvando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Cadastrar produto'}
             </button>
             <button
               type="button"
               onClick={() => router.push('/estoque')}
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-lg font-medium transition"
+              className="flex-1 bg-[#F1F5F7] hover:bg-[#E3E9EC] text-[#2B3C44] py-2.5 rounded-lg font-medium transition"
             >
               Cancelar
             </button>
@@ -331,7 +321,13 @@ function CadastroEstoquePageInner() {
 
 export default function CadastroEstoquePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><p className="text-gray-600">Carregando...</p></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <p className="text-[#5B6B73]">Carregando...</p>
+        </div>
+      }
+    >
       <CadastroEstoquePageInner />
     </Suspense>
   );
