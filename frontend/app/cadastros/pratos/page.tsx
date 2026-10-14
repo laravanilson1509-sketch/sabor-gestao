@@ -13,6 +13,9 @@ type Prato = {
   ativo: boolean;
 };
 
+const BTN =
+  'text-sm px-3 py-1.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] hover:bg-[#F1F5F7] transition';
+
 export default function PratosPage() {
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -52,7 +55,7 @@ export default function PratosPage() {
     }
     const jaExiste = pratos.some((p) => p.nome.trim().toLowerCase() === nomeLimpo.toLowerCase());
     if (jaExiste) {
-      setErro('Ja existe um prato com esse nome.');
+      setErro('Já existe um prato com esse nome.');
       return;
     }
     setSalvando(true);
@@ -96,7 +99,7 @@ export default function PratosPage() {
 
   async function excluir(p: Prato) {
     const ok = window.confirm(
-      'Excluir o prato "' + p.nome + '"? Isso apaga tambem a ficha tecnica dele. Nao pode ser desfeito.'
+      'Excluir o prato "' + p.nome + '"? Isso apaga também a ficha técnica dele. Não pode ser desfeito.'
     );
     if (!ok) return;
     try {
@@ -108,91 +111,111 @@ export default function PratosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <Link href="/cadastros" className="text-gray-500 hover:text-gray-700 text-xl">
-            {'<-'}
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <Link
+            href="/cadastros"
+            className="h-10 w-10 flex items-center justify-center rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition"
+            aria-label="Voltar para Cadastros"
+          >
+            ←
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 flex-1">🍽️ Pratos</h1>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-[#16252B]">Pratos</h1>
+            <p className="text-sm text-[#5B6B73]">Pratos do cardápio e seus preços de venda</p>
+          </div>
           <button
             onClick={() => setShowForm((v) => !v)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition"
+            className="bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white px-4 py-2.5 rounded-lg font-medium transition"
           >
             {showForm ? 'Cancelar' : '+ Novo prato'}
           </button>
         </div>
 
         {showForm && (
-          <form onSubmit={handleCriar} className="bg-white rounded-lg shadow p-4 mb-6 flex gap-2 flex-wrap">
+          <form
+            onSubmit={handleCriar}
+            className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-6 flex gap-2 flex-wrap"
+          >
             <input
               type="text"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              placeholder="Nome do prato. Ex: Tacaca"
-              className="flex-1 min-w-48 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              placeholder="Nome do prato. Ex: Tacacá"
+              className="flex-1 min-w-48 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
               autoFocus
             />
             <button
               type="submit"
               disabled={salvando}
-              className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium"
             >
               {salvando ? 'Salvando...' : 'Cadastrar prato'}
             </button>
-            {erro && <p className="w-full text-sm text-red-600">{erro}</p>}
+            {erro && (
+              <p role="alert" className="w-full text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+                {erro}
+              </p>
+            )}
           </form>
         )}
 
         {loading ? (
-          <p className="text-center py-12 text-gray-600">Carregando...</p>
+          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
         ) : pratos.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-600">Nenhum prato cadastrado</p>
-            <p className="text-sm text-gray-500 mt-2">Clique em + Novo prato para comecar</p>
+          <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
+            <p className="text-[#16252B]">Nenhum prato cadastrado</p>
+            <p className="text-sm text-[#5B6B73] mt-2">Clique em + Novo prato para começar</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
+          <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-100 border-b">
+              <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Prato</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Preco de venda</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">Acoes</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Prato</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Preço de venda</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Status</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-[#E6ECEF]">
                 {pratos.map((p) => (
-                  <tr key={p.id} className={'hover:bg-gray-50 ' + (p.ativo ? '' : 'opacity-50')}>
-                    <td className="px-4 py-4 text-sm font-medium text-gray-900">{p.nome}</td>
-                    <td className="px-4 py-4 text-right text-sm text-gray-600">
-                      {Number(p.preco_venda) > 0 ? 'R$ ' + Number(p.preco_venda).toFixed(2) : 'Nao definido'}
+                  <tr key={p.id} className={'hover:bg-[#F8FAFB] ' + (p.ativo ? '' : 'opacity-60')}>
+                    <td className="px-4 py-4 text-sm font-medium text-[#16252B]">{p.nome}</td>
+                    <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">
+                      {Number(p.preco_venda) > 0
+                        ? 'R$ ' + Number(p.preco_venda).toFixed(2)
+                        : 'Não definido'}
                     </td>
-                    <td className="px-4 py-4 text-sm">{p.ativo ? 'Ativo' : 'Pausado'}</td>
+                    <td className="px-4 py-4 text-sm">
+                      {p.ativo ? (
+                        <span className="inline-block rounded-full bg-[#D9F0E3] text-[#1E6B3F] px-3 py-1 text-xs font-semibold">
+                          Ativo
+                        </span>
+                      ) : (
+                        <span className="inline-block rounded-full bg-[#FFF0C7] text-[#7A5A0A] px-3 py-1 text-xs font-semibold">
+                          Pausado
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-4">
-                      <div className="flex gap-1 justify-center flex-wrap">
+                      <div className="flex gap-1.5 justify-center flex-wrap">
                         <Link
                           href={'/cadastros/fichas-tecnicas/' + p.id}
-                          className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-lg"
+                          className="text-sm px-3 py-1.5 rounded-lg bg-[#DCEEF2] text-[#0B4F5E] font-medium hover:bg-[#C9E3EA] transition"
                         >
-                          Ficha tecnica
+                          Ficha técnica
                         </Link>
-                        <button
-                          onClick={() => renomear(p)}
-                          className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-1.5 rounded-lg"
-                        >
+                        <button onClick={() => renomear(p)} className={BTN}>
                           Renomear
                         </button>
-                        <button
-                          onClick={() => alternarAtivo(p)}
-                          className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg"
-                        >
+                        <button onClick={() => alternarAtivo(p)} className={BTN}>
                           {p.ativo ? 'Pausar' : 'Ativar'}
                         </button>
                         <button
                           onClick={() => excluir(p)}
-                          className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg"
+                          className="text-sm px-3 py-1.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] hover:bg-[#FADBD6] transition"
                         >
                           Excluir
                         </button>
