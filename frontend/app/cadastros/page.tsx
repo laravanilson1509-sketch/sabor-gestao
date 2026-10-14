@@ -2,11 +2,6 @@ import Link from 'next/link';
 
 const CARTOES = [
   {
-    href: '/estoque/cadastro',
-    titulo: 'Estoque',
-    descricao: 'Ingredientes e produtos acabados, com custo e estoque mínimo.',
-  },
-  {
     href: '/cadastros/pratos',
     titulo: 'Pratos',
     descricao: 'Pratos do cardápio, preço de venda e se vendem no WhatsApp.',
