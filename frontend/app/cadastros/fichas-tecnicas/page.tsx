@@ -45,54 +45,71 @@ export default function FichasTecnicasPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <Link href="/cadastros" className="text-gray-500 hover:text-gray-700 text-xl">
-            {'<-'}
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <Link
+            href="/cadastros"
+            className="h-10 w-10 flex items-center justify-center rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition"
+            aria-label="Voltar para Cadastros"
+          >
+            ←
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Fichas Tecnicas</h1>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-[#16252B]">Fichas técnicas</h1>
+            <p className="text-sm text-[#5B6B73]">
+              Monte a receita de cada prato para calcular o custo real e definir o preço de venda.
+            </p>
+          </div>
+          <Link
+            href="/cadastros/pratos"
+            className="px-4 py-2.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] font-medium hover:bg-[#F1F5F7] transition"
+          >
+            Ver pratos
+          </Link>
         </div>
-        <p className="text-gray-600 mb-6 text-sm">
-          Monte a receita de cada prato para calcular o custo real e definir o preco de venda.
-        </p>
 
         {loading ? (
-          <p className="text-center py-12 text-gray-600">Carregando...</p>
+          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
         ) : produtos.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-600">Nenhum prato cadastrado</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Cadastre um produto do tipo Prato em Cadastros / Estoque primeiro
+          <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
+            <p className="text-[#16252B]">Nenhum prato cadastrado</p>
+            <p className="text-sm text-[#5B6B73] mt-2">
+              Cadastre um prato em Cadastros → Pratos primeiro.
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
+          <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-100 border-b">
+              <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Prato</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Custo (receita)</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Preco venda</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Margem</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">Acoes</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Prato</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Custo (receita)</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Preço de venda</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Margem</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-[#E6ECEF]">
                 {produtos.map((p) => {
                   const preco = Number(p.preco_venda) || 0;
                   const custo = p.custoTotal || 0;
                   const margemCalculo = calcularMargem(custo, preco);
                   const margemReais = margemCalculo.margemReais;
                   const margemPct = margemCalculo.margemPct;
-                  const corMargem = margemPct >= 50 ? 'text-green-600' : margemPct >= 20 ? 'text-yellow-600' : 'text-red-600';
+                  const corMargem =
+                    margemPct >= 50
+                      ? 'text-[#1E6B3F]'
+                      : margemPct >= 20
+                      ? 'text-[#8A5F00]'
+                      : 'text-[#B3261E]';
 
                   return (
-                    <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900">{p.nome}</td>
-                      <td className="px-4 py-4 text-right text-sm text-gray-600">R$ {custo.toFixed(2)}</td>
-                      <td className="px-4 py-4 text-right text-sm text-gray-600">
-                        {preco > 0 ? 'R$ ' + preco.toFixed(2) : 'Nao definido'}
+                    <tr key={p.id} className="hover:bg-[#F8FAFB]">
+                      <td className="px-4 py-4 text-sm font-medium text-[#16252B]">{p.nome}</td>
+                      <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">R$ {custo.toFixed(2)}</td>
+                      <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">
+                        {preco > 0 ? 'R$ ' + preco.toFixed(2) : 'Não definido'}
                       </td>
                       <td className={'px-4 py-4 text-right text-sm font-semibold ' + corMargem}>
                         {preco > 0 ? margemPct.toFixed(0) + '% (R$ ' + margemReais.toFixed(2) + ')' : '-'}
@@ -100,7 +117,7 @@ export default function FichasTecnicasPage() {
                       <td className="px-4 py-4 text-center">
                         <Link
                           href={'/cadastros/fichas-tecnicas/' + p.id}
-                          className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-lg"
+                          className="text-sm px-3 py-1.5 rounded-lg bg-[#DCEEF2] text-[#0B4F5E] font-medium hover:bg-[#C9E3EA] transition"
                         >
                           Editar receita
                         </Link>

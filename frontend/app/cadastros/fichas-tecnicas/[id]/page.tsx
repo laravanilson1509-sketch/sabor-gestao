@@ -199,10 +199,10 @@ export default function EditarFichaTecnicaPage() {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button
-            onClick={() => router.push('/cadastros/fichas-tecnicas')}
+            onClick={() => (window.history.length > 1 ? router.back() : router.push('/cadastros/pratos'))}
             className="text-gray-500 hover:text-gray-700 text-xl"
           >
-            {'<-'}
+            ←
           </button>
           <h1 className="text-2xl font-bold text-gray-900">{produto ? produto.nome : ''}</h1>
         </div>
