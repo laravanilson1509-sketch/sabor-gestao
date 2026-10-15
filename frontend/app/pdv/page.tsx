@@ -623,7 +623,7 @@ export default function PdvPage() {
                         (p
                           ? 'bg-[#FFF0C7] border-[#E8D28A]'
                           : reservada
-                          ? 'bg-[#EAF4F7] border-[#B5D6DF]'
+                          ? 'bg-[#FADBD6] border-[#F2C2BB]'
                           : 'bg-white border-[#DCE3E7] hover:border-[#0E6B7E]')
                       }
                     >
@@ -638,7 +638,7 @@ export default function PdvPage() {
                             (p
                               ? 'bg-white text-[#7A5A0A]'
                               : reservada
-                              ? 'bg-[#DCEEF2] text-[#0B4F5E]'
+                              ? 'bg-white text-[#B3261E]'
                               : 'bg-[#D9F0E3] text-[#1E6B3F]')
                           }
                         >
