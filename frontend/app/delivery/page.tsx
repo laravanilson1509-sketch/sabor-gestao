@@ -23,13 +23,27 @@ type Pedido = {
 };
 
 const FILTROS: { label: string; value: StatusDelivery | 'todos' }[] = [
-  { label: '🔍 Todos', value: 'todos' },
-  { label: '🆕 Novos', value: 'novo' },
-  { label: '🍳 Em preparo', value: 'em_preparo' },
-  { label: '🛵 Saiu', value: 'saiu_entrega' },
-  { label: '✅ Entregues', value: 'entregue' },
-  { label: '❌ Cancelados', value: 'cancelado' },
+  { label: 'Todos', value: 'todos' },
+  { label: 'Novos', value: 'novo' },
+  { label: 'Em preparo', value: 'em_preparo' },
+  { label: 'Saiu para entrega', value: 'saiu_entrega' },
+  { label: 'Entregues', value: 'entregue' },
+  { label: 'Cancelados', value: 'cancelado' },
 ];
+
+// Cores dos selos de status (visual claro)
+const COR_STATUS: Record<string, string> = {
+  novo: 'bg-[#DCEEF2] text-[#0B4F5E]',
+  em_preparo: 'bg-[#FFF0C7] text-[#7A5A0A]',
+  saiu_entrega: 'bg-[#E6E4F7] text-[#3F3A8C]',
+  entregue: 'bg-[#D9F0E3] text-[#1E6B3F]',
+  cancelado: 'bg-[#FADBD6] text-[#9B2C1F]',
+};
+
+// Remove emojis/símbolos no começo de textos vindos da lib (ex: "🍳 Iniciar preparo")
+function limpar(texto: string | undefined | null) {
+  return (texto || '').replace(/^[^A-Za-zÀ-ÿ0-9]+/, '');
+}
 
 export default function DeliveryPage() {
   const supabase = createBrowserClient(
@@ -60,7 +74,9 @@ export default function DeliveryPage() {
     setLoading(false);
   }
 
-  useEffect(() => { carregar(); }, [filtro]);
+  useEffect(() => {
+    carregar();
+  }, [filtro]);
 
   async function avancarStatus(pedido: Pedido) {
     const statusInfo = getStatusDelivery(pedido.status);
@@ -70,7 +86,7 @@ export default function DeliveryPage() {
       await atualizarStatusDelivery(supabase, pedido.id, statusInfo.proximo);
       await carregar();
       if (pedidoAberto?.id === pedido.id) {
-        setPedidoAberto(prev => prev ? { ...prev, status: statusInfo.proximo! } : null);
+        setPedidoAberto((prev) => (prev ? { ...prev, status: statusInfo.proximo! } : null));
       }
     } catch (err: any) {
       alert('Erro: ' + err.message);
@@ -94,12 +110,18 @@ export default function DeliveryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">🛵 Delivery</h1>
-          <button onClick={carregar} className="text-sm text-blue-600 hover:underline">
-            🔄 Atualizar
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-[#16252B]">Delivery</h1>
+            <p className="text-sm text-[#5B6B73] mt-1">Acompanhe os pedidos de entrega</p>
+          </div>
+          <button
+            onClick={carregar}
+            className="px-4 py-2 rounded-lg border border-[#DCE3E7] bg-white text-sm font-medium text-[#2B3C44] hover:bg-[#F1F5F7] transition"
+          >
+            Atualizar
           </button>
         </div>
 
@@ -109,11 +131,12 @@ export default function DeliveryPage() {
             <button
               key={f.value}
               onClick={() => setFiltro(f.value)}
-              className={`text-sm px-3 py-1.5 rounded-lg font-medium transition ${
-                filtro === f.value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-              }`}
+              className={
+                'text-sm px-3.5 py-1.5 rounded-full font-medium transition ' +
+                (filtro === f.value
+                  ? 'bg-[#0E6B7E] text-white'
+                  : 'bg-white text-[#5B6B73] border border-[#DCE3E7] hover:bg-[#F1F5F7]')
+              }
             >
               {f.label}
             </button>
@@ -121,10 +144,10 @@ export default function DeliveryPage() {
         </div>
 
         {loading ? (
-          <p className="text-center py-12 text-gray-500">Carregando...</p>
+          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
         ) : pedidos.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-500">Nenhum pedido encontrado</p>
+          <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
+            <p className="text-[#16252B]">Nenhum pedido encontrado</p>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -132,54 +155,59 @@ export default function DeliveryPage() {
               const statusInfo = getStatusDelivery(pedido.status);
               const pagamentoInfo = getStatusPagamento(pedido.status_pagamento);
               const hora = new Date(pedido.criado_em).toLocaleTimeString('pt-BR', {
-                hour: '2-digit', minute: '2-digit'
+                hour: '2-digit',
+                minute: '2-digit',
               });
               const data = new Date(pedido.criado_em).toLocaleDateString('pt-BR');
+              const corStatus = COR_STATUS[pedido.status] || statusInfo.cor;
 
               return (
-                <div key={pedido.id} className="bg-white rounded-lg shadow p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusInfo.cor}`}>
-                          {statusInfo.emoji} {statusInfo.label}
+                <div key={pedido.id} className="bg-white border border-[#DCE3E7] rounded-xl p-4 md:p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex-1 min-w-[220px]">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <span className={'text-xs font-semibold px-2.5 py-1 rounded-full ' + corStatus}>
+                          {limpar(statusInfo.label)}
                         </span>
-                        <span className="text-xs text-gray-400">{data} às {hora}</span>
+                        <span className="text-xs text-[#8FA0A8]">
+                          {data} às {hora}
+                        </span>
                       </div>
-                      <p className="text-sm font-medium text-gray-900">📱 {pedido.telefone_cliente}</p>
-                      <p className="text-sm text-gray-600">📍 {pedido.endereco_entrega}</p>
-                      <p className="text-sm text-gray-600">
-                        💳 {pedido.forma_pagamento.charAt(0).toUpperCase() + pedido.forma_pagamento.slice(1)}
+                      <p className="text-sm font-semibold text-[#16252B]">{pedido.telefone_cliente}</p>
+                      <p className="text-sm text-[#5B6B73]">{pedido.endereco_entrega}</p>
+                      <p className="text-sm text-[#5B6B73] mt-1">
+                        Pagamento:{' '}
+                        {pedido.forma_pagamento.charAt(0).toUpperCase() + pedido.forma_pagamento.slice(1)}
                         {' — '}
-                        <span className={pagamentoInfo.cor}>{pagamentoInfo.label}</span>
+                        <span className={pagamentoInfo.cor}>{limpar(pagamentoInfo.label)}</span>
                       </p>
-                      <p className="text-sm font-semibold text-gray-900 mt-1">
+                      <p className="text-base font-bold text-[#16252B] mt-2">
                         Total: R$ {Number(pedido.valor_total).toFixed(2)}
                       </p>
                     </div>
 
-                    <div className="flex flex-col gap-2 shrink-0">
+                    <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">
                       <button
                         onClick={() => setPedidoAberto(pedido)}
-                        className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg"
+                        className="text-sm px-4 py-2 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] hover:bg-[#F1F5F7] transition"
                       >
-                        📋 Ver itens
+                        Ver itens
                       </button>
                       {statusInfo.proximo && (
                         <button
                           onClick={() => avancarStatus(pedido)}
                           disabled={atualizando === pedido.id}
-                          className="text-xs bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg"
+                          className="text-sm px-4 py-2 rounded-lg bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white font-medium transition"
                         >
-                          {atualizando === pedido.id ? '...' : statusInfo.labelProximo}
+                          {atualizando === pedido.id ? '...' : limpar(statusInfo.labelProximo)}
                         </button>
                       )}
                       {pedido.status !== 'cancelado' && pedido.status !== 'entregue' && (
                         <button
                           onClick={() => setParaCancelar(pedido)}
-                          className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg"
+                          className="text-sm px-4 py-2 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] hover:bg-[#FADBD6] transition"
                         >
-                          ❌ Cancelar
+                          Cancelar
                         </button>
                       )}
                     </div>
@@ -191,62 +219,79 @@ export default function DeliveryPage() {
         )}
       </div>
 
-      {/* Modal: Ver itens */}
+      {/* Janela: ver itens */}
       {pedidoAberto && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">📋 Itens do pedido</h2>
-              <button onClick={() => setPedidoAberto(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+              <h2 className="text-lg font-bold text-[#16252B]">Itens do pedido</h2>
+              <button
+                onClick={() => setPedidoAberto(null)}
+                className="h-9 w-9 text-xl text-[#5B6B73] hover:text-[#16252B]"
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
             </div>
             <div className="space-y-2 mb-4">
               {pedidoAberto.itens.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm">
-                  <span>{item.quantidade}x {item.nome}</span>
-                  <span className="font-medium">R$ {(item.quantidade * item.preco_unitario).toFixed(2)}</span>
+                <div key={i} className="flex justify-between text-sm text-[#2B3C44]">
+                  <span>
+                    {item.quantidade}x {item.nome}
+                  </span>
+                  <span className="font-medium">
+                    R$ {(item.quantidade * item.preco_unitario).toFixed(2)}
+                  </span>
                 </div>
               ))}
-              <div className="border-t pt-2 flex justify-between font-bold">
+              <div className="border-t border-[#DCE3E7] pt-2 flex justify-between font-bold text-[#16252B]">
                 <span>Total</span>
                 <span>R$ {Number(pedidoAberto.valor_total).toFixed(2)}</span>
               </div>
             </div>
-            <div className="text-sm text-gray-600 space-y-1 mb-4">
-              <p>📍 {pedidoAberto.endereco_entrega}</p>
-              <p>📱 {pedidoAberto.telefone_cliente}</p>
-              <p>💳 {pedidoAberto.forma_pagamento} — {getStatusPagamento(pedidoAberto.status_pagamento).label}</p>
+            <div className="text-sm text-[#5B6B73] space-y-1 mb-4">
+              <p>Endereço: {pedidoAberto.endereco_entrega}</p>
+              <p>Telefone: {pedidoAberto.telefone_cliente}</p>
+              <p>
+                Pagamento: {pedidoAberto.forma_pagamento} —{' '}
+                {limpar(getStatusPagamento(pedidoAberto.status_pagamento).label)}
+              </p>
             </div>
             {getStatusDelivery(pedidoAberto.status).proximo && (
               <button
-                onClick={() => { avancarStatus(pedidoAberto); setPedidoAberto(null); }}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium"
+                onClick={() => {
+                  avancarStatus(pedidoAberto);
+                  setPedidoAberto(null);
+                }}
+                className="w-full bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white py-2.5 rounded-lg font-medium"
               >
-                {getStatusDelivery(pedidoAberto.status).labelProximo}
+                {limpar(getStatusDelivery(pedidoAberto.status).labelProximo)}
               </button>
             )}
           </div>
         </div>
       )}
 
-      {/* Modal: Confirmar cancelamento */}
+      {/* Janela: confirmar cancelamento */}
       {paraCancelar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-2 text-red-700">❌ Cancelar pedido?</h2>
-            <p className="text-sm text-gray-600 mb-6">
-              Tem certeza que quer cancelar o pedido de <strong>{paraCancelar.telefone_cliente}</strong>?
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold mb-2 text-[#B3261E]">Cancelar pedido?</h2>
+            <p className="text-sm text-[#5B6B73] mb-6">
+              Tem certeza que quer cancelar o pedido de{' '}
+              <strong className="text-[#16252B]">{paraCancelar.telefone_cliente}</strong>?
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => cancelar(paraCancelar)}
                 disabled={atualizando === paraCancelar.id}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-2 rounded-lg font-medium"
+                className="flex-1 bg-[#B3261E] hover:bg-[#971F18] disabled:opacity-50 text-white py-2.5 rounded-lg font-medium"
               >
                 {atualizando === paraCancelar.id ? 'Cancelando...' : 'Sim, cancelar'}
               </button>
               <button
                 onClick={() => setParaCancelar(null)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-medium"
+                className="flex-1 bg-[#F1F5F7] hover:bg-[#E3E9EC] text-[#2B3C44] py-2.5 rounded-lg font-medium"
               >
                 Voltar
               </button>
