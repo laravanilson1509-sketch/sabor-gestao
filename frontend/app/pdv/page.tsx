@@ -30,6 +30,14 @@ const BTN_SECONDARY =
 
 const moeda = (v: number) => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
 
+type Categoria = 'todos' | 'prato' | 'acabado';
+
+const FILTROS_CARDAPIO: { valor: Categoria; rotulo: string }[] = [
+  { valor: 'todos', rotulo: 'Todos' },
+  { valor: 'prato', rotulo: 'Pratos' },
+  { valor: 'acabado', rotulo: 'Produtos acabados' },
+];
+
 export default function PdvPage() {
   const supabase = useMemo(
     () =>
@@ -56,6 +64,7 @@ export default function PdvPage() {
   const [pedido, setPedido] = useState<PedidoPdv | null>(null);
   const [itens, setItens] = useState<ItemPdv[]>([]);
   const [busca, setBusca] = useState('');
+  const [categoria, setCategoria] = useState<Categoria>('todos');
   const [forma, setForma] = useState('dinheiro');
   const [ocupado, setOcupado] = useState(false);
 
@@ -99,6 +108,7 @@ export default function PdvPage() {
     setErro(null);
     setPedido(p);
     setBusca('');
+    setCategoria('todos');
     setForma('dinheiro');
     try {
       setItens(await listarItens(supabase, p.id));
@@ -223,8 +233,10 @@ export default function PdvPage() {
   }
 
   const totalPedido = itens.reduce((s, i) => s + i.quantidade * Number(i.preco_unitario), 0);
-  const filtrado = cardapio.filter((p) =>
-    p.nome.toLowerCase().includes(busca.trim().toLowerCase())
+  const filtrado = cardapio.filter(
+    (p) =>
+      (categoria === 'todos' || p.tipo_produto === categoria) &&
+      p.nome.toLowerCase().includes(busca.trim().toLowerCase())
   );
   const mesaDoPedido = pedido?.mesa_id ? mesas.find((m) => m.id === pedido.mesa_id) : null;
   const tituloComanda = pedido
@@ -263,6 +275,22 @@ export default function PdvPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
             {/* Cardápio */}
             <div className="bg-white border border-[#DCE3E7] rounded-xl p-4">
+              <div className="flex flex-wrap gap-2 mb-3">
+                {FILTROS_CARDAPIO.map((f) => (
+                  <button
+                    key={f.valor}
+                    onClick={() => setCategoria(f.valor)}
+                    className={
+                      'text-sm px-3 py-1.5 rounded-lg font-medium transition border ' +
+                      (categoria === f.valor
+                        ? 'bg-[#0E6B7E] text-white border-[#0E6B7E]'
+                        : 'bg-white text-[#2B3C44] border-[#DCE3E7] hover:bg-[#F1F5F7]')
+                    }
+                  >
+                    {f.rotulo}
+                  </button>
+                ))}
+              </div>
               <input
                 type="text"
                 value={busca}
@@ -286,6 +314,9 @@ export default function PdvPage() {
                       className="text-left border border-[#DCE3E7] rounded-lg p-3 hover:border-[#0E6B7E] hover:bg-[#F1F8FA] disabled:opacity-60 transition"
                     >
                       <span className="block text-sm font-medium text-[#16252B]">{p.nome}</span>
+                      <span className="block text-xs text-[#8FA0A8] mt-0.5">
+                        {p.tipo_produto === 'acabado' ? 'Produto acabado' : 'Prato'}
+                      </span>
                       <span className="block text-sm font-semibold text-[#0E6B7E] mt-1">
                         {moeda(p.preco_venda)}
                       </span>
