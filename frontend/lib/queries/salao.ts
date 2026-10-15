@@ -207,3 +207,82 @@ export async function cancelarPedido(supabase: SupabaseClient, pedidoId: string)
     .eq('id', pedidoId);
   if (error) throw error;
 }
+// ---------- Reservas ----------
+
+export type Reserva = {
+  id: string;
+  mesa_id: string;
+  nome_cliente: string;
+  telefone: string | null;
+  pessoas: number;
+  data_hora: string;
+  observacao: string | null;
+  status: 'ativa' | 'concluida' | 'cancelada';
+};
+
+export async function listarReservasAtivas(supabase: SupabaseClient, unidadeId: string) {
+  const inicioHoje = new Date();
+  inicioHoje.setHours(0, 0, 0, 0);
+  const { data, error } = await supabase
+    .from('pdv_reservas')
+    .select('id, mesa_id, nome_cliente, telefone, pessoas, data_hora, observacao, status')
+    .eq('unidade_id', unidadeId)
+    .eq('status', 'ativa')
+    .gte('data_hora', inicioHoje.toISOString())
+    .order('data_hora');
+  if (error) throw error;
+  return (data || []) as Reserva[];
+}
+
+export async function criarReserva(
+  supabase: SupabaseClient,
+  params: {
+    unidadeId: string;
+    mesaId: string;
+    nomeCliente: string;
+    telefone?: string;
+    pessoas: number;
+    dataHora: string; // ISO
+    observacao?: string;
+  }
+) {
+  // impede duas reservas na mesma mesa com menos de 2 horas de diferença
+  const t = new Date(params.dataHora).getTime();
+  const de = new Date(t - 2 * 3600000).toISOString();
+  const ate = new Date(t + 2 * 3600000).toISOString();
+  const { data: conflito, error: erroConflito } = await supabase
+    .from('pdv_reservas')
+    .select('id')
+    .eq('mesa_id', params.mesaId)
+    .eq('status', 'ativa')
+    .gt('data_hora', de)
+    .lt('data_hora', ate)
+    .limit(1);
+  if (erroConflito) throw erroConflito;
+  if (conflito && conflito.length > 0) {
+    throw new Error('Essa mesa já tem reserva em um horário próximo (menos de 2 horas).');
+  }
+
+  const { error } = await supabase.from('pdv_reservas').insert({
+    unidade_id: params.unidadeId,
+    mesa_id: params.mesaId,
+    nome_cliente: params.nomeCliente,
+    telefone: params.telefone || null,
+    pessoas: params.pessoas,
+    data_hora: params.dataHora,
+    observacao: params.observacao || null,
+  });
+  if (error) throw error;
+}
+
+export async function atualizarStatusReserva(
+  supabase: SupabaseClient,
+  reservaId: string,
+  status: 'concluida' | 'cancelada'
+) {
+  const { error } = await supabase
+    .from('pdv_reservas')
+    .update({ status })
+    .eq('id', reservaId);
+  if (error) throw error;
+}

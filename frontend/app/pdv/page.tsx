@@ -14,11 +14,15 @@ import {
   alterarQuantidade,
   fecharPedido,
   cancelarPedido,
+  listarReservasAtivas,
+  criarReserva,
+  atualizarStatusReserva,
   FORMAS_PAGAMENTO,
   type Mesa,
   type PedidoPdv,
   type ItemPdv,
   type ProdutoCardapio,
+  type Reserva,
 } from '@/lib/queries/salao';
 
 const INPUT =
@@ -29,6 +33,28 @@ const BTN_SECONDARY =
   'px-4 py-2.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] text-sm font-medium hover:bg-[#F1F5F7] transition';
 
 const moeda = (v: number) => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+
+const hora = (iso: string) =>
+  new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+const ehHoje = (iso: string) => new Date(iso).toDateString() === new Date().toDateString();
+
+const dataHoraCurta = (iso: string) =>
+  ehHoje(iso)
+    ? 'Hoje, ' + hora(iso)
+    : new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) +
+      ', ' +
+      hora(iso);
+
+// valor padrão do campo de data/hora: daqui a 1 hora, minutos zerados
+function dataHoraPadrao() {
+  const d = new Date(Date.now() + 3600000);
+  d.setMinutes(0, 0, 0);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return (
+    d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes())
+  );
+}
 
 type Categoria = 'todos' | 'prato' | 'acabado';
 
@@ -52,6 +78,7 @@ export default function PdvPage() {
   const [mesas, setMesas] = useState<Mesa[]>([]);
   const [abertos, setAbertos] = useState<PedidoPdv[]>([]);
   const [cardapio, setCardapio] = useState<ProdutoCardapio[]>([]);
+  const [reservas, setReservas] = useState<Reserva[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -59,6 +86,16 @@ export default function PdvPage() {
   const [mostrarNovaMesa, setMostrarNovaMesa] = useState(false);
   const [numeroMesa, setNumeroMesa] = useState('');
   const [capacidadeMesa, setCapacidadeMesa] = useState('4');
+
+  // reserva
+  const [mesaReserva, setMesaReserva] = useState<Mesa | null>(null);
+  const [rNome, setRNome] = useState('');
+  const [rTelefone, setRTelefone] = useState('');
+  const [rPessoas, setRPessoas] = useState('2');
+  const [rDataHora, setRDataHora] = useState('');
+  const [rObs, setRObs] = useState('');
+  const [rErro, setRErro] = useState<string | null>(null);
+  const [rSalvando, setRSalvando] = useState(false);
 
   // comanda
   const [pedido, setPedido] = useState<PedidoPdv | null>(null);
@@ -83,8 +120,16 @@ export default function PdvPage() {
     } catch (e: any) {
       setErro(
         e?.message?.includes('pdv_')
-          ? 'As tabelas do PDV ainda não existem. Rode o SQL schema-pdv-simples.sql no Supabase.'
+          ? 'As tabelas do PDV ainda não existem. Rode o SQL do PDV no Supabase.'
           : e?.message || 'Erro ao carregar'
+      );
+    }
+    try {
+      setReservas(await listarReservasAtivas(supabase, unidadeId));
+    } catch (e: any) {
+      setReservas([]);
+      setErro(
+        'Não foi possível carregar as reservas. Rode o SQL da tabela pdv_reservas no Supabase.'
       );
     }
     setLoading(false);
@@ -120,6 +165,27 @@ export default function PdvPage() {
   async function clicarMesa(m: Mesa) {
     const existente = abertos.find((p) => p.mesa_id === m.id);
     if (existente) return abrirComanda(existente);
+
+    // reserva de hoje nesta mesa: confirma a chegada do cliente
+    const reservaHoje = reservas.find((r) => r.mesa_id === m.id && ehHoje(r.data_hora));
+    if (reservaHoje) {
+      const chegou = window.confirm(
+        'Mesa reservada para ' +
+          reservaHoje.nome_cliente +
+          ' às ' +
+          hora(reservaHoje.data_hora) +
+          '.\n\nO cliente chegou? OK abre a mesa e conclui a reserva.'
+      );
+      if (!chegou) return;
+      try {
+        await atualizarStatusReserva(supabase, reservaHoje.id, 'concluida');
+        setReservas((prev) => prev.filter((r) => r.id !== reservaHoje.id));
+      } catch (e: any) {
+        setErro(e.message || 'Erro ao concluir a reserva');
+        return;
+      }
+    }
+
     try {
       const novo = await abrirPedido(supabase, { unidadeId, canal: 'mesa', mesaId: m.id });
       setAbertos((prev) => [...prev, novo]);
@@ -163,6 +229,10 @@ export default function PdvPage() {
       setErro('Feche ou cancele o pedido da mesa antes de excluí-la.');
       return;
     }
+    if (reservas.some((r) => r.mesa_id === m.id)) {
+      setErro('Cancele as reservas da mesa antes de excluí-la.');
+      return;
+    }
     if (!window.confirm('Excluir a mesa ' + m.numero + '?')) return;
     try {
       await excluirMesa(supabase, m.id);
@@ -171,6 +241,70 @@ export default function PdvPage() {
       setErro(e.message || 'Erro ao excluir a mesa');
     }
   }
+
+  // ---------- reservas ----------
+
+  function abrirReserva(m: Mesa) {
+    setMesaReserva(m);
+    setRNome('');
+    setRTelefone('');
+    setRPessoas(String(Math.min(2, m.capacidade) || 2));
+    setRDataHora(dataHoraPadrao());
+    setRObs('');
+    setRErro(null);
+  }
+
+  async function salvarReserva(e: React.FormEvent) {
+    e.preventDefault();
+    if (!mesaReserva) return;
+    setRErro(null);
+    const pessoas = parseInt(rPessoas, 10);
+    if (!rNome.trim()) {
+      setRErro('Informe o nome do cliente.');
+      return;
+    }
+    if (!rDataHora) {
+      setRErro('Informe a data e a hora.');
+      return;
+    }
+    if (new Date(rDataHora).getTime() < Date.now() - 15 * 60000) {
+      setRErro('A data e hora da reserva já passaram.');
+      return;
+    }
+    if (!pessoas || pessoas <= 0) {
+      setRErro('Informe o número de pessoas.');
+      return;
+    }
+    setRSalvando(true);
+    try {
+      await criarReserva(supabase, {
+        unidadeId,
+        mesaId: mesaReserva.id,
+        nomeCliente: rNome.trim(),
+        telefone: rTelefone.trim(),
+        pessoas,
+        dataHora: new Date(rDataHora).toISOString(),
+        observacao: rObs.trim(),
+      });
+      setMesaReserva(null);
+      setReservas(await listarReservasAtivas(supabase, unidadeId));
+    } catch (err: any) {
+      setRErro(err.message || 'Erro ao salvar a reserva');
+    }
+    setRSalvando(false);
+  }
+
+  async function cancelarReserva(r: Reserva) {
+    if (!window.confirm('Cancelar a reserva de ' + r.nome_cliente + '?')) return;
+    try {
+      await atualizarStatusReserva(supabase, r.id, 'cancelada');
+      setReservas((prev) => prev.filter((x) => x.id !== r.id));
+    } catch (e: any) {
+      setErro(e.message || 'Erro ao cancelar a reserva');
+    }
+  }
+
+  // ---------- comanda ----------
 
   async function addProduto(prod: ProdutoCardapio) {
     if (!pedido || ocupado) return;
@@ -338,9 +472,7 @@ export default function PdvPage() {
                     <li key={i.id} className="py-3 flex items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-[#16252B] truncate">{i.nome}</p>
-                        <p className="text-xs text-[#5B6B73]">
-                          {moeda(i.preco_unitario)} cada
-                        </p>
+                        <p className="text-xs text-[#5B6B73]">{moeda(i.preco_unitario)} cada</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
@@ -421,7 +553,7 @@ export default function PdvPage() {
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-[#16252B]">PDV</h1>
-            <p className="text-sm text-[#5B6B73]">Mesas e vendas no balcão</p>
+            <p className="text-sm text-[#5B6B73]">Mesas, reservas e vendas no balcão</p>
           </div>
           <button onClick={novaVendaBalcao} className={BTN_PRIMARY}>
             Venda no balcão
@@ -481,6 +613,8 @@ export default function PdvPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-8">
                 {mesas.map((m) => {
                   const p = abertos.find((x) => x.mesa_id === m.id);
+                  const reservaHoje = reservas.find((r) => r.mesa_id === m.id && ehHoje(r.data_hora));
+                  const reservada = !p && !!reservaHoje;
                   return (
                     <div
                       key={m.id}
@@ -488,6 +622,8 @@ export default function PdvPage() {
                         'rounded-xl border p-4 transition ' +
                         (p
                           ? 'bg-[#FFF0C7] border-[#E8D28A]'
+                          : reservada
+                          ? 'bg-[#EAF4F7] border-[#B5D6DF]'
                           : 'bg-white border-[#DCE3E7] hover:border-[#0E6B7E]')
                       }
                     >
@@ -499,23 +635,103 @@ export default function PdvPage() {
                         <span
                           className={
                             'inline-block mt-2 rounded-full px-3 py-1 text-xs font-semibold ' +
-                            (p ? 'bg-white text-[#7A5A0A]' : 'bg-[#D9F0E3] text-[#1E6B3F]')
+                            (p
+                              ? 'bg-white text-[#7A5A0A]'
+                              : reservada
+                              ? 'bg-[#DCEEF2] text-[#0B4F5E]'
+                              : 'bg-[#D9F0E3] text-[#1E6B3F]')
                           }
                         >
-                          {p ? 'Ocupada · ' + moeda(p.total) : 'Livre'}
+                          {p
+                            ? 'Ocupada · ' + moeda(p.total)
+                            : reservada
+                            ? 'Reservada · ' + hora(reservaHoje!.data_hora)
+                            : 'Livre'}
                         </span>
+                        {reservada && (
+                          <span className="block text-xs text-[#5B6B73] mt-1 truncate">
+                            {reservaHoje!.nome_cliente}
+                          </span>
+                        )}
                       </button>
                       {!p && (
-                        <button
-                          onClick={() => handleExcluirMesa(m)}
-                          className="block mt-2 text-xs text-[#8FA0A8] hover:text-[#B3261E]"
-                        >
-                          Excluir
-                        </button>
+                        <div className="flex gap-3 mt-2">
+                          <button
+                            onClick={() => abrirReserva(m)}
+                            className="text-xs font-medium text-[#0E6B7E] hover:underline"
+                          >
+                            Reservar
+                          </button>
+                          <button
+                            onClick={() => handleExcluirMesa(m)}
+                            className="text-xs text-[#8FA0A8] hover:text-[#B3261E]"
+                          >
+                            Excluir
+                          </button>
+                        </div>
                       )}
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Lista de reservas */}
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[#5B6B73] mb-3">
+              Reservas
+            </h2>
+            {reservas.length === 0 ? (
+              <div className="bg-white border border-[#DCE3E7] rounded-xl p-6 text-center mb-8">
+                <p className="text-sm text-[#5B6B73]">
+                  Nenhuma reserva. Use o botão Reservar no card da mesa.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto mb-8">
+                <table className="w-full">
+                  <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Quando</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Mesa</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Cliente</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Pessoas</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E6ECEF]">
+                    {reservas.map((r) => {
+                      const mesa = mesas.find((m) => m.id === r.mesa_id);
+                      return (
+                        <tr key={r.id} className="hover:bg-[#F8FAFB]">
+                          <td className="px-4 py-3 text-sm font-medium text-[#16252B]">
+                            {dataHoraCurta(r.data_hora)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-[#2B3C44]">
+                            Mesa {mesa?.numero ?? '-'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-[#2B3C44]">
+                            {r.nome_cliente}
+                            {r.telefone && (
+                              <span className="block text-xs text-[#5B6B73]">{r.telefone}</span>
+                            )}
+                            {r.observacao && (
+                              <span className="block text-xs text-[#8FA0A8]">{r.observacao}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center text-sm text-[#2B3C44]">{r.pessoas}</td>
+                          <td className="px-4 py-3 text-center">
+                            <button
+                              onClick={() => cancelarReserva(r)}
+                              className="text-sm px-3 py-1.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] hover:bg-[#FADBD6] transition"
+                            >
+                              Cancelar
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
 
@@ -545,6 +761,110 @@ export default function PdvPage() {
           </>
         )}
       </div>
+
+      {/* Modal: nova reserva */}
+      {mesaReserva && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <form
+            onSubmit={salvarReserva}
+            className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4"
+          >
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold text-[#16252B]">
+                Reservar mesa {mesaReserva.numero}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setMesaReserva(null)}
+                className="text-xl text-[#8FA0A8] hover:text-[#16252B]"
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#2B3C44] mb-1">
+                Nome do cliente <span className="text-[#B3261E]">*</span>
+              </label>
+              <input
+                type="text"
+                value={rNome}
+                onChange={(e) => setRNome(e.target.value)}
+                className={INPUT + ' w-full'}
+                autoFocus
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-[#2B3C44] mb-1">Telefone</label>
+                <input
+                  type="tel"
+                  value={rTelefone}
+                  onChange={(e) => setRTelefone(e.target.value)}
+                  placeholder="(44) 99999-9999"
+                  className={INPUT + ' w-full'}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#2B3C44] mb-1">
+                  Pessoas <span className="text-[#B3261E]">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={rPessoas}
+                  onChange={(e) => setRPessoas(e.target.value)}
+                  className={INPUT + ' w-full'}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#2B3C44] mb-1">
+                Data e hora <span className="text-[#B3261E]">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={rDataHora}
+                onChange={(e) => setRDataHora(e.target.value)}
+                className={INPUT + ' w-full'}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#2B3C44] mb-1">Observação</label>
+              <input
+                type="text"
+                value={rObs}
+                onChange={(e) => setRObs(e.target.value)}
+                placeholder="Ex: aniversário, cadeirinha de bebê"
+                className={INPUT + ' w-full'}
+              />
+            </div>
+
+            {rErro && (
+              <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+                {rErro}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button type="submit" disabled={rSalvando} className={BTN_PRIMARY + ' flex-1'}>
+                {rSalvando ? 'Salvando...' : 'Salvar reserva'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMesaReserva(null)}
+                className={BTN_SECONDARY + ' flex-1'}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
