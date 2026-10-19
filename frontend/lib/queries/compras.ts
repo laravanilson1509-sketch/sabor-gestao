@@ -119,12 +119,12 @@ export async function criarCotacao(
 
 export function getStatusLabel(status: string) {
   const map: Record<string, { label: string; cor: string; emoji: string }> = {
-    aguardando_cotacao: { label: "Aguardando cotação", cor: "text-gray-600 bg-gray-100", emoji: "📝" },
-    cotado: { label: "Cotado", cor: "text-blue-600 bg-blue-100", emoji: "💰" },
-    aprovado: { label: "Aprovado", cor: "text-purple-600 bg-purple-100", emoji: "✅" },
-    pedido_enviado: { label: "Pedido enviado", cor: "text-orange-600 bg-orange-100", emoji: "📤" },
-    recebido: { label: "Recebido", cor: "text-green-600 bg-green-100", emoji: "📦" },
-    cancelado: { label: "Cancelado", cor: "text-red-600 bg-red-100", emoji: "❌" },
+    aguardando_cotacao: { label: "Aguardando cotação", cor: "text-[#5B6B73] bg-[#E3E9EC]", emoji: "📝" },
+    cotado: { label: "Cotado", cor: "text-[#0B4F5E] bg-[#DCEEF2]", emoji: "💰" },
+    aprovado: { label: "Aprovado", cor: "text-[#3F3A8C] bg-[#E6E4F7]", emoji: "✅" },
+    pedido_enviado: { label: "Pedido enviado", cor: "text-[#7A5A0A] bg-[#FFF0C7]", emoji: "📤" },
+    recebido: { label: "Recebido", cor: "text-[#1E6B3F] bg-[#D9F0E3]", emoji: "📦" },
+    cancelado: { label: "Cancelado", cor: "text-[#B3261E] bg-[#FADBD6]", emoji: "❌" },
   };
   return map[status] || map.aguardando_cotacao;
 }

@@ -142,16 +142,16 @@ export default function DetalheSolicitacaoPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Carregando...</p>
+      <div className="px-4 py-12 text-center">
+        <p className="text-[#5B6B73]">Carregando...</p>
       </div>
     );
   }
 
   if (!solicitacao) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Solicitação não encontrada</p>
+      <div className="px-4 py-12 text-center">
+        <p className="text-[#5B6B73]">Solicitação não encontrada</p>
       </div>
     );
   }
@@ -159,54 +159,54 @@ export default function DetalheSolicitacaoPage() {
   const statusInfo = getStatusLabel(solicitacao.status);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => router.push('/compras')} className="text-gray-500 hover:text-gray-700 text-xl">←</button>
+          <button onClick={() => router.push('/compras')} className="h-10 w-10 rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition">←</button>
           <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-gray-900">Solicitação de compra</h1>
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusInfo.cor}`}>
-                {statusInfo.emoji} {statusInfo.label}
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold text-[#16252B]">Solicitação de compra</h1>
+              <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${statusInfo.cor}`}>
+                {statusInfo.label}
               </span>
             </div>
-            <p className="text-xs text-gray-400">{new Date(solicitacao.criado_em).toLocaleString('pt-BR')}</p>
+            <p className="text-sm text-[#5B6B73]">{new Date(solicitacao.criado_em).toLocaleString('pt-BR')}</p>
           </div>
           {solicitacao.status !== 'recebido' && (
             <button
               onClick={() => setParaDeletar(true)}
-              className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg"
+              className="text-sm px-3 py-1.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] hover:bg-[#FADBD6] transition"
             >
-              🗑️ Excluir
+              Excluir
             </button>
           )}
         </div>
 
         {/* Itens solicitados */}
-        <div className="bg-white rounded-lg shadow p-4 mb-4">
-          <h2 className="font-semibold text-gray-900 mb-3">📝 Itens solicitados</h2>
-          <div className="space-y-1">
+        <div className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-4">
+          <h2 className="text-base font-semibold text-[#16252B] mb-3">Itens solicitados</h2>
+          <div className="divide-y divide-[#E6ECEF]">
             {itens.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm">
-                <span>{item.ingredientes?.nome}</span>
-                <span className="text-gray-500">{item.quantidade} {item.unidade}</span>
+              <div key={item.id} className="flex justify-between py-2 text-sm">
+                <span className="text-[#16252B]">{item.ingredientes?.nome}</span>
+                <span className="text-[#5B6B73]">{item.quantidade} {item.unidade}</span>
               </div>
             ))}
           </div>
           {solicitacao.observacao && (
-            <p className="text-xs text-gray-500 mt-3 pt-3 border-t">{solicitacao.observacao}</p>
+            <p className="text-sm text-[#5B6B73] mt-3 pt-3 border-t border-[#DCE3E7]">{solicitacao.observacao}</p>
           )}
         </div>
 
         {/* Cotações */}
         {(solicitacao.status === 'aguardando_cotacao' || solicitacao.status === 'cotado') && (
-          <div className="bg-white rounded-lg shadow p-4 mb-4">
+          <div className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-gray-900">💰 Cotações</h2>
+              <h2 className="text-base font-semibold text-[#16252B]">Cotações</h2>
               {!showCotacaoForm && (
                 <button
                   onClick={() => setShowCotacaoForm(true)}
-                  className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-lg"
+                  className="text-sm font-medium text-[#0E6B7E] hover:underline"
                 >
                   + Adicionar cotação
                 </button>
@@ -214,33 +214,33 @@ export default function DetalheSolicitacaoPage() {
             </div>
 
             {cotacoes.length === 0 && !showCotacaoForm && (
-              <p className="text-sm text-gray-500">Nenhuma cotação ainda</p>
+              <p className="text-sm text-[#5B6B73] py-6 text-center">Nenhuma cotação ainda</p>
             )}
 
             {cotacoes.map((cot) => (
-              <div key={cot.id} className="border rounded-lg p-3 mb-2">
+              <div key={cot.id} className="border border-[#DCE3E7] rounded-lg p-3 mb-2">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-sm">{cot.fornecedores?.nome}</span>
-                  <span className="font-bold text-sm">R$ {totalCotacao(cot).toFixed(2)}</span>
+                  <span className="font-medium text-sm text-[#16252B]">{cot.fornecedores?.nome}</span>
+                  <span className="font-bold text-sm text-[#0E6B7E]">R$ {totalCotacao(cot).toFixed(2)}</span>
                 </div>
                 <button
                   onClick={() => aprovarFornecedor(cot.fornecedor_id)}
                   disabled={processando}
-                  className="w-full text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 py-1.5 rounded-lg font-medium disabled:opacity-50"
+                  className="w-full text-sm px-3 py-2 rounded-lg border border-[#0E6B7E] bg-white text-[#0E6B7E] font-medium hover:bg-[#F1F8FA] disabled:opacity-50 transition"
                 >
-                  ✅ Aprovar este fornecedor
+                  Aprovar este fornecedor
                 </button>
               </div>
             ))}
 
             {showCotacaoForm && (
-              <form onSubmit={handleSalvarCotacao} className="border-t pt-4 mt-2 space-y-3">
+              <form onSubmit={handleSalvarCotacao} className="border-t border-[#DCE3E7] pt-4 mt-2 space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Fornecedor</label>
+                  <label className="block text-sm font-medium text-[#2B3C44] mb-1">Fornecedor</label>
                   <select
                     value={fornecedorCotacao}
                     onChange={(e) => setFornecedorCotacao(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    className="w-full border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
                   >
                     <option value="">Selecione...</option>
                     {fornecedores.map((f) => (
@@ -252,33 +252,33 @@ export default function DetalheSolicitacaoPage() {
                 <div className="space-y-2">
                   {itens.map((item) => (
                     <div key={item.id} className="flex items-center justify-between gap-3">
-                      <span className="text-sm flex-1">{item.ingredientes?.nome} ({item.quantidade} {item.unidade})</span>
+                      <span className="text-sm text-[#2B3C44] flex-1">{item.ingredientes?.nome} ({item.quantidade} {item.unidade})</span>
                       <input
                         type="number"
                         step="0.01"
                         placeholder="R$"
                         value={precos[item.id] || ''}
                         onChange={(e) => setPrecos({ ...precos, [item.id]: e.target.value })}
-                        className="w-24 border border-gray-300 rounded-lg px-2 py-1.5 text-sm"
+                        className="w-28 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
                       />
                     </div>
                   ))}
                 </div>
 
-                {erro && <p className="text-xs text-red-600">{erro}</p>}
+                {erro && <p role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">{erro}</p>}
 
                 <div className="flex gap-2">
                   <button
                     type="submit"
                     disabled={salvandoCotacao}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium"
+                    className="flex-1 bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
                   >
                     {salvandoCotacao ? 'Salvando...' : 'Salvar cotação'}
                   </button>
                   <button
                     type="button"
                     onClick={() => { setShowCotacaoForm(false); setErro(null); }}
-                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium"
+                    className="flex-1 px-4 py-2.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] text-sm font-medium hover:bg-[#F1F5F7] transition"
                   >
                     Cancelar
                   </button>
@@ -290,58 +290,58 @@ export default function DetalheSolicitacaoPage() {
 
         {/* Aprovado -> pedido enviado */}
         {solicitacao.status === 'aprovado' && (
-          <div className="bg-white rounded-lg shadow p-4 mb-4">
-            <h2 className="font-semibold text-gray-900 mb-2">✅ Fornecedor aprovado</h2>
-            <p className="text-sm text-gray-600 mb-3">{solicitacao.fornecedores?.nome}</p>
+          <div className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-4">
+            <h2 className="text-base font-semibold text-[#16252B] mb-2">Fornecedor aprovado</h2>
+            <p className="text-sm text-[#5B6B73] mb-3">{solicitacao.fornecedores?.nome}</p>
             <button
               onClick={marcarPedidoEnviado}
               disabled={processando}
-              className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white py-2.5 rounded-lg font-medium"
+              className="w-full bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
             >
-              📤 Marcar pedido como enviado
+              Marcar pedido como enviado
             </button>
           </div>
         )}
 
         {/* Pedido enviado -> recebido */}
         {solicitacao.status === 'pedido_enviado' && (
-          <div className="bg-white rounded-lg shadow p-4 mb-4">
-            <h2 className="font-semibold text-gray-900 mb-2">📤 Pedido enviado</h2>
-            <p className="text-sm text-gray-600 mb-3">Fornecedor: {solicitacao.fornecedores?.nome}</p>
+          <div className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-4">
+            <h2 className="text-base font-semibold text-[#16252B] mb-2">Pedido enviado</h2>
+            <p className="text-sm text-[#5B6B73] mb-3">Fornecedor: {solicitacao.fornecedores?.nome}</p>
             <button
               onClick={marcarRecebido}
               disabled={processando}
-              className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white py-2.5 rounded-lg font-medium"
+              className="w-full bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
             >
-              📦 Marcar como recebido (entra no estoque automaticamente)
+              Marcar como recebido (entra no estoque automaticamente)
             </button>
           </div>
         )}
 
         {/* Recebido */}
         {solicitacao.status === 'recebido' && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-green-700 font-medium">📦 Pedido recebido — itens já entraram no estoque automaticamente.</p>
+          <div className="bg-[#D9F0E3] rounded-xl p-4 mb-4">
+            <p className="text-sm text-[#1E6B3F] font-medium">Pedido recebido — itens já entraram no estoque automaticamente.</p>
           </div>
         )}
       </div>
 
       {paraDeletar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-2 text-red-700">🗑️ Excluir solicitação?</h2>
-            <p className="text-sm text-gray-600 mb-6">Essa ação não pode ser desfeita.</p>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold mb-2 text-[#16252B]">Excluir solicitação?</h2>
+            <p className="text-sm text-[#5B6B73] mb-6">Essa ação não pode ser desfeita.</p>
             <div className="flex gap-3">
               <button
                 onClick={confirmarExclusao}
                 disabled={processando}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-2 rounded-lg font-medium"
+                className="flex-1 bg-[#B3261E] hover:bg-[#971F18] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
               >
                 {processando ? 'Excluindo...' : 'Sim, excluir'}
               </button>
               <button
                 onClick={() => setParaDeletar(false)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-medium"
+                className="flex-1 px-4 py-2.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] text-sm font-medium hover:bg-[#F1F5F7] transition"
               >
                 Cancelar
               </button>

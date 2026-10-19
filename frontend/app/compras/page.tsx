@@ -37,24 +37,27 @@ export default function ComprasPage() {
   useEffect(() => { carregar(); }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">🛒 Compras</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-[#16252B]">Compras</h1>
+            <p className="text-sm text-[#5B6B73]">Solicitações, cotações e pedidos</p>
+          </div>
           <Link
             href="/compras/nova"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition"
+            className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
           >
             + Nova solicitação
           </Link>
         </div>
 
         {loading ? (
-          <p className="text-center py-12 text-gray-600">Carregando...</p>
+          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
         ) : itens.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-600">Nenhuma solicitação de compra ainda</p>
-            <p className="text-sm text-gray-500 mt-2">Clica em "+ Nova solicitação" para começar</p>
+          <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
+            <p className="text-[#2B3C44]">Nenhuma solicitação de compra ainda</p>
+            <p className="text-sm text-[#5B6B73] mt-2">Clica em "+ Nova solicitação" para começar</p>
           </div>
         ) : (
           <div className="grid gap-3">
@@ -65,21 +68,21 @@ export default function ComprasPage() {
                 <Link
                   key={s.id}
                   href={`/compras/${s.id}`}
-                  className="bg-white rounded-lg shadow p-4 hover:shadow-md transition flex items-center justify-between"
+                  className="bg-white border border-[#DCE3E7] rounded-xl p-4 hover:border-[#0E6B7E] transition flex items-center justify-between"
                 >
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusInfo.cor}`}>
-                        {statusInfo.emoji} {statusInfo.label}
+                      <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${statusInfo.cor}`}>
+                        {statusInfo.label}
                       </span>
-                      <span className="text-xs text-gray-400">{data}</span>
+                      <span className="text-xs text-[#8FA0A8]">{data}</span>
                     </div>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm font-medium text-[#16252B]">
                       {s.fornecedores?.nome ? `Fornecedor: ${s.fornecedores.nome}` : 'Sem fornecedor definido'}
                     </p>
-                    {s.observacao && <p className="text-xs text-gray-500 mt-1">{s.observacao}</p>}
+                    {s.observacao && <p className="text-xs text-[#5B6B73] mt-1">{s.observacao}</p>}
                   </div>
-                  <span className="text-gray-400">→</span>
+                  <span className="text-[#8FA0A8]">→</span>
                 </Link>
               );
             })}
