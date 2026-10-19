@@ -13,7 +13,7 @@ function Campo(props: {
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{props.rotulo}</label>
+      <label className="block text-sm font-medium text-[#2B3C44] mb-1">{props.rotulo}</label>
       <div className="flex items-center gap-2">
         <input
           type="number"
@@ -21,11 +21,11 @@ function Campo(props: {
           min="0"
           value={props.valor}
           onChange={(e) => props.onChange(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          className="w-full border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
         />
-        <span className="text-sm text-gray-500">{props.sufixo}</span>
+        <span className="text-sm text-[#5B6B73]">{props.sufixo}</span>
       </div>
-      <p className="text-xs text-gray-400 mt-1">{props.dica}</p>
+      <p className="text-xs text-[#8FA0A8] mt-1">{props.dica}</p>
     </div>
   );
 }
@@ -102,14 +102,14 @@ export default function ConfigPrecificacao({ onSalvo }: { onSalvo: () => void })
   }
 
   if (loading) {
-    return <div className="bg-white rounded-lg shadow p-6 text-gray-600">Carregando...</div>;
+    return <div className="bg-white border border-[#DCE3E7] rounded-xl p-6 text-sm text-[#5B6B73]">Carregando...</div>;
   }
 
   return (
-    <form onSubmit={handleSalvar} className="bg-white rounded-lg shadow p-6 space-y-4">
+    <form onSubmit={handleSalvar} className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Parametros de preco</h2>
-        <p className="text-sm text-gray-500">
+        <h2 className="text-lg font-bold text-[#16252B]">Parametros de preco</h2>
+        <p className="text-sm text-[#5B6B73]">
           Valem para todas as fichas tecnicas. O preco sugerido divide o custo por (1 - soma dos percentuais).
         </p>
       </div>
@@ -127,17 +127,17 @@ export default function ConfigPrecificacao({ onSalvo }: { onSalvo: () => void })
           dica="Usado para ratear os custos fixos entre os pratos" />
       </div>
 
-      <p className={'text-sm font-medium ' + (soma >= 100 ? 'text-red-600' : 'text-gray-700')}>
+      <p className={'text-sm font-medium ' + (soma >= 100 ? 'text-[#B3261E]' : 'text-[#2B3C44]')}>
         Soma dos percentuais: {soma.toFixed(2)}%
       </p>
 
-      {erro && <p className="text-sm text-red-600">{erro}</p>}
-      {msg && <p className="text-sm text-green-600">{msg}</p>}
+      {erro && <p className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">{erro}</p>}
+      {msg && <p className="text-sm text-[#1E6B3F] bg-[#D9F0E3] rounded-lg px-3 py-2">{msg}</p>}
 
       <button
         type="submit"
         disabled={salvando}
-        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2 rounded-lg font-medium"
+        className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
       >
         {salvando ? 'Salvando...' : 'Salvar parametros'}
       </button>
