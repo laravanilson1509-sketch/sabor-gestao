@@ -25,6 +25,12 @@ import {
   type ProdutoCardapio,
   type Reserva,
 } from '@/lib/queries/salao';
+import {
+  listarProdutosSemEstoque,
+  verificarEstoqueEnvio,
+  type FaltaEstoque,
+} from '@/lib/queries/estoqueVenda';
+import { registrarPendenciasEnvio, EVENTO_PENDENCIAS } from '@/lib/queries/pendenciasEstoque';
 
 const INPUT =
   'border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
@@ -39,6 +45,8 @@ const SELO_COZINHA = {
   preparando: { rotulo: 'Preparando', cor: 'bg-[#DCEEF2] text-[#0B4F5E]' },
   pronto: { rotulo: 'Pronto', cor: 'bg-[#D9F0E3] text-[#1E6B3F]' },
 };
+
+const qtd = (v: number) => Number(v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
 
 const moeda = (v: number) => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
 
@@ -112,6 +120,15 @@ export default function PdvPage() {
   const [categoria, setCategoria] = useState<Categoria>('todos');
   const [forma, setForma] = useState('dinheiro');
   const [ocupado, setOcupado] = useState(false);
+  // estoque: pratos sem estoque no cardápio e aviso antes de enviar para a cozinha
+  const [semEstoque, setSemEstoque] = useState<Set<string>>(new Set());
+  const [faltas, setFaltas] = useState<FaltaEstoque[] | null>(null);
+
+  function atualizarSemEstoque() {
+    listarProdutosSemEstoque(supabase, unidadeId)
+      .then(setSemEstoque)
+      .catch(() => setSemEstoque(new Set()));
+  }
 
   async function carregarInicio() {
     setLoading(true);
@@ -132,6 +149,7 @@ export default function PdvPage() {
           : e?.message || 'Erro ao carregar'
       );
     }
+    atualizarSemEstoque();
     try {
       setReservas(await listarReservasAtivas(supabase, unidadeId));
     } catch (e: any) {
@@ -341,11 +359,37 @@ export default function PdvPage() {
   async function enviarCozinha() {
     if (!pedido || ocupado) return;
     setOcupado(true);
+    setErro(null);
     try {
-      await enviarParaCozinha(supabase, pedido.id);
-      await recarregarComanda(pedido);
+      // só avisa: se faltar estoque, o atendente decide se envia mesmo assim
+      const falta = await verificarEstoqueEnvio(supabase, unidadeId, pedido.id);
+      if (falta.length > 0) {
+        setFaltas(falta);
+      } else {
+        await enviarParaCozinha(supabase, pedido.id);
+        await recarregarComanda(pedido);
+        atualizarSemEstoque();
+      }
     } catch (e: any) {
       setErro(e.message || 'Erro ao enviar para a cozinha');
+    }
+    setOcupado(false);
+  }
+
+  async function enviarMesmoAssim() {
+    if (!pedido || !faltas || ocupado) return;
+    setOcupado(true);
+    try {
+      const itensSemEstoque = [...new Set(faltas.flatMap((f) => f.itemIds))];
+      await enviarParaCozinha(supabase, pedido.id, itensSemEstoque);
+      await registrarPendenciasEnvio(supabase, { unidadeId, origem: tituloComanda, faltas });
+      window.dispatchEvent(new Event(EVENTO_PENDENCIAS));
+      setFaltas(null);
+      await recarregarComanda(pedido);
+      atualizarSemEstoque();
+    } catch (e: any) {
+      setErro(e.message || 'Erro ao enviar para a cozinha');
+      setFaltas(null);
     }
     setOcupado(false);
   }
@@ -476,6 +520,11 @@ export default function PdvPage() {
                       <span className="block text-sm font-semibold text-[#0E6B7E] mt-1">
                         {moeda(p.preco_venda)}
                       </span>
+                      {semEstoque.has(p.id) && (
+                        <span className="inline-block mt-1.5 rounded-full px-2 py-0.5 text-xs font-semibold bg-[#FADBD6] text-[#B3261E]">
+                          Sem estoque
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -582,6 +631,50 @@ export default function PdvPage() {
             </div>
           </div>
         </div>
+
+        {faltas && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div role="alertdialog" className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4">
+              <div>
+                <h2 className="text-lg font-bold text-[#16252B]">Falta estoque no sistema</h2>
+                <p className="text-sm text-[#5B6B73]">
+                  Confira com a cozinha antes de enviar. Se o ingrediente existe e só não foi lançado,
+                  dá para enviar mesmo assim, e o gerente confere depois.
+                </p>
+              </div>
+              <ul className="divide-y divide-[#E6ECEF] border-y border-[#E6ECEF]">
+                {faltas.map((f) => (
+                  <li key={f.ingrediente_id} className="py-2.5 text-sm">
+                    <p className="font-medium text-[#16252B]">
+                      {f.ingrediente_nome}
+                      <span className="font-normal text-[#5B6B73]"> · {f.produtos.join(', ')}</span>
+                    </p>
+                    <p className="text-[#B3261E]">
+                      Precisa de {qtd(f.necessario)} {f.unidade}, o sistema tem {qtd(f.disponivel)} {f.unidade}
+                    </p>
+                    {f.naFila > 0 && (
+                      <p className="text-xs text-[#8FA0A8]">
+                        {qtd(f.naFila)} {f.unidade} já estão reservados para pedidos na cozinha
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <div className="flex gap-3">
+                <button onClick={() => setFaltas(null)} disabled={ocupado} className={BTN_PRIMARY + ' flex-1'}>
+                  Não enviar
+                </button>
+                <button
+                  onClick={enviarMesmoAssim}
+                  disabled={ocupado}
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] text-sm font-medium hover:bg-[#FADBD6] disabled:opacity-50 transition"
+                >
+                  {ocupado ? 'Enviando...' : 'Enviar mesmo assim'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

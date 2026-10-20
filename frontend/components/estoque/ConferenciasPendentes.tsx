@@ -33,11 +33,10 @@ const dataHora = (iso: string) =>
 function descricao(p: PendenciaEstoque) {
   const onde = p.origem ? ' (' + p.origem + ')' : '';
   if (p.tipo === 'estoque_insuficiente') {
-    const faltou = Number(p.quantidade_necessaria || 0) - Number(p.quantidade_baixada || 0);
     return (
-      'Faltou ' + qtd(faltou) + ' ' + (p.unidade || '') + ' de ' + p.ingrediente_nome +
-      ' ao preparar ' + p.produto_nome + onde + '. O sistema só tinha ' +
-      qtd(p.quantidade_baixada) + ' ' + (p.unidade || '') + '.'
+      p.produto_nome + onde + ' foi enviado para a cozinha sem estoque no sistema: precisava de ' +
+      qtd(p.quantidade_necessaria) + ' ' + (p.unidade || '') + ' de ' + p.ingrediente_nome +
+      ', o sistema tinha ' + qtd(p.quantidade_baixada) + ' ' + (p.unidade || '') + '.'
     );
   }
   if (p.tipo === 'unidade_diferente') {
@@ -133,7 +132,7 @@ export default function ConferenciasPendentes({
         </span>
       </div>
       <p className="text-sm text-[#5B6B73] mb-3">
-        Itens preparados na cozinha em que a baixa automática do estoque não saiu completa.
+        Itens enviados sem estoque no sistema ou preparados sem baixa completa.
       </p>
 
       {erro && (

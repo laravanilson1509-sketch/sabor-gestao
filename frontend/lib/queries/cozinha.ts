@@ -12,7 +12,7 @@ export type CartaoCozinha = {
   status: StatusCozinha;
   chegouEm: string; // quando o pedido chegou na cozinha
   desde: string; // quando entrou no status atual
-  itens: { nome: string; quantidade: number; observacao: string | null }[];
+  itens: { nome: string; quantidade: number; observacao: string | null; semEstoque: boolean }[];
   itemIds: string[]; // PDV: os itens deste cartão
   deliveryId: string | null;
   deliveryStatus: string | null;
@@ -55,7 +55,7 @@ export async function listarFilaCozinha(
   if (pedidos.length > 0) {
     const { data, error } = await supabase
       .from('pdv_pedido_itens')
-      .select('id, pedido_id, nome, quantidade, observacao, status_cozinha, enviado_cozinha_em, iniciado_em, pronto_em')
+      .select('id, pedido_id, nome, quantidade, observacao, status_cozinha, enviado_cozinha_em, iniciado_em, pronto_em, sem_estoque')
       .in('pedido_id', pedidos.map((p) => p.id))
       .not('status_cozinha', 'is', null);
     if (error) throw error;
@@ -93,7 +93,12 @@ export async function listarFilaCozinha(
       status,
       chegouEm,
       desde,
-      itens: itens.map((i) => ({ nome: i.nome, quantidade: i.quantidade, observacao: i.observacao })),
+      itens: itens.map((i) => ({
+        nome: i.nome,
+        quantidade: i.quantidade,
+        observacao: i.observacao,
+        semEstoque: Boolean(i.sem_estoque),
+      })),
       itemIds: itens.map((i) => i.id),
       deliveryId: null,
       deliveryStatus: null,
@@ -119,6 +124,7 @@ export async function listarFilaCozinha(
         nome: i.nome,
         quantidade: i.quantidade,
         observacao: i.observacao || null,
+        semEstoque: false,
       })),
       itemIds: [],
       deliveryId: d.id,

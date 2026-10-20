@@ -188,6 +188,11 @@ export default function CozinhaPage() {
                                   <p className="text-base text-[#16252B]">
                                     <span className="font-bold">{i.quantidade}×</span> {i.nome}
                                   </p>
+                                  {i.semEstoque && (
+                                    <span className="inline-block mt-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-[#FADBD6] text-[#B3261E]">
+                                      Conferir estoque
+                                    </span>
+                                  )}
                                   {i.observacao && (
                                     <p className="text-sm text-[#7A5A0A] bg-[#FFF0C7] rounded px-2 py-0.5 mt-1">
                                       {i.observacao}

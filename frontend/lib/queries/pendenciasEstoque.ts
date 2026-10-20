@@ -1,8 +1,10 @@
-// lib/queries/pendenciasEstoque.ts — conferências geradas pela baixa automática
-// do estoque (quando a cozinha marca um item do PDV como pronto)
+// lib/queries/pendenciasEstoque.ts — conferências de estoque para o gerente:
+// itens enviados à cozinha sem estoque no sistema e baixas que não puderam ser
+// feitas (prato sem ficha técnica, unidade diferente)
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { registrarMovimentacao } from '@/lib/queries/estoque';
+import type { FaltaEstoque } from '@/lib/queries/estoqueVenda';
 
 export type PendenciaEstoque = {
   id: string;
@@ -32,6 +34,28 @@ export async function listarPendenciasAbertas(supabase: SupabaseClient, unidadeI
     .order('criado_em');
   if (error) throw error;
   return (data || []) as PendenciaEstoque[];
+}
+
+// atendente escolheu "Enviar mesmo assim" no PDV: o gerente confere o estoque depois
+export async function registrarPendenciasEnvio(
+  supabase: SupabaseClient,
+  params: { unidadeId: string; origem: string; faltas: FaltaEstoque[] }
+) {
+  const { error } = await supabase.from('pdv_estoque_pendencias').insert(
+    params.faltas.map((f) => ({
+      unidade_id: params.unidadeId,
+      item_id: f.itemIds[0] || null,
+      tipo: 'estoque_insuficiente',
+      produto_nome: f.produtos.join(', '),
+      ingrediente_id: f.ingrediente_id,
+      ingrediente_nome: f.ingrediente_nome,
+      quantidade_necessaria: f.necessario,
+      quantidade_baixada: f.disponivel, // o que o sistema tinha no momento do envio
+      unidade: f.unidade,
+      origem: params.origem,
+    }))
+  );
+  if (error) throw error;
 }
 
 export async function contarPendenciasAbertas(

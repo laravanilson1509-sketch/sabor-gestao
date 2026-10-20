@@ -188,8 +188,20 @@ export async function alterarQuantidade(
   if (error) throw error;
 }
 
-// manda para a cozinha todos os itens da comanda que ainda não foram enviados
-export async function enviarParaCozinha(supabase: SupabaseClient, pedidoId: string) {
+// manda para a cozinha todos os itens da comanda que ainda não foram enviados;
+// os de itensSemEstoque chegam lá marcados como "Conferir estoque"
+export async function enviarParaCozinha(
+  supabase: SupabaseClient,
+  pedidoId: string,
+  itensSemEstoque: string[] = []
+) {
+  if (itensSemEstoque.length > 0) {
+    const { error } = await supabase
+      .from('pdv_pedido_itens')
+      .update({ sem_estoque: true })
+      .in('id', itensSemEstoque);
+    if (error) throw error;
+  }
   const { error } = await supabase
     .from('pdv_pedido_itens')
     .update({ status_cozinha: 'novo', enviado_cozinha_em: new Date().toISOString() })
