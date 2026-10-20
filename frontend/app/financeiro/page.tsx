@@ -6,8 +6,10 @@ import CustosFixos from '@/components/financeiro/CustosFixos';
 import Contas from '@/components/financeiro/Contas';
 import FluxoCaixa from '@/components/financeiro/FluxoCaixa';
 import Dre from '@/components/financeiro/Dre';
+import PainelFinanceiro from '@/components/financeiro/PainelFinanceiro';
 
 const ABAS = [
+  { id: 'painel', rotulo: 'Painel' },
   { id: 'pagar', rotulo: 'Contas a pagar' },
   { id: 'receber', rotulo: 'Contas a receber' },
   { id: 'fluxo', rotulo: 'Fluxo de caixa' },
@@ -18,15 +20,15 @@ const ABAS = [
 type Aba = (typeof ABAS)[number]['id'];
 
 export default function FinanceiroPage() {
-  const [aba, setAba] = useState<Aba>('pagar');
+  const [aba, setAba] = useState<Aba>('painel');
   const [versao, setVersao] = useState(0);
 
   return (
     <div className="p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className={(aba === 'painel' ? 'max-w-6xl' : 'max-w-4xl') + ' mx-auto space-y-6'}>
         <div>
           <h1 className="text-2xl font-bold text-[#16252B]">Financeiro</h1>
-          <p className="text-sm text-[#5B6B73]">Contas, fluxo de caixa, resultado do mês e parâmetros de preço</p>
+          <p className="text-sm text-[#5B6B73]">Painel, contas, fluxo de caixa, resultado do mês e parâmetros de preço</p>
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1">
@@ -46,6 +48,7 @@ export default function FinanceiroPage() {
           ))}
         </div>
 
+        {aba === 'painel' && <PainelFinanceiro />}
         {aba === 'pagar' && <Contas key="pagar" tipo="pagar" />}
         {aba === 'receber' && <Contas key="receber" tipo="receber" />}
         {aba === 'fluxo' && <FluxoCaixa />}

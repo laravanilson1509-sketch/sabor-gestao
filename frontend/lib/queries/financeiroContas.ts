@@ -190,15 +190,15 @@ function somarDias(data: string, dias: number) {
   return dataLocal(new Date(ano, m - 1, d + dias));
 }
 
-// contas quitadas dentro do mês (pela data em que foram pagas/recebidas)
-async function listarQuitadasNoMes(
+// contas quitadas entre duas datas AAAA-MM-DD (fim não entra), pela data do pagamento
+export async function listarQuitadasEntre(
   supabase: SupabaseClient,
   tipo: TipoConta,
   unidadeId: string,
-  mes: string
+  inicioData: string,
+  fimData: string
 ) {
   const t = TABELA[tipo];
-  const { inicioData, fimData } = limitesMes(mes);
   const { data, error } = await supabase
     .from(t.tabela)
     .select('*')
@@ -208,6 +208,37 @@ async function listarQuitadasNoMes(
     .lt(t.quitado, fimData);
   if (error) throw error;
   return (data || []).map((c) => paraConta(tipo, c));
+}
+
+function listarQuitadasNoMes(supabase: SupabaseClient, tipo: TipoConta, unidadeId: string, mes: string) {
+  const { inicioData, fimData } = limitesMes(mes);
+  return listarQuitadasEntre(supabase, tipo, unidadeId, inicioData, fimData);
+}
+
+// CMV: o que saiu do estoque nas vendas, menos o que voltou (estorno da cozinha),
+// usando o custo unitário atual de cada produto
+export async function calcularCmv(supabase: SupabaseClient, unidadeId: string, inicio: string, fim: string) {
+  const [resMov, resCustos] = await Promise.all([
+    supabase
+      .from('movimentacoes_estoque')
+      .select('ingrediente_id, tipo, quantidade, observacao')
+      .eq('unidade_id', unidadeId)
+      .in('tipo', ['consumo', 'entrada'])
+      .gte('criado_em', inicio)
+      .lt('criado_em', fim),
+    supabase.from('estoque_saldo').select('ingrediente_id, custo_unitario').eq('unidade_id', unidadeId),
+  ]);
+  if (resMov.error) throw resMov.error;
+  if (resCustos.error) throw resCustos.error;
+
+  const custo = new Map((resCustos.data || []).map((e) => [e.ingrediente_id, Number(e.custo_unitario) || 0]));
+  let cmv = 0;
+  for (const m of resMov.data || []) {
+    const valor = Number(m.quantidade) * (custo.get(m.ingrediente_id) || 0);
+    if (m.tipo === 'consumo') cmv += valor;
+    else if ((m.observacao || '').startsWith('Estorno')) cmv -= valor;
+  }
+  return cmv;
 }
 
 // ---------- fluxo de caixa ----------
@@ -259,31 +290,12 @@ export async function carregarFluxoCaixa(supabase: SupabaseClient, unidadeId: st
 
 export async function carregarDre(supabase: SupabaseClient, unidadeId: string, mes: string) {
   const { inicio, fim } = limitesMes(mes);
-  const [vendas, recebidas, pagas, resMov, resCustos] = await Promise.all([
+  const [vendas, recebidas, pagas, cmv] = await Promise.all([
     listarVendas(supabase, unidadeId, inicio.toISOString(), fim.toISOString()),
     listarQuitadasNoMes(supabase, 'receber', unidadeId, mes),
     listarQuitadasNoMes(supabase, 'pagar', unidadeId, mes),
-    supabase
-      .from('movimentacoes_estoque')
-      .select('ingrediente_id, tipo, quantidade, observacao')
-      .eq('unidade_id', unidadeId)
-      .in('tipo', ['consumo', 'entrada'])
-      .gte('criado_em', inicio.toISOString())
-      .lt('criado_em', fim.toISOString()),
-    supabase.from('estoque_saldo').select('ingrediente_id, custo_unitario').eq('unidade_id', unidadeId),
+    calcularCmv(supabase, unidadeId, inicio.toISOString(), fim.toISOString()),
   ]);
-  if (resMov.error) throw resMov.error;
-  if (resCustos.error) throw resCustos.error;
-
-  // CMV: o que saiu do estoque nas vendas, menos o que voltou (estorno da cozinha),
-  // usando o custo unitário atual de cada produto
-  const custo = new Map((resCustos.data || []).map((e) => [e.ingrediente_id, Number(e.custo_unitario) || 0]));
-  let cmv = 0;
-  for (const m of resMov.data || []) {
-    const valor = Number(m.quantidade) * (custo.get(m.ingrediente_id) || 0);
-    if (m.tipo === 'consumo') cmv += valor;
-    else if ((m.observacao || '').startsWith('Estorno')) cmv -= valor;
-  }
 
   const faturamentoVendas = vendas.reduce((a, v) => a + v.valor, 0);
   const outrasReceitas = recebidas.reduce((a, c) => a + c.valor, 0);
