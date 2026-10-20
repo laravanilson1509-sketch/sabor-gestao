@@ -11,6 +11,7 @@ const LINKS = [
   { href: '/estoque', label: 'Estoque' },
   { href: '/pdv', label: 'PDV' },
   { href: '/cozinha', label: 'Cozinha' },
+  { href: '/caixa', label: 'Caixa' },
   { href: '/cadastros', label: 'Cadastros' },
   { href: '/delivery', label: 'Delivery' },
   { href: '/compras', label: 'Compras' },
