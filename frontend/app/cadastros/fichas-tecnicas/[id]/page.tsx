@@ -175,8 +175,8 @@ export default function EditarFichaTecnicaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Carregando...</p>
+      <div className="px-4 py-12 flex items-center justify-center">
+        <p className="text-[#5B6B73]">Carregando...</p>
       </div>
     );
   }
@@ -192,42 +192,42 @@ export default function EditarFichaTecnicaPage() {
   const margemPct = precoSalvo > 0 ? (lucro / precoSalvo) * 100 : 0;
   const alvo = config ? config.margem_lucro_pct : 50;
   const corMargem =
-    margemPct >= alvo ? 'text-green-600' : margemPct >= alvo / 2 ? 'text-yellow-600' : 'text-red-600';
+    margemPct >= alvo ? 'text-[#1E6B3F]' : margemPct >= alvo / 2 ? 'text-[#8A5F00]' : 'text-[#B3261E]';
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => (window.history.length > 1 ? router.back() : router.push('/cadastros/pratos'))}
-            className="text-gray-500 hover:text-gray-700 text-xl"
+            className="h-10 w-10 rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition"
           >
             ←
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">{produto ? produto.nome : ''}</h1>
+          <h1 className="text-2xl font-bold text-[#16252B]">{produto ? produto.nome : ''}</h1>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4 mb-4">
-          <h2 className="font-semibold text-gray-900 mb-3">Ingredientes da receita</h2>
+        <div className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-4">
+          <h2 className="text-base font-semibold text-[#16252B] mb-3">Ingredientes da receita</h2>
           {itens.length === 0 ? (
-            <p className="text-sm text-gray-500">Nenhum ingrediente adicionado ainda</p>
+            <p className="text-sm text-[#5B6B73] py-4 text-center">Nenhum ingrediente adicionado ainda</p>
           ) : (
             <div className="space-y-2">
               {itens.map((item) => (
-                <div key={item.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
+                <div key={item.id} className="flex items-center justify-between text-sm border-b border-[#E6ECEF] pb-2 last:border-0">
                   <div>
-                    <span className="font-medium">{item.ingredientes ? item.ingredientes.nome : ''}</span>
-                    <span className="text-gray-500">
+                    <span className="font-medium text-[#16252B]">{item.ingredientes ? item.ingredientes.nome : ''}</span>
+                    <span className="text-[#5B6B73]">
                       {' '}
                       - {item.quantidade} {item.unidade}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-gray-600">{moeda(item.quantidade * item.custo_unitario)}</span>
+                    <span className="text-[#5B6B73]">{moeda(item.quantidade * item.custo_unitario)}</span>
                     <button
                       onClick={() => handleRemover(item.id)}
                       disabled={removendo === item.id}
-                      className="text-red-500 hover:text-red-700 disabled:opacity-50"
+                      className="text-[#8FA0A8] hover:text-[#B3261E] disabled:opacity-50"
                     >
                       X
                     </button>
@@ -238,13 +238,13 @@ export default function EditarFichaTecnicaPage() {
           )}
         </div>
 
-        <form onSubmit={handleAdicionar} className="bg-white rounded-lg shadow p-4 space-y-3 mb-4">
-          <h2 className="font-semibold text-gray-900">Adicionar ingrediente</h2>
+        <form onSubmit={handleAdicionar} className="bg-white border border-[#DCE3E7] rounded-xl p-4 space-y-3 mb-4">
+          <h2 className="text-base font-semibold text-[#16252B]">Adicionar ingrediente</h2>
           <div className="flex gap-2">
             <select
               value={ingredienteSelecionado}
               onChange={(e) => handleSelecionarIngrediente(e.target.value)}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="flex-1 min-w-0 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
             >
               <option value="">Selecione...</option>
               {ingredientesDisponiveis
@@ -261,12 +261,12 @@ export default function EditarFichaTecnicaPage() {
               value={quantidade}
               onChange={(e) => setQuantidade(e.target.value)}
               placeholder="Qtd"
-              className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="w-24 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
             />
             <select
               value={unidade}
               onChange={(e) => setUnidade(e.target.value)}
-              className="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="w-20 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
             >
               <option value="kg">kg</option>
               <option value="g">g</option>
@@ -276,73 +276,73 @@ export default function EditarFichaTecnicaPage() {
             </select>
           </div>
 
-          {erro && <p className="text-xs text-red-600">{erro}</p>}
+          {erro && <p role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">{erro}</p>}
 
           <button
             type="submit"
             disabled={salvando}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2 rounded-lg text-sm font-medium"
+            className="w-full bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
           >
             {salvando ? 'Adicionando...' : 'Adicionar'}
           </button>
         </form>
 
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white border border-[#DCE3E7] rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-gray-900">Formação do preço</h2>
-            <Link href="/financeiro" className="text-xs text-blue-600 hover:underline">
+            <h2 className="text-base font-semibold text-[#16252B]">Formação do preço</h2>
+            <Link href="/financeiro" className="text-xs font-medium text-[#0E6B7E] hover:underline">
               Alterar parâmetros no Financeiro
             </Link>
           </div>
 
           {!config ? (
-            <p className="text-sm text-red-600 mb-3">
+            <p className="text-sm text-[#B3261E] mb-3">
               Não foi possível ler os parâmetros do Financeiro. Abra a tela Financeiro e salve os parâmetros.
             </p>
           ) : (
             <div className="text-sm space-y-1 mb-4">
               <div className="flex justify-between">
-                <span className="text-gray-600">Custo dos ingredientes</span>
+                <span className="text-[#5B6B73]">Custo dos ingredientes</span>
                 <span>{moeda(custoTotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Custo fixo por prato (rateio)</span>
+                <span className="text-[#5B6B73]">Custo fixo por prato (rateio)</span>
                 <span>{moeda(custoFixoPrato)}</span>
               </div>
-              <div className="flex justify-between font-medium border-t pt-1">
+              <div className="flex justify-between font-medium text-[#16252B] border-t border-[#DCE3E7] pt-1">
                 <span>Custo base</span>
                 <span>{moeda(custoBase)}</span>
               </div>
-              <div className="flex justify-between text-gray-600 pt-2">
+              <div className="flex justify-between text-[#5B6B73] pt-2">
                 <span>Margem de lucro</span>
                 <span>{config.margem_lucro_pct}%</span>
               </div>
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-[#5B6B73]">
                 <span>Impostos</span>
                 <span>{config.impostos_pct}%</span>
               </div>
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-[#5B6B73]">
                 <span>Taxa de cartão</span>
                 <span>{config.taxa_cartao_pct}%</span>
               </div>
-              <div className="flex justify-between text-gray-600">
+              <div className="flex justify-between text-[#5B6B73]">
                 <span>Taxa de apps de delivery</span>
                 <span>{config.taxa_app_pct}%</span>
               </div>
-              <div className="flex justify-between font-semibold text-blue-600 border-t pt-2">
+              <div className="flex justify-between font-semibold text-[#0E6B7E] border-t border-[#DCE3E7] pt-2">
                 <span>Preço sugerido</span>
                 <span>
                   {sugestao && sugestao.valido && sugestao.preco > 0 ? moeda(sugestao.preco) : '-'}
                 </span>
               </div>
               {sugestao && !sugestao.valido && (
-                <p className="text-xs text-red-600">
+                <p className="text-xs text-[#B3261E]">
                   A soma dos percentuais chegou a {sugestao.percentuais}%. Ajuste no Financeiro (precisa ser
                   menor que 100%).
                 </p>
               )}
               {config.vendas_previstas_mes === 0 && (
-                <p className="text-xs text-yellow-700 bg-yellow-50 rounded-lg p-2 mt-2">
+                <p className="text-xs text-[#7A5A0A] bg-[#FFF0C7] border border-[#E8D28A] rounded-lg px-3 py-2 mt-2">
                   Defina as vendas previstas por mês no Financeiro para o custo fixo entrar no preço.
                 </p>
               )}
@@ -356,7 +356,7 @@ export default function EditarFichaTecnicaPage() {
               value={precoInput}
               onChange={(e) => setPrecoInput(e.target.value)}
               placeholder="Defina o preço final"
-              className="flex-1 min-w-40 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="flex-1 min-w-40 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
             />
             <button
               type="button"
@@ -365,14 +365,14 @@ export default function EditarFichaTecnicaPage() {
                   setPrecoInput(sugestao.preco.toFixed(2));
                 }
               }}
-              className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium"
+              className="px-4 py-2.5 rounded-lg border border-[#0E6B7E] bg-white text-[#0E6B7E] text-sm font-medium hover:bg-[#F1F8FA] transition"
             >
               Usar sugerido
             </button>
             <button
               onClick={handleSalvarPreco}
               disabled={salvandoPreco}
-              className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
             >
               {salvandoPreco ? 'Salvando...' : 'Salvar preço'}
             </button>
