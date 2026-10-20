@@ -29,6 +29,8 @@ export type ItemPdv = {
   quantidade: number;
   preco_unitario: number;
   observacao: string | null;
+  // null = ainda não foi enviado para a cozinha
+  status_cozinha: 'novo' | 'preparando' | 'pronto' | null;
 };
 
 export type ProdutoCardapio = {
@@ -127,7 +129,7 @@ export async function abrirPedido(
 export async function listarItens(supabase: SupabaseClient, pedidoId: string) {
   const { data, error } = await supabase
     .from('pdv_pedido_itens')
-    .select('id, pedido_id, produto_id, nome, quantidade, preco_unitario, observacao')
+    .select('id, pedido_id, produto_id, nome, quantidade, preco_unitario, observacao, status_cozinha')
     .eq('pedido_id', pedidoId)
     .order('criado_em');
   if (error) throw error;
@@ -138,13 +140,15 @@ export async function adicionarItem(
   supabase: SupabaseClient,
   params: { pedidoId: string; produto: ProdutoCardapio }
 ) {
-  // se o mesmo produto já está na comanda, só aumenta a quantidade
+  // se o mesmo produto já está na comanda (e ainda não foi para a cozinha),
+  // só aumenta a quantidade
   const { data: existente, error: erroBusca } = await supabase
     .from('pdv_pedido_itens')
     .select('id, quantidade')
     .eq('pedido_id', params.pedidoId)
     .eq('produto_id', params.produto.id)
     .is('observacao', null)
+    .is('status_cozinha', null)
     .maybeSingle();
   if (erroBusca) throw erroBusca;
 
@@ -181,6 +185,16 @@ export async function alterarQuantidade(
     .from('pdv_pedido_itens')
     .update({ quantidade })
     .eq('id', itemId);
+  if (error) throw error;
+}
+
+// manda para a cozinha todos os itens da comanda que ainda não foram enviados
+export async function enviarParaCozinha(supabase: SupabaseClient, pedidoId: string) {
+  const { error } = await supabase
+    .from('pdv_pedido_itens')
+    .update({ status_cozinha: 'novo', enviado_cozinha_em: new Date().toISOString() })
+    .eq('pedido_id', pedidoId)
+    .is('status_cozinha', null);
   if (error) throw error;
 }
 

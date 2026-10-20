@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/whatsapp', label: 'WhatsApp' },
   { href: '/estoque', label: 'Estoque' },
   { href: '/pdv', label: 'PDV' },
+  { href: '/cozinha', label: 'Cozinha' },
   { href: '/cadastros', label: 'Cadastros' },
   { href: '/delivery', label: 'Delivery' },
   { href: '/compras', label: 'Compras' },

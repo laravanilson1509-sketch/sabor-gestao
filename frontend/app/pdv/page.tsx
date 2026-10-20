@@ -12,6 +12,7 @@ import {
   listarItens,
   adicionarItem,
   alterarQuantidade,
+  enviarParaCozinha,
   fecharPedido,
   cancelarPedido,
   listarReservasAtivas,
@@ -31,6 +32,13 @@ const BTN_PRIMARY =
   'bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition';
 const BTN_SECONDARY =
   'px-4 py-2.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] text-sm font-medium hover:bg-[#F1F5F7] transition';
+
+// etiqueta mostrada nos itens da comanda que já foram para a cozinha
+const SELO_COZINHA = {
+  novo: { rotulo: 'Na cozinha', cor: 'bg-[#FFF0C7] text-[#7A5A0A]' },
+  preparando: { rotulo: 'Preparando', cor: 'bg-[#DCEEF2] text-[#0B4F5E]' },
+  pronto: { rotulo: 'Pronto', cor: 'bg-[#D9F0E3] text-[#1E6B3F]' },
+};
 
 const moeda = (v: number) => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
 
@@ -330,6 +338,18 @@ export default function PdvPage() {
     setOcupado(false);
   }
 
+  async function enviarCozinha() {
+    if (!pedido || ocupado) return;
+    setOcupado(true);
+    try {
+      await enviarParaCozinha(supabase, pedido.id);
+      await recarregarComanda(pedido);
+    } catch (e: any) {
+      setErro(e.message || 'Erro ao enviar para a cozinha');
+    }
+    setOcupado(false);
+  }
+
   async function fechar() {
     if (!pedido) return;
     if (itens.length === 0) {
@@ -378,6 +398,8 @@ export default function PdvPage() {
       ? 'Mesa ' + (mesaDoPedido?.numero ?? '')
       : 'Balcão #' + pedido.numero
     : '';
+
+  const naoEnviados = itens.filter((i) => !i.status_cozinha).length;
 
   const avisoErro = erro && (
     <div role="alert" className="mb-4 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
@@ -474,6 +496,16 @@ export default function PdvPage() {
                         <p className="text-sm font-medium text-[#16252B] truncate">{i.nome}</p>
                         <p className="text-xs text-[#5B6B73]">{moeda(i.preco_unitario)} cada</p>
                       </div>
+                      {i.status_cozinha ? (
+                        <span className="flex items-center gap-2">
+                          <span className="w-7 text-center text-sm font-semibold text-[#16252B]">
+                            {i.quantidade}
+                          </span>
+                          <span className={'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + SELO_COZINHA[i.status_cozinha].cor}>
+                            {SELO_COZINHA[i.status_cozinha].rotulo}
+                          </span>
+                        </span>
+                      ) : (
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => mudarQtd(i, -1)}
@@ -495,6 +527,7 @@ export default function PdvPage() {
                           +
                         </button>
                       </div>
+                      )}
                       <span className="w-20 text-right text-sm font-semibold text-[#16252B]">
                         {moeda(i.quantidade * Number(i.preco_unitario))}
                       </span>
@@ -524,9 +557,18 @@ export default function PdvPage() {
               </select>
 
               <button
+                onClick={enviarCozinha}
+                disabled={ocupado || naoEnviados === 0}
+                className={BTN_PRIMARY + ' w-full mb-2'}
+              >
+                {naoEnviados > 0
+                  ? 'Enviar para a cozinha (' + naoEnviados + (naoEnviados === 1 ? ' item)' : ' itens)')
+                  : 'Tudo enviado para a cozinha'}
+              </button>
+              <button
                 onClick={fechar}
                 disabled={ocupado || itens.length === 0}
-                className={BTN_PRIMARY + ' w-full mb-2'}
+                className={BTN_SECONDARY + ' w-full mb-2'}
               >
                 Fechar conta
               </button>
