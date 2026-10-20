@@ -18,6 +18,7 @@ import {
   type Venda,
 } from '@/lib/queries/caixa';
 import { listarItens, type ItemPdv } from '@/lib/queries/salao';
+import { contarPendenciasAbertas } from '@/lib/queries/pendenciasEstoque';
 
 const INPUT =
   'border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
@@ -100,6 +101,7 @@ export default function CaixaPage() {
   const [mostrarFechamento, setMostrarFechamento] = useState(false);
   const [valorContado, setValorContado] = useState('');
   const [obsFechamento, setObsFechamento] = useState('');
+  const [pendenciasEstoque, setPendenciasEstoque] = useState(0);
 
   // vendas do dia
   const [data, setData] = useState(hojeLocal());
@@ -200,7 +202,14 @@ export default function CaixaPage() {
   function abrirFechamento() {
     setValorContado('');
     setObsFechamento('');
+    setPendenciasEstoque(0);
     setMostrarFechamento(true);
+    // lembrete: conferências de estoque abertas desde que o caixa abriu
+    if (caixa) {
+      contarPendenciasAbertas(supabase, unidadeId, caixa.aberto_em)
+        .then(setPendenciasEstoque)
+        .catch(() => setPendenciasEstoque(0));
+    }
   }
 
   function handleFechar(e: React.FormEvent) {
@@ -606,6 +615,17 @@ export default function CaixaPage() {
                 ×
               </button>
             </div>
+
+            {pendenciasEstoque > 0 && (
+              <div className="text-sm text-[#7A5A0A] bg-[#FFF0C7] border border-[#E8D28A] rounded-lg px-3 py-2">
+                {pendenciasEstoque === 1
+                  ? 'Existe 1 conferência de estoque pendente desde a abertura do caixa.'
+                  : 'Existem ' + pendenciasEstoque + ' conferências de estoque pendentes desde a abertura do caixa.'}{' '}
+                <a href="/estoque" className="font-medium underline">
+                  Ver no Estoque
+                </a>
+              </div>
+            )}
 
             <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3 text-sm space-y-1">
               <div className="flex justify-between">

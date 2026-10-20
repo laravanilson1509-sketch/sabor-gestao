@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import { contarPendenciasAbertas, EVENTO_PENDENCIAS } from '@/lib/queries/pendenciasEstoque';
 import './globals.css';
 
 const LINKS = [
@@ -40,6 +41,19 @@ export default function RootLayout({
   }
 
   const naLogin = pathname === '/login';
+
+  // contador de conferências de estoque pendentes, mostrado ao lado de "Estoque"
+  const [pendencias, setPendencias] = useState(0);
+  useEffect(() => {
+    if (naLogin) return;
+    const atualizar = () =>
+      contarPendenciasAbertas(supabase, process.env.NEXT_PUBLIC_UNIDADE_ID!)
+        .then(setPendencias)
+        .catch(() => setPendencias(0));
+    atualizar();
+    window.addEventListener(EVENTO_PENDENCIAS, atualizar);
+    return () => window.removeEventListener(EVENTO_PENDENCIAS, atualizar);
+  }, [pathname]);
 
   function classeLink(href: string) {
     const ativo = pathname.startsWith(href);
@@ -94,9 +108,17 @@ export default function RootLayout({
                   key={l.href}
                   href={l.href}
                   onClick={() => setAberto(false)}
-                  className={classeLink(l.href)}
+                  className={classeLink(l.href) + ' flex items-center justify-between'}
                 >
                   {l.label}
+                  {l.href === '/estoque' && pendencias > 0 && (
+                    <span
+                      className="rounded-full px-2 py-0.5 text-xs font-semibold bg-[#FFF0C7] text-[#7A5A0A]"
+                      title="Conferências de estoque pendentes"
+                    >
+                      {pendencias}
+                    </span>
+                  )}
                 </Link>
               ))}
             </nav>

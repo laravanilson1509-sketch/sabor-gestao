@@ -10,6 +10,7 @@ import {
   calcularStatus,
   getStatusDisplay,
 } from '@/lib/queries/estoque';
+import ConferenciasPendentes from '@/components/estoque/ConferenciasPendentes';
 
 type ItemEstoque = {
   id: string;
@@ -189,6 +190,8 @@ export default function EstoquePage() {
             + Novo produto
           </Link>
         </div>
+
+        <ConferenciasPendentes unidadeId={unidadeId} onAlterado={carregar} />
 
         <div className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-6 flex flex-wrap gap-6">
           <div>
