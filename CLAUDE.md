@@ -1,1 +1,1 @@
-Responda sempre em português do Brasil. Explique de forma simples, pois o dono do projeto está aprendendo. Antes de mudar vários arquivos, diga o que vai alterar. Não rode git push sem eu pedir.
+Responda sempre em português do Brasil. Explique de forma simples, pois o dono do projeto está aprendendo. Antes de mudar vários arquivos, diga o que vai alterar. Sempre que terminar uma alteração e o build passar, faça o commit e o git push para subir para a Vercel.
