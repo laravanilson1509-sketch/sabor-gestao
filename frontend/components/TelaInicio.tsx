@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Logo from './Logo';
+import { diaMes, linkParabens, listarAniversariantes, textoFaltam, type Aniversariante } from '@/lib/queries/aniversarios';
 
 const traco = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
 
@@ -88,6 +89,7 @@ function nomeDoEmail(email: string | undefined | null) {
 export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
   const [nome, setNome] = useState('');
   const [empresa, setEmpresa] = useState('');
+  const [aniversariantes, setAniversariantes] = useState<Aniversariante[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setNome(nomeDoEmail(data.user?.email)));
@@ -97,6 +99,9 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
       .eq('unidade_id', process.env.NEXT_PUBLIC_UNIDADE_ID!)
       .maybeSingle()
       .then(({ data }) => setEmpresa(data?.nome_estabelecimento || ''));
+    listarAniversariantes(supabase, process.env.NEXT_PUBLIC_UNIDADE_ID!)
+      .then(setAniversariantes)
+      .catch(() => setAniversariantes([]));
   }, []);
 
   return (
@@ -191,6 +196,51 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
             ))}
           </ul>
         </div>
+
+        {aniversariantes.length > 0 && (
+          <div className="relative z-10 mt-12 rounded-2xl border border-[#F0DFA8] bg-[#FFFAEB] p-5">
+            <p className="text-sm font-semibold text-[#7A5A0A] mb-3">
+              🎂 Aniversariantes{' '}
+              {aniversariantes.some((a) => a.faltam === 0) ? 'de hoje e dos próximos dias' : 'dos próximos dias'}
+            </p>
+            <ul className="divide-y divide-[#F0DFA8]">
+              {aniversariantes.map((a) => {
+                const zap = linkParabens(a);
+                return (
+                  <li key={a.id} className="flex flex-wrap items-center gap-3 py-2.5">
+                    <span
+                      className={
+                        'rounded-full px-2.5 py-0.5 text-xs font-semibold ' +
+                        (a.faltam === 0 ? 'bg-[#E3B341] text-[#16252B]' : 'bg-white text-[#7A5A0A] border border-[#F0DFA8]')
+                      }
+                    >
+                      {textoFaltam(a.faltam)}
+                    </span>
+                    <span className="flex-1 min-w-[10rem] text-sm text-[#16252B]">
+                      <b>{a.nome}</b>
+                      <span className="text-[#5B6B73]">
+                        {' '}
+                        · {diaMes(`2000-${String(a.mes).padStart(2, '0')}-${String(a.dia).padStart(2, '0')}`)} · faz {a.idade} anos
+                      </span>
+                    </span>
+                    {zap ? (
+                      <a
+                        href={zap}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-[#1E6B3F] hover:underline"
+                      >
+                        Mandar parabéns no WhatsApp
+                      </a>
+                    ) : (
+                      <span className="text-xs text-[#8FA0A8]">sem telefone</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
 
         <div id="como-funciona" className="relative z-10 mt-14 border-t border-[#E6ECEF] pt-6 scroll-mt-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#5B6B73] mb-4">Dicas para você começar</p>

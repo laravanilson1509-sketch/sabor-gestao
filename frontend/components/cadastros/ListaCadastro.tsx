@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { listarCadastros, deletarCadastro } from '@/lib/queries/cadastros';
+import { diaMes, proximoAniversario } from '@/lib/queries/aniversarios';
 
-type Coluna = { chave: string; rotulo: string };
+type Coluna = { chave: string; rotulo: string; tipo?: 'aniversario' };
 
 type Props = {
   tabela: string;
@@ -54,6 +55,25 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
     } finally {
       setDeletando(false);
     }
+  }
+
+  // dia/mês do aniversário, com destaque para hoje e para os próximos 7 dias
+  function celulaAniversario(data: string | null) {
+    if (!data) return '-';
+    const { faltam } = proximoAniversario(data);
+    return (
+      <span>
+        {diaMes(data)}
+        {faltam === 0 && (
+          <span className="ml-2 rounded-full bg-[#FFF0C7] text-[#7A5A0A] px-2.5 py-0.5 text-xs font-semibold">
+            🎂 Hoje!
+          </span>
+        )}
+        {faltam > 0 && faltam <= 7 && (
+          <span className="ml-2 text-xs text-[#8FA0A8]">em {faltam} {faltam === 1 ? 'dia' : 'dias'}</span>
+        )}
+      </span>
+    );
   }
 
   const TH = 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]';
@@ -106,7 +126,7 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
                     <td className="px-4 py-4 text-sm font-medium text-[#16252B]">{item.nome}</td>
                     {colunas.map((c) => (
                       <td key={c.chave} className="px-4 py-4 text-sm text-[#2B3C44]">
-                        {item[c.chave] || '-'}
+                        {c.tipo === 'aniversario' ? celulaAniversario(item[c.chave]) : item[c.chave] || '-'}
                       </td>
                     ))}
                     <td className="px-4 py-4 text-sm">

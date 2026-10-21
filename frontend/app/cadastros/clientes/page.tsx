@@ -10,6 +10,7 @@ export default function ClientesPage() {
       colunas={[
         { chave: 'telefone', rotulo: 'Telefone' },
         { chave: 'email', rotulo: 'Email' },
+        { chave: 'data_nascimento', rotulo: 'Aniversário', tipo: 'aniversario' as const },
       ]}
     />
   );
