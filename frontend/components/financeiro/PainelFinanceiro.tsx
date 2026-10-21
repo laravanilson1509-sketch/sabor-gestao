@@ -565,7 +565,7 @@ export default function PainelFinanceiro() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl p-4 md:p-6 space-y-5 text-white"
+      className="tema-escuro relative overflow-hidden rounded-3xl p-4 md:p-6 space-y-5 text-white"
       style={{
         backgroundColor: tema.base,
         backgroundImage: `radial-gradient(ellipse at 10% 0%, ${tema.cor}50, transparent 45%), radial-gradient(ellipse at 95% 20%, ${tema.cor2}45, transparent 45%), radial-gradient(ellipse at 50% 110%, ${tema.cor}35, transparent 55%), linear-gradient(160deg, ${tema.base}, #0A0D1A 60%, ${tema.base})`,
@@ -628,7 +628,7 @@ export default function PainelFinanceiro() {
         {tipo === 'ano' && (
           <select value={refAno} onChange={(e) => setRefAno(e.target.value)} className={campo}>
             {Array.from({ length: 6 }, (_, i) => String(Number(hoje.slice(0, 4)) - i)).map((a) => (
-              <option key={a} value={a} className="text-black">
+              <option key={a} value={a} className="bg-[#1A1424] text-white">
                 {a}
               </option>
             ))}
