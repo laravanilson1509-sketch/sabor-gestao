@@ -54,7 +54,7 @@ function LoginForm() {
     <div className="min-h-screen md:flex bg-[#EEF2F4]">
       {/* Painel da esquerda (só em telas médias ou maiores) */}
       <section className="hidden md:flex md:flex-1 flex-col justify-between bg-white border-r border-[#DCE3E7] p-12">
-        <Logo tamanho={44} />
+        <Logo tamanho={44} tagline />
 
         <div>
           <h2 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-[#16252B]">

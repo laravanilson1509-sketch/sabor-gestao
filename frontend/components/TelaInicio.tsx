@@ -8,6 +8,69 @@ import Link from 'next/link';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Logo from './Logo';
 
+const traco = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
+
+const RECURSOS = [
+  {
+    titulo: 'Pedidos e comandas',
+    texto: 'Mais agilidade no atendimento',
+    href: '/pdv',
+    icone: (
+      <>
+        <path d="M6 15 a6 6 0 0 1 12 0 v2 H6 Z" {...traco} />
+        <path d="M8 19 h8 M12 9 v-2" {...traco} />
+      </>
+    ),
+  },
+  {
+    titulo: 'Financeiro',
+    texto: 'Controle total do seu negócio',
+    href: '/financeiro',
+    icone: (
+      <>
+        <path d="M4 19 h16" {...traco} />
+        <path d="M5 15 l4 -4 3 3 6 -7" {...traco} />
+        <path d="M14 7 h4 v4" {...traco} />
+      </>
+    ),
+  },
+  {
+    titulo: 'Equipe',
+    texto: 'Organização e desempenho',
+    href: '/cadastros/funcionarios',
+    icone: (
+      <>
+        <circle cx="12" cy="9" r="3" {...traco} />
+        <circle cx="5.5" cy="10.5" r="2" {...traco} />
+        <circle cx="18.5" cy="10.5" r="2" {...traco} />
+        <path d="M6.5 19 a5.5 5 0 0 1 11 0" {...traco} />
+      </>
+    ),
+  },
+  {
+    titulo: 'Estoque',
+    texto: 'Nunca falte o que você precisa',
+    href: '/estoque',
+    icone: (
+      <>
+        <path d="M4 9 l2 -4 h12 l2 4 v1 a2 2 0 0 1 -4 0 a2 2 0 0 1 -4 0 a2 2 0 0 1 -4 0 a2 2 0 0 1 -4 0 Z" {...traco} />
+        <path d="M5.5 12 v7 h13 v-7 M10 19 v-4 h4 v4" {...traco} />
+      </>
+    ),
+  },
+  {
+    titulo: 'Relatórios',
+    texto: 'Decisões com base em dados',
+    href: '/financeiro',
+    icone: (
+      <>
+        <rect x="6" y="3.5" width="12" height="17" rx="2" {...traco} />
+        <path d="M9 16 v-3 M12 16 v-6 M15 16 v-4" {...traco} />
+      </>
+    ),
+  },
+];
+
 const DICAS = [
   { titulo: 'Cadastrar um prato', texto: 'Monte a ficha técnica e defina o preço de venda.', href: '/cadastros/pratos', botao: 'Cadastrar' },
   { titulo: 'Lançar um pedido', texto: 'Abra uma mesa ou venda no balcão e envie para a produção.', href: '/pdv', botao: 'Abrir PDV' },
@@ -20,24 +83,6 @@ const DICAS = [
 function nomeDoEmail(email: string | undefined | null) {
   const base = (email || '').split('@')[0].split(/[._-]/)[0];
   return base ? base.charAt(0).toUpperCase() + base.slice(1) : '';
-}
-
-function Ilustracao() {
-  return (
-    <svg viewBox="0 0 320 230" className="w-full h-auto" role="img" aria-label="Ilustração de gráficos">
-      <rect x="20" y="150" width="34" height="60" rx="5" fill="#0E6B7E" opacity="0.25" />
-      <rect x="64" y="120" width="34" height="90" rx="5" fill="#0E6B7E" opacity="0.45" />
-      <rect x="108" y="85" width="34" height="125" rx="5" fill="#0E6B7E" />
-      <path d="M20 118 L66 92 L108 100 L168 48" fill="none" stroke="#E3B341" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M158 44 L172 46 L168 60" fill="none" stroke="#E3B341" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="238" cy="118" r="62" fill="#DCEEF2" />
-      <path d="M238 118 L238 56 A62 62 0 0 1 297 99 Z" fill="#E3B341" />
-      <path d="M238 118 L297 99 A62 62 0 0 1 252 179 Z" fill="#0A4E5C" />
-      <circle cx="238" cy="118" r="26" fill="#fff" />
-      <path d="M227 124 L226 111 L232 116 L238 107 L244 116 L250 111 L249 124 Z" fill="#E3B341" />
-      <line x1="10" y1="212" x2="310" y2="212" stroke="#C9D3D8" strokeWidth="2" />
-    </svg>
-  );
 }
 
 export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
@@ -55,66 +100,91 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
   }, []);
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] md:min-h-screen bg-white">
-      {/* Faixa superior */}
-      <div className="flex items-center justify-between gap-3 border-b border-[#E6ECEF] px-5 md:px-8 h-16">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold tracking-wide text-[#16252B] truncate">
-            {(empresa || 'Império').toUpperCase()}
-          </p>
-          <p className="text-xs text-[#8FA0A8]">Painel inicial</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="hidden sm:block text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">
-            {nome || 'Usuário'}
-          </span>
-          <span className="h-9 w-9 rounded-full bg-[#0E6B7E] text-white flex items-center justify-center text-sm font-bold">
-            {(nome || 'U').charAt(0)}
-          </span>
-        </div>
-      </div>
+    <div className="relative min-h-[calc(100vh-3.5rem)] md:min-h-screen bg-white overflow-hidden">
+      {/* Formas decorativas dos cantos */}
+      <svg aria-hidden className="absolute -top-10 -right-10 w-[26rem] max-w-[70%] pointer-events-none" viewBox="0 0 400 300">
+        <path d="M400 0 V230 C330 250 250 190 240 120 C232 60 180 30 120 0 Z" fill="#DCEEF2" />
+        <path d="M400 0 V160 C350 170 300 130 292 90 C286 55 250 25 215 0 Z" fill="#0E6B7E" opacity="0.9" />
+        <path d="M120 0 C180 30 232 60 240 120 C250 190 330 250 400 230" fill="none" stroke="#E3B341" strokeWidth="3" />
+      </svg>
+      <svg aria-hidden className="absolute -bottom-12 -right-12 w-[24rem] max-w-[60%] pointer-events-none" viewBox="0 0 400 260">
+        <path d="M400 260 V60 C330 40 260 90 230 150 C210 195 150 240 100 260 Z" fill="#DCEEF2" />
+        <path d="M400 260 V130 C360 120 320 150 300 190 C285 220 250 245 225 260 Z" fill="#0E6B7E" opacity="0.9" />
+        <path d="M400 60 C330 40 260 90 230 150 C210 195 150 240 100 260" fill="none" stroke="#E3B341" strokeWidth="3" />
+      </svg>
 
-      <div className="max-w-6xl mx-auto px-5 md:px-8 py-8 md:py-10">
-        {/* Boas-vindas */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8 items-center">
+      <div className="relative max-w-6xl mx-auto px-5 md:px-10 py-8 md:py-10">
+        <div className="flex items-start justify-between gap-4">
+          <Logo tamanho={52} tagline />
+          {(empresa || nome) && (
+            <p className="hidden md:block text-xs text-right text-[#5B6B73] relative z-10">
+              {empresa && <span className="block font-semibold text-[#16252B]">{empresa}</span>}
+              {nome && <span>Olá, {nome}</span>}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-10 md:mt-14 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-[#16252B]">
-              <span className="italic font-normal text-[#0E6B7E]" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-                Olá,
-              </span>{' '}
-              {nome || 'bem-vindo'}!
-            </h1>
-            <p className="mt-5 text-2xl md:text-3xl leading-snug text-[#8FA0A8]">
-              O Império foi criado para
+            <h1 className="text-4xl md:text-6xl font-extrabold leading-[1.05] text-[#16252B]">
+              Olá{nome ? ', ' + nome : ','}
               <br />
-              <span className="relative inline-block px-3 text-[#16252B]">
-                você voar
-                <svg viewBox="0 0 150 46" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
-                  <ellipse cx="75" cy="23" rx="72" ry="19" fill="none" stroke="#E3B341" strokeWidth="2.5" />
+              Seja{' '}
+              <span className="relative inline-block text-[#E3B341]">
+                bem-vindo!
+                <svg viewBox="0 0 300 14" preserveAspectRatio="none" className="absolute left-0 -bottom-2 w-full h-3" aria-hidden>
+                  <path d="M3 9 C60 2 140 2 297 8" fill="none" stroke="#E3B341" strokeWidth="3.5" strokeLinecap="round" />
                 </svg>
-              </span>{' '}
-              no dia a dia!
+              </span>
+            </h1>
+            <p className="mt-8 text-lg md:text-xl font-medium text-[#2B3C44] max-w-lg">
+              Sua operação no restaurante ou bar mais organizada, prática e lucrativa.
+            </p>
+            <p className="mt-3 text-base text-[#5B6B73] max-w-lg">
+              Vamos juntos transformar o seu negócio em grandes resultados!
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/pdv" className="bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white px-5 py-3 rounded-lg text-sm font-medium transition">
-                Abrir o PDV
+              <Link
+                href="/pdv"
+                className="inline-flex items-center gap-2 bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white px-6 py-3.5 rounded-lg text-sm font-semibold transition"
+              >
+                Acessar o sistema <span aria-hidden>→</span>
               </Link>
-              <Link href="/cozinha" className="px-5 py-3 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] text-sm font-medium hover:bg-[#F1F5F7] transition">
-                Ver a cozinha
-              </Link>
+              <a
+                href="#como-funciona"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg border-2 border-[#16252B] text-[#16252B] text-sm font-semibold hover:bg-[#F1F5F7] transition"
+              >
+                <span aria-hidden>▷</span> Ver como funciona
+              </a>
             </div>
           </div>
-          <div className="hidden md:block max-w-md justify-self-center w-full">
-            <Ilustracao />
-          </div>
+
+          <ul className="relative z-10 space-y-0 lg:pl-6">
+            {RECURSOS.map((r) => (
+              <li key={r.titulo} className="border-b border-[#DCE3E7] last:border-0">
+                <Link href={r.href} className="flex items-center gap-4 py-4 group">
+                  <span className="text-[#0E6B7E]">
+                    <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden>
+                      {r.icone}
+                    </svg>
+                  </span>
+                  <span>
+                    <span className="block text-base font-bold text-[#16252B] group-hover:text-[#0E6B7E] transition">
+                      {r.titulo}
+                    </span>
+                    <span className="block text-sm text-[#5B6B73]">{r.texto}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Dicas */}
-        <div className="mt-10 border-t border-[#E6ECEF] pt-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#5B6B73] mb-4">Dicas para você</p>
+        <div id="como-funciona" className="relative z-10 mt-14 border-t border-[#E6ECEF] pt-6 scroll-mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#5B6B73] mb-4">Dicas para você começar</p>
           <div className="flex gap-4 overflow-x-auto pb-3 snap-x">
             {DICAS.map((d, k) => (
-              <div key={d.titulo} className="snap-start shrink-0 w-64 border-l-2 border-[#0E6B7E]/30 pl-4 pr-2 py-1">
+              <div key={d.titulo} className="snap-start shrink-0 w-64 border-l-2 border-[#0E6B7E]/30 pl-4 pr-2 py-1 bg-white/80">
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#0E6B7E] text-xs font-bold text-[#0E6B7E]">
                   {k + 1}
                 </span>
@@ -129,10 +199,6 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="mt-8 flex justify-center opacity-[0.12] select-none" aria-hidden>
-          <Logo tamanho={44} />
         </div>
       </div>
     </div>

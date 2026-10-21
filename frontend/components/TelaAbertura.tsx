@@ -48,7 +48,7 @@ export default function TelaAbertura({ ativa }: { ativa: boolean }) {
         @media (prefers-reduced-motion: reduce) { .imperio-anim { animation: none !important; } }
       `}</style>
       <div className="imperio-anim" style={{ animation: 'imperio-entra 0.8s ease both' }}>
-        <Logo tamanho={84} claro />
+        <Logo tamanho={84} claro empilhado />
       </div>
       <div
         className="imperio-anim h-0.5 bg-[#E3B341] mt-6 rounded"
@@ -58,7 +58,7 @@ export default function TelaAbertura({ ativa }: { ativa: boolean }) {
         className="imperio-anim mt-4 text-sm tracking-[0.3em] uppercase text-white/80"
         style={{ animation: 'imperio-entra 0.8s 0.6s ease both' }}
       >
-        Gestão de restaurante
+        Do pedido ao lucro
       </p>
     </div>
   );

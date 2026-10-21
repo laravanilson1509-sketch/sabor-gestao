@@ -50,7 +50,7 @@ export default function RootLayout({
 
   // título da aba do navegador (o layout é de cliente, então não usa metadata)
   useEffect(() => {
-    document.title = 'Império';
+    document.title = 'FoodFlow';
   }, [pathname]);
 
   // contador de conferências de estoque pendentes, mostrado ao lado de "Estoque"
