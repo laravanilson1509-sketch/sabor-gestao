@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { grupoDaCategoria, rotuloCategoria } from '@/lib/queries/bebidas';
 import { createBrowserClient } from '@supabase/ssr';
 import {
   listarMesas,
@@ -88,12 +89,14 @@ function dataHoraPadrao() {
   );
 }
 
-type Categoria = 'todos' | 'prato' | 'acabado';
+type Categoria = 'todos' | 'prato' | 'acabado' | 'bebida';
+type FiltroBebida = 'todas' | 'nao_alcoolica' | 'alcoolica';
 
 const FILTROS_CARDAPIO: { valor: Categoria; rotulo: string }[] = [
   { valor: 'todos', rotulo: 'Todos' },
   { valor: 'prato', rotulo: 'Pratos' },
   { valor: 'acabado', rotulo: 'Produtos acabados' },
+  { valor: 'bebida', rotulo: 'Bebidas' },
 ];
 
 export default function PdvPage() {
@@ -134,6 +137,7 @@ export default function PdvPage() {
   const [itens, setItens] = useState<ItemPdv[]>([]);
   const [busca, setBusca] = useState('');
   const [categoria, setCategoria] = useState<Categoria>('todos');
+  const [filtroBebida, setFiltroBebida] = useState<FiltroBebida>('todas');
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   // janelas da comanda
@@ -519,6 +523,7 @@ export default function PdvPage() {
   const filtrado = cardapio.filter(
     (p) =>
       (categoria === 'todos' || p.tipo_produto === categoria) &&
+      (categoria !== 'bebida' || filtroBebida === 'todas' || grupoDaCategoria(p.categoria_bebida) === filtroBebida) &&
       p.nome.toLowerCase().includes(busca.trim().toLowerCase())
   );
   const mesaDoPedido = pedido?.mesa_id ? mesas.find((m) => m.id === pedido.mesa_id) : null;
@@ -600,6 +605,26 @@ export default function PdvPage() {
                   </button>
                 ))}
               </div>
+              {categoria === 'bebida' && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {([['todas', 'Todas'], ['nao_alcoolica', 'Não alcoólicas'], ['alcoolica', 'Alcoólicas']] as [FiltroBebida, string][]).map(
+                    ([valor, rotulo]) => (
+                      <button
+                        key={valor}
+                        onClick={() => setFiltroBebida(valor)}
+                        className={
+                          'text-xs px-3 py-1 rounded-full font-medium transition border ' +
+                          (filtroBebida === valor
+                            ? 'bg-[#DCEEF2] text-[#0B4F5E] border-[#0E6B7E]'
+                            : 'bg-white text-[#5B6B73] border-[#DCE3E7] hover:bg-[#F1F5F7]')
+                        }
+                      >
+                        {rotulo}
+                      </button>
+                    )
+                  )}
+                </div>
+              )}
               <input
                 type="text"
                 value={busca}
@@ -624,7 +649,11 @@ export default function PdvPage() {
                     >
                       <span className="block text-sm font-medium text-[#16252B]">{p.nome}</span>
                       <span className="block text-xs text-[#8FA0A8] mt-0.5">
-                        {p.tipo_produto === 'acabado' ? 'Produto acabado' : 'Prato'}
+                        {p.tipo_produto === 'acabado'
+                          ? 'Produto acabado'
+                          : p.tipo_produto === 'bebida'
+                          ? rotuloCategoria(p.categoria_bebida) || 'Bebida'
+                          : 'Prato'}
                       </span>
                       <span className="block text-sm font-semibold text-[#0E6B7E] mt-1">
                         {moeda(p.preco_venda)}

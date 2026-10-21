@@ -60,6 +60,7 @@ export type ProdutoCardapio = {
   nome: string;
   preco_venda: number;
   tipo_produto: string;
+  categoria_bebida: string | null;
 };
 
 export const FORMAS_PAGAMENTO = [
@@ -107,15 +108,22 @@ export async function excluirMesa(supabase: SupabaseClient, mesaId: string) {
 // ---------- Cardápio (pratos e acabados com preço) ----------
 
 export async function listarCardapioPdv(supabase: SupabaseClient) {
-  const { data, error } = await supabase
-    .from('ingredientes')
-    .select('id, nome, preco_venda, tipo_produto')
-    .in('tipo_produto', ['prato', 'acabado'])
-    .eq('ativo', true)
-    .gt('preco_venda', 0)
-    .order('nome');
+  const consulta = (campos: string, tipos: string[]) =>
+    supabase
+      .from('ingredientes')
+      .select(campos)
+      .in('tipo_produto', tipos)
+      .eq('ativo', true)
+      .gt('preco_venda', 0)
+      .order('nome');
+
+  let { data, error } = await consulta('id, nome, preco_venda, tipo_produto, categoria_bebida', ['prato', 'acabado', 'bebida']);
+  // SQL das bebidas (0020) ainda não rodado: segue sem elas, o PDV continua funcionando
+  if (error && (error.message || '').includes('categoria_bebida')) {
+    ({ data, error } = await consulta('id, nome, preco_venda, tipo_produto', ['prato', 'acabado']));
+  }
   if (error) throw error;
-  return (data || []) as ProdutoCardapio[];
+  return ((data || []) as any[]).map((p) => ({ categoria_bebida: null, ...p })) as ProdutoCardapio[];
 }
 
 // ---------- Pedidos ----------

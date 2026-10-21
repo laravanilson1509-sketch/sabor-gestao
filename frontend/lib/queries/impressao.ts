@@ -142,7 +142,7 @@ export async function listarProdutosComSetor(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from('ingredientes')
     .select('id, nome, tipo_produto, setor_id')
-    .in('tipo_produto', ['prato', 'acabado'])
+    .in('tipo_produto', ['prato', 'acabado', 'bebida'])
     .eq('ativo', true)
     .order('nome');
   if (error) throw error;

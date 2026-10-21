@@ -59,11 +59,11 @@ async function carregarBase(supabase: SupabaseClient, unidadeId: string): Promis
 }
 
 // quanto de cada ingrediente um item consome — mesma regra da baixa no banco:
-// prato usa a ficha técnica, produto acabado consome ele mesmo
+// prato usa a ficha técnica, produto acabado e bebida consomem eles mesmos
 function consumoDoItem(base: Base, produtoId: string | null, quantidade: number) {
   if (!produtoId) return [];
   const tipo = base.tipos.get(produtoId);
-  if (tipo === 'acabado') return [{ ingrediente_id: produtoId, quantidade }];
+  if (tipo === 'acabado' || tipo === 'bebida') return [{ ingrediente_id: produtoId, quantidade }];
   if (tipo !== 'prato') return [];
   return (base.fichas.get(produtoId) || [])
     .filter((f) => {
@@ -79,7 +79,7 @@ export async function listarProdutosSemEstoque(supabase: SupabaseClient, unidade
   const base = await carregarBase(supabase, unidadeId);
   const semEstoque = new Set<string>();
   for (const [produtoId, tipo] of base.tipos) {
-    if (tipo !== 'prato' && tipo !== 'acabado') continue;
+    if (tipo !== 'prato' && tipo !== 'acabado' && tipo !== 'bebida') continue;
     const falta = consumoDoItem(base, produtoId, 1).some(
       (c) => c.quantidade > (base.saldo.get(c.ingrediente_id)?.disponivel || 0) + MARGEM
     );

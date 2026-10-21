@@ -436,7 +436,7 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
                 <li key={p.id} className="px-3 py-2 flex flex-wrap items-center gap-3">
                   <span className="flex-1 min-w-[10rem] text-sm text-[#16252B]">
                     {p.nome}
-                    <span className="text-xs text-[#8FA0A8]"> · {p.tipo_produto === 'acabado' ? 'Produto acabado' : 'Prato'}</span>
+                    <span className="text-xs text-[#8FA0A8]"> · {p.tipo_produto === 'acabado' ? 'Produto acabado' : p.tipo_produto === 'bebida' ? 'Bebida' : 'Prato'}</span>
                   </span>
                   <select
                     value={p.setor_id || ''}

@@ -1,5 +1,6 @@
 'use client';
 
+import { GRUPOS_BEBIDA, categoriasDoGrupo, grupoDaCategoria, setorSugerido, type GrupoBebida } from '@/lib/queries/bebidas';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
@@ -30,7 +31,10 @@ function CadastroEstoquePageInner() {
   const [erro, setErro] = useState<string | null>(null);
 
   const [nome, setNome] = useState('');
-  const [tipoProduto, setTipoProduto] = useState<'ingrediente' | 'acabado'>('ingrediente');
+  const [tipoProduto, setTipoProduto] = useState<'ingrediente' | 'acabado' | 'bebida'>('ingrediente');
+  const [grupoBebida, setGrupoBebida] = useState<GrupoBebida>('nao_alcoolica');
+  const [categoriaBebida, setCategoriaBebida] = useState('');
+  const [precoVenda, setPrecoVenda] = useState('');
   const [unidade, setUnidade] = useState('kg');
   const [quantidade, setQuantidade] = useState('0');
   const [custo, setCusto] = useState('');
@@ -51,7 +55,14 @@ function CadastroEstoquePageInner() {
         }
 
         setNome(ingrediente.nome || '');
-        setTipoProduto(ingrediente.tipo_produto === 'acabado' ? 'acabado' : 'ingrediente');
+        setTipoProduto(
+          ingrediente.tipo_produto === 'acabado' || ingrediente.tipo_produto === 'bebida'
+            ? ingrediente.tipo_produto
+            : 'ingrediente'
+        );
+        setCategoriaBebida(ingrediente.categoria_bebida || '');
+        setGrupoBebida(grupoDaCategoria(ingrediente.categoria_bebida) || 'nao_alcoolica');
+        setPrecoVenda(ingrediente.preco_venda ? String(ingrediente.preco_venda) : '');
         setAtivo(ingrediente.ativo ?? true);
         setUnidade(estoque?.unidade || 'kg');
         setQuantidade(String(estoque?.quantidade_disponivel || 0));
@@ -67,6 +78,22 @@ function CadastroEstoquePageInner() {
     carregarDados();
   }, [id]);
 
+  // bebida nova já vai para o setor certo na impressão (Bar ou Bebidas), se existir
+  async function sugerirSetor(ingredienteId: string) {
+    try {
+      const nomeSetor = setorSugerido(grupoBebida);
+      const { data } = await supabase
+        .from('pdv_setores')
+        .select('id')
+        .eq('unidade_id', unidadeId)
+        .ilike('nome', nomeSetor)
+        .maybeSingle();
+      if (data?.id) await supabase.from('ingredientes').update({ setor_id: data.id }).eq('id', ingredienteId);
+    } catch {
+      // sem setor cadastrado: o item vai para o setor padrão
+    }
+  }
+
   async function handleSalvar(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
@@ -81,20 +108,31 @@ function CadastroEstoquePageInner() {
       return;
     }
 
+    if (tipoProduto === 'bebida' && !categoriaBebida) {
+      setErro('Escolha a categoria da bebida.');
+      return;
+    }
+    const vendavel = tipoProduto === 'acabado' || tipoProduto === 'bebida';
+    const preco = vendavel && precoVenda ? parseFloat(precoVenda) || 0 : null;
+
     setSalvando(true);
     try {
       if (editando) {
         await atualizarIngrediente(supabase, id!, {
           nome: nome.trim(),
           tipo_produto: tipoProduto,
+          categoria_bebida: categoriaBebida || null,
+          ...(vendavel && { preco_venda: preco }),
           ativo,
           custo_unitario: parseFloat(custo) || 0,
           estoque_minimo: parseFloat(estoqueMinimo) || 0,
         });
       } else {
-        await criarIngredienteComEstoque(supabase, {
+        const novoId = await criarIngredienteComEstoque(supabase, {
           nome: nome.trim(),
           tipo_produto: tipoProduto,
+          categoria_bebida: categoriaBebida || null,
+          preco_venda: preco,
           unidade_padrao: unidade,
           ativo,
           quantidade_disponivel: parseFloat(quantidade) || 0,
@@ -102,6 +140,7 @@ function CadastroEstoquePageInner() {
           estoque_minimo: parseFloat(estoqueMinimo) || 0,
           unidade_id: unidadeId,
         });
+        if (tipoProduto === 'bebida') await sugerirSetor(novoId);
       }
       router.push('/estoque');
     } catch (err: any) {
@@ -159,7 +198,7 @@ function CadastroEstoquePageInner() {
             <label className="block text-sm font-medium text-[#2B3C44] mb-2">
               Tipo de produto
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 type="button"
                 onClick={() => setTipoProduto('ingrediente')}
@@ -188,8 +227,85 @@ function CadastroEstoquePageInner() {
                   Pronto para revenda direta
                 </span>
               </button>
+              <button
+                type="button"
+                onClick={() => setTipoProduto('bebida')}
+                className={`py-3 px-4 rounded-lg border-2 text-left transition ${
+                  tipoProduto === 'bebida'
+                    ? 'border-[#0E6B7E] bg-[#DCEEF2] text-[#0B4F5E]'
+                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
+                }`}
+              >
+                <span className="block text-sm font-semibold">Bebida</span>
+                <span className="block text-xs font-normal mt-1 opacity-80">
+                  Alcoólica, não alcoólica...
+                </span>
+              </button>
             </div>
           </div>
+
+          {tipoProduto === 'bebida' && (
+            <div className="space-y-4 rounded-xl border border-[#DCE3E7] bg-[#F8FAFB] p-4">
+              <div>
+                <label className="block text-sm font-medium text-[#2B3C44] mb-2">Tipo de bebida</label>
+                <div className="flex gap-2">
+                  {(Object.entries(GRUPOS_BEBIDA) as [GrupoBebida, string][]).map(([valor, rotulo]) => (
+                    <button
+                      key={valor}
+                      type="button"
+                      onClick={() => {
+                        setGrupoBebida(valor);
+                        if (grupoDaCategoria(categoriaBebida) !== valor) setCategoriaBebida('');
+                      }}
+                      className={`flex-1 py-2.5 rounded-lg border-2 text-sm font-semibold transition ${
+                        grupoBebida === valor
+                          ? 'border-[#0E6B7E] bg-[#DCEEF2] text-[#0B4F5E]'
+                          : 'border-[#DCE3E7] bg-white text-[#5B6B73] hover:border-[#C9D3D8]'
+                      }`}
+                    >
+                      {rotulo}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className={LABEL}>
+                  Categoria <span className="text-[#B3261E]">*</span>
+                </label>
+                <select value={categoriaBebida} onChange={(e) => setCategoriaBebida(e.target.value)} className={INPUT}>
+                  <option value="">Escolha...</option>
+                  {categoriasDoGrupo(grupoBebida).map((c) => (
+                    <option key={c.valor} value={c.valor}>
+                      {c.rotulo}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {grupoBebida === 'alcoolica' && (
+                <p className="text-xs text-[#7A5A0A] bg-[#FFF0C7] rounded-lg px-3 py-2">
+                  Lembrete: a venda de bebida alcoólica é proibida para menores de 18 anos.
+                </p>
+              )}
+            </div>
+          )}
+
+          {(tipoProduto === 'acabado' || tipoProduto === 'bebida') && (
+            <div>
+              <label className={LABEL}>
+                Preço de venda (R$)
+                <span className="ml-1 text-xs text-[#8FA0A8]">(aparece no PDV)</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={precoVenda}
+                onChange={(e) => setPrecoVenda(e.target.value)}
+                placeholder="0.00"
+                className={INPUT}
+              />
+            </div>
+          )}
 
           {/* Unidade + Quantidade (só no cadastro novo) */}
           {!editando && (

@@ -1,5 +1,6 @@
 'use client';
 
+import { grupoDaCategoria, rotuloCategoria } from '@/lib/queries/bebidas';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
@@ -18,15 +19,17 @@ type ItemEstoque = {
   custo_unitario: number;
   estoque_minimo: number;
   unidade: string;
-  ingredientes: { id: string; nome: string; tipo_produto: string; ativo: boolean } | null;
+  ingredientes: { id: string; nome: string; tipo_produto: string; categoria_bebida?: string | null; ativo: boolean } | null;
 };
 
-type FiltroTipo = 'todos' | 'ingrediente' | 'acabado';
+type FiltroTipo = 'todos' | 'ingrediente' | 'acabado' | 'bebida';
+type FiltroBebida = 'todas' | 'nao_alcoolica' | 'alcoolica';
 type FiltroAtivo = 'todos' | 'ativo' | 'inativo';
 
 function rotuloTipo(t: FiltroTipo) {
   if (t === 'todos') return 'Todos';
   if (t === 'ingrediente') return 'Ingrediente';
+  if (t === 'bebida') return 'Bebida';
   return 'Acabado';
 }
 
@@ -100,6 +103,7 @@ export default function EstoquePage() {
 
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos');
   const [filtroAtivo, setFiltroAtivo] = useState<FiltroAtivo>('ativo');
+  const [filtroBebida, setFiltroBebida] = useState<FiltroBebida>('todas');
 
   const [itemMovimentacao, setItemMovimentacao] = useState<ItemEstoque | null>(null);
   const [tipoMovimentacao, setTipoMovimentacao] = useState<'entrada' | 'consumo'>('entrada');
@@ -111,6 +115,12 @@ export default function EstoquePage() {
 
   const [itemParaDeletar, setItemParaDeletar] = useState<ItemEstoque | null>(null);
   const [deletando, setDeletando] = useState(false);
+
+  // sub-filtro das bebidas: alcoólicas ou não alcoólicas
+  function passaFiltroBebida(item: ItemEstoque) {
+    if (filtroTipo !== 'bebida' || filtroBebida === 'todas') return true;
+    return grupoDaCategoria(item.ingredientes?.categoria_bebida) === filtroBebida;
+  }
 
   async function carregar() {
     setLoading(true);
@@ -197,7 +207,7 @@ export default function EstoquePage() {
           <div>
             <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Tipo</label>
             <div className="flex gap-1.5 flex-wrap">
-              {(['todos', 'ingrediente', 'acabado'] as FiltroTipo[]).map((t) => (
+              {(['todos', 'ingrediente', 'acabado', 'bebida'] as FiltroTipo[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setFiltroTipo(t)}
@@ -213,6 +223,30 @@ export default function EstoquePage() {
               ))}
             </div>
           </div>
+
+          {filtroTipo === 'bebida' && (
+            <div>
+              <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Tipo de bebida</label>
+              <div className="flex gap-1.5 flex-wrap">
+                {([['todas', 'Todas'], ['nao_alcoolica', 'Não alcoólicas'], ['alcoolica', 'Alcoólicas']] as [FiltroBebida, string][]).map(
+                  ([valor, rotulo]) => (
+                    <button
+                      key={valor}
+                      onClick={() => setFiltroBebida(valor)}
+                      className={
+                        'text-sm px-3.5 py-1.5 rounded-full font-medium transition ' +
+                        (filtroBebida === valor
+                          ? 'bg-[#0E6B7E] text-white'
+                          : 'bg-[#F1F5F7] text-[#5B6B73] hover:bg-[#E3E9EC]')
+                      }
+                    >
+                      {rotulo}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Status</label>
@@ -260,13 +294,18 @@ export default function EstoquePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E6ECEF]">
-                {itens.map((item) => {
+                {itens.filter(passaFiltroBebida).map((item) => {
                   const total = (item.quantidade_disponivel || 0) * (item.custo_unitario || 0);
                   const status = calcularStatus(item.quantidade_disponivel, item.estoque_minimo);
                   const statusInfo = getStatusDisplay(status);
                   const inativo = item.ingredientes ? item.ingredientes.ativo === false : false;
                   const tipo = item.ingredientes ? item.ingredientes.tipo_produto : '';
-                  const rotulo = tipo === 'acabado' ? 'Acabado' : 'Ingrediente';
+                  const rotulo =
+                    tipo === 'acabado'
+                      ? 'Acabado'
+                      : tipo === 'bebida'
+                      ? 'Bebida' + (rotuloCategoria(item.ingredientes?.categoria_bebida) ? ' · ' + rotuloCategoria(item.ingredientes?.categoria_bebida) : '')
+                      : 'Ingrediente';
 
                   return (
                     <tr key={item.id} className={'hover:bg-[#F8FAFB] ' + (inativo ? 'opacity-50' : '')}>

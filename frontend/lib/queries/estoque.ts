@@ -5,16 +5,20 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export async function getEstoqueComStatus(
   supabase: SupabaseClient,
   unidadeId: string,
-  filtros?: { tipo?: "ingrediente" | "prato" | "acabado" | "todos"; ativo?: "ativo" | "inativo" | "todos" }
+  filtros?: { tipo?: "ingrediente" | "prato" | "acabado" | "bebida" | "todos"; ativo?: "ativo" | "inativo" | "todos" }
 ) {
-  let query = supabase
-    .from("estoque_saldo")
-    .select(
-      "id, quantidade_disponivel, custo_unitario, estoque_minimo, unidade, ingredientes(id, nome, tipo_produto, ativo)"
-    )
-    .eq("unidade_id", unidadeId);
+  const buscar = (ingredientes: string) =>
+    supabase
+      .from("estoque_saldo")
+      .select(`id, quantidade_disponivel, custo_unitario, estoque_minimo, unidade, ingredientes(${ingredientes})`)
+      .eq("unidade_id", unidadeId)
+      .order("id");
 
-  const { data, error } = await query.order("id");
+  let { data, error } = await buscar("id, nome, tipo_produto, categoria_bebida, ativo");
+  // SQL das bebidas (0020) ainda não rodado: lista sem a categoria
+  if (error && (error.message || "").includes("categoria_bebida")) {
+    ({ data, error } = await buscar("id, nome, tipo_produto, ativo"));
+  }
   if (error) throw error;
 
   let resultado = (data || []) as any[];
@@ -70,7 +74,9 @@ export async function criarIngredienteComEstoque(
   supabase: SupabaseClient,
   params: {
     nome: string;
-    tipo_produto: "ingrediente" | "prato" | "acabado";
+    tipo_produto: "ingrediente" | "prato" | "acabado" | "bebida";
+    categoria_bebida?: string | null;
+    preco_venda?: number | null;
     unidade_padrao: string;
     ativo: boolean;
     quantidade_disponivel: number;
@@ -86,11 +92,18 @@ export async function criarIngredienteComEstoque(
       tipo_produto: params.tipo_produto,
       unidade_padrao: params.unidade_padrao,
       ativo: params.ativo,
+      ...(params.tipo_produto === "bebida" && { categoria_bebida: params.categoria_bebida ?? null }),
+      ...(params.preco_venda ? { preco_venda: params.preco_venda } : {}),
     })
     .select("id")
     .single();
 
-  if (erroIngrediente) throw erroIngrediente;
+  if (erroIngrediente) {
+    if ((erroIngrediente.message || "").includes("categoria_bebida")) {
+      throw new Error("Falta rodar o SQL 0020_bebidas.sql no Supabase.");
+    }
+    throw erroIngrediente;
+  }
 
   const { error: erroEstoque } = await supabase.from("estoque_saldo").insert({
     ingrediente_id: novo.id,
@@ -128,7 +141,9 @@ export async function atualizarIngrediente(
   ingredienteId: string,
   params: {
     nome: string;
-        tipo_produto: "ingrediente" | "prato" | "acabado";
+        tipo_produto: "ingrediente" | "prato" | "acabado" | "bebida";
+    categoria_bebida?: string | null;
+    preco_venda?: number | null;
     ativo: boolean;
     custo_unitario: number;
     estoque_minimo: number;
@@ -140,9 +155,16 @@ export async function atualizarIngrediente(
       nome: params.nome,
       tipo_produto: params.tipo_produto,
       ativo: params.ativo,
+      ...(params.tipo_produto === "bebida" && { categoria_bebida: params.categoria_bebida ?? null }),
+      ...(params.preco_venda !== undefined && { preco_venda: params.preco_venda }),
     })
     .eq("id", ingredienteId);
-  if (e1) throw e1;
+  if (e1) {
+    if ((e1.message || "").includes("categoria_bebida")) {
+      throw new Error("Falta rodar o SQL 0020_bebidas.sql no Supabase.");
+    }
+    throw e1;
+  }
 
   const { error: e2 } = await supabase
     .from("estoque_saldo")
