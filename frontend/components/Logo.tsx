@@ -1,7 +1,7 @@
 // Logo do sistema (SVG, sem arquivos de imagem). Para trocar a logo em todo o
 // sistema, mude LOGO_PADRAO (1 a 4). Veja as opções em /logos.
 
-export const LOGO_PADRAO: Variante = 1;
+export const LOGO_PADRAO: Variante = 4;
 
 export type Variante = 1 | 2 | 3 | 4;
 

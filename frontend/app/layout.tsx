@@ -90,7 +90,9 @@ export default function RootLayout({
         <div className="min-h-screen md:flex">
           {/* Barra superior (celular) */}
           <header className="md:hidden sticky top-0 z-30 flex items-center justify-between bg-white border-b border-[#DCE3E7] px-4 h-14">
-            <Logo tamanho={30} />
+            <Link href="/" aria-label="Início">
+              <Logo tamanho={30} />
+            </Link>
             <button
               onClick={() => setAberto((v) => !v)}
               className="h-10 w-10 text-2xl text-[#16252B]"
@@ -108,9 +110,9 @@ export default function RootLayout({
               'bg-white border-r border-[#DCE3E7] p-4'
             }
           >
-            <div className="hidden md:block px-3 pt-2 pb-6">
+            <Link href="/" aria-label="Início" className="hidden md:block px-3 pt-2 pb-6">
               <Logo tamanho={34} />
-            </div>
+            </Link>
             <nav className="flex flex-col gap-1">
               {LINKS.map((l) => (
                 <Link

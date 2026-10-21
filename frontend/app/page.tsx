@@ -1,14 +1,13 @@
-'use client';
+import Logo from '@/components/Logo';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
+// Tela inicial: vazia por enquanto, só com a logo como marca d'água.
+// Depois dá para colocar aqui contato de suporte, atalhos etc.
 export default function Home() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.push('/whatsapp');
-  }, [router]);
-
-  return null;
+  return (
+    <div className="min-h-[calc(100vh-3.5rem)] md:min-h-screen flex items-center justify-center overflow-hidden">
+      <div aria-hidden className="opacity-[0.07] select-none pointer-events-none">
+        <Logo tamanho={340} />
+      </div>
+    </div>
+  );
 }

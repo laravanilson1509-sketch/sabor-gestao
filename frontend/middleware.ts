@@ -43,7 +43,7 @@ export async function middleware(request: NextRequest) {
   // já logado e tentando acessar /login -> manda pro sistema
   if (user && ehRotaPublica) {
     const url = request.nextUrl.clone();
-    url.pathname = "/whatsapp";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 
