@@ -174,7 +174,15 @@ export async function carregarResumo(
   const despesas = [...porDespesa.values()].reduce((a, f) => a + f.valor, 0);
   const lucro = faturamento - cmv - despesas;
 
+  // eixo do gráfico; o período anterior também precisa dele para a linha de comparação
+  const buckets = listarBuckets(p).map((b) => ({
+    ...b,
+    valor: porBucket.get(b.chave)?.valor || 0,
+    quantidade: porBucket.get(b.chave)?.quantidade || 0,
+  }));
+
   const resumo = {
+    buckets,
     faturamento,
     vendas,
     outrasReceitas,
@@ -208,12 +216,9 @@ export async function carregarResumo(
     }
   }
 
-  const buckets = listarBuckets(p).map((b) => ({ ...b, valor: porBucket.get(b.chave)?.valor || 0, quantidade: porBucket.get(b.chave)?.quantidade || 0 }));
-
   return {
     ...resumo,
     detalhe: {
-      buckets,
       porForma: ordenar(porForma),
       porCanal: ordenar(porCanal),
       topProdutos: ordenar(porProduto).slice(0, 6),
