@@ -88,6 +88,12 @@ export default function RootLayout({
 
   return (
     <html lang="pt-BR">
+      <head>
+        {/* letra manuscrita da tela inicial */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet" />
+      </head>
       <body className="bg-[#EEF2F4] text-[#16252B]">
         <TelaAbertura ativa={!naLogin} />
         <div className="min-h-screen md:flex">

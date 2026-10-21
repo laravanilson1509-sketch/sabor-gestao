@@ -81,7 +81,7 @@ const DICAS = [
 ];
 
 function nomeDoEmail(email: string | undefined | null) {
-  const base = (email || '').split('@')[0].split(/[._-]/)[0];
+  const base = (email || '').split('@')[0].split(/[._-]/)[0].replace(/\d+/g, '');
   return base ? base.charAt(0).toUpperCase() + base.slice(1) : '';
 }
 
@@ -126,33 +126,45 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
 
         <div className="mt-10 md:mt-14 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
           <div>
-            <h1 className="text-4xl md:text-6xl font-extrabold leading-[1.05] text-[#16252B]">
-              Olá{nome ? ', ' + nome : ','}
-              <br />
-              Seja{' '}
-              <span className="relative inline-block text-[#E3B341]">
-                bem-vindo!
-                <svg viewBox="0 0 300 14" preserveAspectRatio="none" className="absolute left-0 -bottom-2 w-full h-3" aria-hidden>
-                  <path d="M3 9 C60 2 140 2 297 8" fill="none" stroke="#E3B341" strokeWidth="3.5" strokeLinecap="round" />
-                </svg>
+            <h1
+              className="font-normal leading-[1.1] text-[#0A4E5C]"
+              style={{ fontFamily: "'Great Vibes', 'Brush Script MT', cursive" }}
+            >
+              <span className="block text-5xl md:text-7xl">Olá{nome ? ', ' + nome : ''}</span>
+              <span className="block text-5xl md:text-7xl mt-1">
+                Seja{' '}
+                <span className="relative inline-block text-[#C99A1E]">
+                  bem-vindo!
+                  {/* traço fino de assinatura */}
+                  <svg viewBox="0 0 320 24" preserveAspectRatio="none" className="absolute left-0 -bottom-3 w-full h-5" aria-hidden>
+                    <path
+                      d="M4 16 C50 6 110 4 170 10 C215 15 262 12 316 4"
+                      fill="none"
+                      stroke="#E3B341"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                    />
+                    <path d="M40 20 C110 14 200 14 270 18" fill="none" stroke="#E3B341" strokeWidth="0.8" strokeLinecap="round" opacity="0.7" />
+                  </svg>
+                </span>
               </span>
             </h1>
-            <p className="mt-8 text-lg md:text-xl font-medium text-[#2B3C44] max-w-lg">
+            <p className="mt-10 text-lg md:text-xl font-light text-[#2B3C44] max-w-lg">
               Sua operação no restaurante ou bar mais organizada, prática e lucrativa.
             </p>
-            <p className="mt-3 text-base text-[#5B6B73] max-w-lg">
+            <p className="mt-3 text-base font-light text-[#5B6B73] max-w-lg">
               Vamos juntos transformar o seu negócio em grandes resultados!
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/pdv"
-                className="inline-flex items-center gap-2 bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white px-6 py-3.5 rounded-lg text-sm font-semibold transition"
+                className="inline-flex items-center gap-2 bg-[#0E6B7E] hover:bg-[#0B5A6A] !text-white px-7 py-3 rounded-full text-sm font-medium transition"
               >
                 Acessar o sistema <span aria-hidden>→</span>
               </Link>
               <a
                 href="#como-funciona"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg border-2 border-[#16252B] text-[#16252B] text-sm font-semibold hover:bg-[#F1F5F7] transition"
+                className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-[#0E6B7E]/40 text-[#0A4E5C] text-sm font-medium hover:bg-[#F1F8FA] transition"
               >
                 <span aria-hidden>▷</span> Ver como funciona
               </a>
