@@ -19,6 +19,16 @@ export type PedidoPdv = {
   forma_pagamento: string | null;
   total: number;
   criado_em: string;
+  subtotal: number;
+  desconto: number;
+  desconto_pct: number | null;
+  desconto_motivo: string | null;
+  taxa_servico_pct: number;
+  taxa_servico: number;
+  pessoas: number;
+  para_viagem: boolean;
+  pre_conta_em: string | null;
+  reaberturas: number;
 };
 
 export type ItemPdv = {
@@ -31,7 +41,19 @@ export type ItemPdv = {
   observacao: string | null;
   // null = ainda não foi enviado para a cozinha
   status_cozinha: 'novo' | 'preparando' | 'pronto' | null;
+  restricao: string | null;
+  adicionais: { nome: string; valor: number }[];
+  cortesia: boolean;
+  cancelado: boolean;
+  cancelado_motivo: string | null;
+  cancelado_por: string | null;
 };
+
+// valor cobrado de uma linha da comanda (igual a pdv_valor_item no banco)
+export const valorItem = (i: ItemPdv) =>
+  i.cancelado || i.cortesia
+    ? 0
+    : i.quantidade * (Number(i.preco_unitario) + (i.adicionais || []).reduce((s, a) => s + Number(a.valor || 0), 0));
 
 export type ProdutoCardapio = {
   id: string;
@@ -98,10 +120,19 @@ export async function listarCardapioPdv(supabase: SupabaseClient) {
 
 // ---------- Pedidos ----------
 
+const CAMPOS_PEDIDO =
+  'id, numero, canal, mesa_id, nome_cliente, status, forma_pagamento, total, criado_em, subtotal, desconto, desconto_pct, desconto_motivo, taxa_servico_pct, taxa_servico, pessoas, para_viagem, pre_conta_em, reaberturas';
+
+export async function buscarPedido(supabase: SupabaseClient, pedidoId: string) {
+  const { data, error } = await supabase.from('pdv_pedidos').select(CAMPOS_PEDIDO).eq('id', pedidoId).single();
+  if (error) throw error;
+  return data as PedidoPdv;
+}
+
 export async function listarPedidosAbertos(supabase: SupabaseClient, unidadeId: string) {
   const { data, error } = await supabase
     .from('pdv_pedidos')
-    .select('id, numero, canal, mesa_id, nome_cliente, status, forma_pagamento, total, criado_em')
+    .select(CAMPOS_PEDIDO)
     .eq('unidade_id', unidadeId)
     .eq('status', 'aberto')
     .order('criado_em');
@@ -111,7 +142,7 @@ export async function listarPedidosAbertos(supabase: SupabaseClient, unidadeId: 
 
 export async function abrirPedido(
   supabase: SupabaseClient,
-  params: { unidadeId: string; canal: 'mesa' | 'balcao'; mesaId?: string }
+  params: { unidadeId: string; canal: 'mesa' | 'balcao'; mesaId?: string; paraViagem?: boolean }
 ) {
   const { data, error } = await supabase
     .from('pdv_pedidos')
@@ -119,8 +150,9 @@ export async function abrirPedido(
       unidade_id: params.unidadeId,
       canal: params.canal,
       mesa_id: params.mesaId ?? null,
+      para_viagem: params.paraViagem ?? false,
     })
-    .select()
+    .select(CAMPOS_PEDIDO)
     .single();
   if (error) throw error;
   return data as PedidoPdv;
@@ -129,7 +161,7 @@ export async function abrirPedido(
 export async function listarItens(supabase: SupabaseClient, pedidoId: string) {
   const { data, error } = await supabase
     .from('pdv_pedido_itens')
-    .select('id, pedido_id, produto_id, nome, quantidade, preco_unitario, observacao, status_cozinha')
+    .select('id, pedido_id, produto_id, nome, quantidade, preco_unitario, observacao, status_cozinha, restricao, adicionais, cortesia, cancelado, cancelado_motivo, cancelado_por')
     .eq('pedido_id', pedidoId)
     .order('criado_em');
   if (error) throw error;
@@ -140,15 +172,18 @@ export async function adicionarItem(
   supabase: SupabaseClient,
   params: { pedidoId: string; produto: ProdutoCardapio }
 ) {
-  // se o mesmo produto já está na comanda (e ainda não foi para a cozinha),
-  // só aumenta a quantidade
+  // se o mesmo produto já está na comanda (sem observação e ainda não foi
+  // para a cozinha), só aumenta a quantidade
   const { data: existente, error: erroBusca } = await supabase
     .from('pdv_pedido_itens')
     .select('id, quantidade')
     .eq('pedido_id', params.pedidoId)
     .eq('produto_id', params.produto.id)
     .is('observacao', null)
+    .is('restricao', null)
+    .eq('adicionais', '[]')
     .is('status_cozinha', null)
+    .limit(1)
     .maybeSingle();
   if (erroBusca) throw erroBusca;
 
@@ -188,51 +223,6 @@ export async function alterarQuantidade(
   if (error) throw error;
 }
 
-// manda para a cozinha todos os itens da comanda que ainda não foram enviados;
-// os de itensSemEstoque chegam lá marcados como "Conferir estoque"
-export async function enviarParaCozinha(
-  supabase: SupabaseClient,
-  pedidoId: string,
-  itensSemEstoque: string[] = []
-) {
-  if (itensSemEstoque.length > 0) {
-    const { error } = await supabase
-      .from('pdv_pedido_itens')
-      .update({ sem_estoque: true })
-      .in('id', itensSemEstoque);
-    if (error) throw error;
-  }
-  const { error } = await supabase
-    .from('pdv_pedido_itens')
-    .update({ status_cozinha: 'novo', enviado_cozinha_em: new Date().toISOString() })
-    .eq('pedido_id', pedidoId)
-    .is('status_cozinha', null);
-  if (error) throw error;
-}
-
-export async function fecharPedido(
-  supabase: SupabaseClient,
-  pedidoId: string,
-  formaPagamento: string
-) {
-  const { error } = await supabase
-    .from('pdv_pedidos')
-    .update({
-      status: 'fechado',
-      forma_pagamento: formaPagamento,
-      fechado_em: new Date().toISOString(),
-    })
-    .eq('id', pedidoId);
-  if (error) throw error;
-}
-
-export async function cancelarPedido(supabase: SupabaseClient, pedidoId: string) {
-  const { error } = await supabase
-    .from('pdv_pedidos')
-    .update({ status: 'cancelado', fechado_em: new Date().toISOString() })
-    .eq('id', pedidoId);
-  if (error) throw error;
-}
 // ---------- Reservas ----------
 
 export type Reserva = {
@@ -310,5 +300,10 @@ export async function atualizarStatusReserva(
     .from('pdv_reservas')
     .update({ status })
     .eq('id', reservaId);
+  if (error) throw error;
+}
+// balcão: comer aqui (senha) ou levar (retirada) — sai assim no ticket
+export async function definirParaViagem(supabase: SupabaseClient, pedidoId: string, paraViagem: boolean) {
+  const { error } = await supabase.from('pdv_pedidos').update({ para_viagem: paraViagem }).eq('id', pedidoId);
   if (error) throw error;
 }

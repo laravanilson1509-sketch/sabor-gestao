@@ -47,6 +47,7 @@ const COR_FORMA: Record<string, string> = {
   vale_refeicao: '#d55181',
   outro: '#9085e9',
   nao_informado: '#9085e9',
+  fiado: '#a0a7b4',
 };
 
 const vidro =

@@ -207,7 +207,9 @@ export async function listarQuitadasEntre(
     .gte(t.quitado, inicioData)
     .lt(t.quitado, fimData);
   if (error) throw error;
-  return (data || []).map((c) => paraConta(tipo, c));
+  // fiado lançado pelo PDV já entrou como venda no fechamento da conta:
+  // receber depois não é receita nova (senão contaria duas vezes)
+  return (data || []).filter((c) => !c.pdv_pedido_id).map((c) => paraConta(tipo, c));
 }
 
 function listarQuitadasNoMes(supabase: SupabaseClient, tipo: TipoConta, unidadeId: string, mes: string) {

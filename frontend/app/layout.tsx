@@ -13,6 +13,7 @@ const LINKS = [
   { href: '/pdv', label: 'PDV' },
   { href: '/cozinha', label: 'Cozinha' },
   { href: '/caixa', label: 'Caixa' },
+  { href: '/impressao', label: 'Impressão' },
   { href: '/cadastros', label: 'Cadastros' },
   { href: '/delivery', label: 'Delivery' },
   { href: '/compras', label: 'Compras' },

@@ -26,6 +26,16 @@ const menorData = (datas: (string | null)[]) =>
 const maiorData = (datas: (string | null)[]) =>
   datas.filter(Boolean).sort().reverse()[0] as string | undefined;
 
+// restrição (alergia) vem primeiro e em maiúsculas; depois adicionais e observação
+function juntarObservacao(i: { observacao: string | null; restricao?: string | null; adicionais?: { nome: string }[] }) {
+  const partes = [
+    i.restricao ? '⚠ ' + i.restricao.toUpperCase() : null,
+    ...(i.adicionais || []).map((a) => '+ ' + a.nome),
+    i.observacao,
+  ].filter(Boolean);
+  return partes.length > 0 ? partes.join(' · ') : null;
+}
+
 export async function listarFilaCozinha(
   supabase: SupabaseClient,
   unidadeId: string
@@ -55,9 +65,10 @@ export async function listarFilaCozinha(
   if (pedidos.length > 0) {
     const { data, error } = await supabase
       .from('pdv_pedido_itens')
-      .select('id, pedido_id, nome, quantidade, observacao, status_cozinha, enviado_cozinha_em, iniciado_em, pronto_em, sem_estoque')
+      .select('id, pedido_id, nome, quantidade, observacao, restricao, adicionais, status_cozinha, enviado_cozinha_em, iniciado_em, pronto_em, sem_estoque')
       .in('pedido_id', pedidos.map((p) => p.id))
-      .not('status_cozinha', 'is', null);
+      .not('status_cozinha', 'is', null)
+      .eq('cancelado', false);
     if (error) throw error;
     itensPdv = data || [];
   }
@@ -96,7 +107,7 @@ export async function listarFilaCozinha(
       itens: itens.map((i) => ({
         nome: i.nome,
         quantidade: i.quantidade,
-        observacao: i.observacao,
+        observacao: juntarObservacao(i),
         semEstoque: Boolean(i.sem_estoque),
       })),
       itemIds: itens.map((i) => i.id),

@@ -30,6 +30,8 @@ export type Venda = {
   quando: string;
   // delivery já traz os itens no próprio pedido; no PDV eles são buscados ao abrir
   itensDelivery: { nome: string; quantidade: number; preco_unitario: number }[] | null;
+  // conta paga com mais de uma forma: quanto entrou em cada uma
+  pagamentos: { forma: string; valor: number }[] | null;
 };
 
 // rótulos das formas de pagamento (PDV e delivery usam nomes um pouco diferentes)
@@ -41,6 +43,8 @@ export const ROTULO_FORMA: Record<string, string> = {
   cartao_debito: 'Cartão de débito',
   vale_refeicao: 'Vale refeição',
   outro: 'Outro',
+  fiado: 'A receber (fiado)',
+  multiplo: 'Várias formas',
 };
 
 export const rotuloForma = (forma: string | null) =>
@@ -156,6 +160,10 @@ export async function listarVendas(
   if (resDelivery.error) throw resDelivery.error;
 
   const numeroMesa = new Map((resMesas.data || []).map((m) => [m.id, m.numero]));
+  const divididos = await pagamentosDivididos(
+    supabase,
+    (resPdv.data || []).filter((p) => p.forma_pagamento === 'multiplo').map((p) => p.id)
+  );
 
   const vendas: Venda[] = (resPdv.data || []).map((p) => ({
     id: p.id,
@@ -168,6 +176,7 @@ export async function listarVendas(
     valor: Number(p.total || 0),
     quando: p.fechado_em,
     itensDelivery: null,
+    pagamentos: divididos.get(p.id) || null,
   }));
 
   for (const d of resDelivery.data || []) {
@@ -179,19 +188,38 @@ export async function listarVendas(
       valor: Number(d.valor_total || 0),
       quando: d.criado_em,
       itensDelivery: d.itens || [],
+      pagamentos: null,
     });
   }
 
   return vendas.sort((a, b) => b.quando.localeCompare(a.quando));
 }
 
+// contas pagas com várias formas: busca os pagamentos confirmados de cada uma
+export async function pagamentosDivididos(supabase: SupabaseClient, pedidoIds: string[]) {
+  const mapa = new Map<string, { forma: string; valor: number }[]>();
+  for (let i = 0; i < pedidoIds.length; i += 150) {
+    const { data, error } = await supabase
+      .from('pdv_pagamentos')
+      .select('pedido_id, forma, valor')
+      .in('pedido_id', pedidoIds.slice(i, i + 150))
+      .eq('status', 'confirmado');
+    if (error) throw error;
+    for (const g of data || []) {
+      mapa.set(g.pedido_id, [...(mapa.get(g.pedido_id) || []), { forma: g.forma, valor: Number(g.valor) }]);
+    }
+  }
+  return mapa;
+}
+
 export function resumirVendas(vendas: Venda[]) {
   const total = vendas.reduce((acc, v) => acc + v.valor, 0);
   const porForma = new Map<string, { quantidade: number; valor: number }>();
   for (const v of vendas) {
-    const chave = v.forma || 'nao_informado';
-    const atual = porForma.get(chave) || { quantidade: 0, valor: 0 };
-    porForma.set(chave, { quantidade: atual.quantidade + 1, valor: atual.valor + v.valor });
+    for (const parte of v.pagamentos || [{ forma: v.forma || 'nao_informado', valor: v.valor }]) {
+      const atual = porForma.get(parte.forma) || { quantidade: 0, valor: 0 };
+      porForma.set(parte.forma, { quantidade: atual.quantidade + 1, valor: atual.valor + parte.valor });
+    }
   }
   return {
     total,
@@ -205,9 +233,11 @@ export function resumirVendas(vendas: Venda[]) {
 
 // dinheiro que deveria estar na gaveta: troco + vendas em dinheiro + suprimentos - sangrias
 export function calcularDinheiroEsperado(caixa: Caixa, vendas: Venda[], movs: Movimentacao[]) {
+  // o troco já foi descontado: o pagamento guarda só o que abateu da conta
   const vendasDinheiro = vendas
-    .filter((v) => v.forma === 'dinheiro')
-    .reduce((acc, v) => acc + v.valor, 0);
+    .flatMap((v) => v.pagamentos || [{ forma: v.forma, valor: v.valor }])
+    .filter((p) => p.forma === 'dinheiro')
+    .reduce((acc, p) => acc + p.valor, 0);
   const suprimentos = movs.filter((m) => m.tipo === 'suprimento').reduce((a, m) => a + Number(m.valor), 0);
   const sangrias = movs.filter((m) => m.tipo === 'sangria').reduce((a, m) => a + Number(m.valor), 0);
   return {

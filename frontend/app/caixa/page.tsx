@@ -239,7 +239,8 @@ export default function CaixaPage() {
     setItensAbertos([]);
     if (!v.itensDelivery) {
       try {
-        setItensAbertos(await listarItens(supabase, v.id));
+        // itens cancelados não fazem parte da venda
+        setItensAbertos((await listarItens(supabase, v.id)).filter((i) => !i.cancelado));
       } catch (e: any) {
         setErro(e.message || 'Erro ao carregar os itens');
       }

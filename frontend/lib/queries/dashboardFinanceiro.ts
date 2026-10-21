@@ -3,6 +3,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { calcularCmv, dataLocal, hojeISO, listarQuitadasEntre, type Conta } from './financeiroContas';
 import { listarCustosFixos } from './financeiro';
+import { pagamentosDivididos } from './caixa';
 
 export type TipoPeriodo = 'dia' | 'mes' | 'ano' | 'periodo';
 export type Agrupamento = 'hora' | 'dia' | 'mes';
@@ -147,11 +148,20 @@ export async function carregarResumo(
   const porCanal = new Map<string, Fatia>();
   let vendas = 0;
 
+  const divididos = detalhado
+    ? await pagamentosDivididos(
+        supabase,
+        pdv.filter((v) => v.forma_pagamento === 'multiplo').map((v) => v.id)
+      )
+    : new Map<string, { forma: string; valor: number }[]>();
+
   for (const v of pdv) {
     const valor = Number(v.total || 0);
     vendas += valor;
     somarEm(porBucket, chaveBucket(new Date(v.fechado_em), p.agrupamento), valor);
-    somarEm(porForma, v.forma_pagamento || 'nao_informado', valor);
+    for (const parte of divididos.get(v.id) || [{ forma: v.forma_pagamento || 'nao_informado', valor }]) {
+      somarEm(porForma, parte.forma, parte.valor);
+    }
     somarEm(porCanal, v.canal === 'mesa' ? 'Mesa' : 'Balcão', valor);
   }
   for (const d of delivery) {
@@ -203,11 +213,13 @@ export async function carregarResumo(
   for (let i = 0; i < ids.length; i += 150) {
     const { data, error } = await supabase
       .from('pdv_pedido_itens')
-      .select('nome, quantidade, preco_unitario')
-      .in('pedido_id', ids.slice(i, i + 150));
+      .select('nome, quantidade, preco_unitario, cortesia')
+      .in('pedido_id', ids.slice(i, i + 150))
+      .eq('cancelado', false);
     if (error) throw error;
     for (const it of data || []) {
-      somarEm(porProduto, it.nome, Number(it.quantidade) * Number(it.preco_unitario), Number(it.quantidade));
+      const valor = it.cortesia ? 0 : Number(it.quantidade) * Number(it.preco_unitario);
+      somarEm(porProduto, it.nome, valor, Number(it.quantidade));
     }
   }
   for (const d of delivery) {

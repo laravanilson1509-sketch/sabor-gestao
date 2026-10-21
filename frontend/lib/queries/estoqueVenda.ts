@@ -101,11 +101,13 @@ export async function verificarEstoqueEnvio(
       .from('pdv_pedido_itens')
       .select('id, produto_id, nome, quantidade')
       .eq('pedido_id', pedidoId)
+      .eq('cancelado', false)
       .is('status_cozinha', null),
     supabase
       .from('pdv_pedido_itens')
       .select('id, produto_id, quantidade, pdv_pedidos!inner(unidade_id, status)')
       .in('status_cozinha', ['novo', 'preparando'])
+      .eq('cancelado', false)
       .eq('pdv_pedidos.unidade_id', unidadeId)
       .eq('pdv_pedidos.status', 'aberto'),
   ]);

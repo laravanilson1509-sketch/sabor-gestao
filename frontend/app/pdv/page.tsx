@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import {
   listarMesas,
@@ -12,13 +13,12 @@ import {
   listarItens,
   adicionarItem,
   alterarQuantidade,
-  enviarParaCozinha,
-  fecharPedido,
-  cancelarPedido,
+  buscarPedido,
+  definirParaViagem,
+  valorItem,
   listarReservasAtivas,
   criarReserva,
   atualizarStatusReserva,
-  FORMAS_PAGAMENTO,
   type Mesa,
   type PedidoPdv,
   type ItemPdv,
@@ -31,6 +31,22 @@ import {
   type FaltaEstoque,
 } from '@/lib/queries/estoqueVenda';
 import { registrarPendenciasEnvio, EVENTO_PENDENCIAS } from '@/lib/queries/pendenciasEstoque';
+import {
+  enviarProducao,
+  cancelarItem,
+  cancelarPedidoAutorizado,
+  imprimirPreConta,
+  listarFechadasHoje,
+  reabrirConta,
+  type ContaFechada,
+} from '@/lib/queries/conta';
+import { contarProblemasFila, erroImpressao } from '@/lib/queries/impressao';
+import { rotuloForma } from '@/lib/queries/caixa';
+import { terminalId } from '@/lib/impressao/terminal';
+import ModalPin from '@/components/pdv/ModalPin';
+import EditarItem from '@/components/pdv/EditarItem';
+import FechamentoConta from '@/components/pdv/FechamentoConta';
+import HistoricoPedido from '@/components/pdv/HistoricoPedido';
 
 const INPUT =
   'border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
@@ -118,8 +134,20 @@ export default function PdvPage() {
   const [itens, setItens] = useState<ItemPdv[]>([]);
   const [busca, setBusca] = useState('');
   const [categoria, setCategoria] = useState<Categoria>('todos');
-  const [forma, setForma] = useState('dinheiro');
   const [ocupado, setOcupado] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+  // janelas da comanda
+  const [editando, setEditando] = useState<ItemPdv | null>(null);
+  const [cancelandoItem, setCancelandoItem] = useState<ItemPdv | null>(null);
+  const [qtdCancelar, setQtdCancelar] = useState(1);
+  const [devolverEstoque, setDevolverEstoque] = useState(true);
+  const [cancelandoPedido, setCancelandoPedido] = useState(false);
+  const [mostrarFechamento, setMostrarFechamento] = useState(false);
+  const [historico, setHistorico] = useState<{ id: string; titulo: string } | null>(null);
+  // salão
+  const [fechadasHoje, setFechadasHoje] = useState<ContaFechada[]>([]);
+  const [reabrindo, setReabrindo] = useState<ContaFechada | null>(null);
+  const [problemasFila, setProblemasFila] = useState(0);
   // estoque: pratos sem estoque no cardápio e aviso antes de enviar para a cozinha
   const [semEstoque, setSemEstoque] = useState<Set<string>>(new Set());
   const [faltas, setFaltas] = useState<FaltaEstoque[] | null>(null);
@@ -150,6 +178,12 @@ export default function PdvPage() {
       );
     }
     atualizarSemEstoque();
+    listarFechadasHoje(supabase, unidadeId)
+      .then(setFechadasHoje)
+      .catch(() => setFechadasHoje([]));
+    contarProblemasFila(supabase, unidadeId)
+      .then(setProblemasFila)
+      .catch(() => setProblemasFila(0));
     try {
       setReservas(await listarReservasAtivas(supabase, unidadeId));
     } catch (e: any) {
@@ -166,21 +200,19 @@ export default function PdvPage() {
   }, []);
 
   async function recarregarComanda(p: PedidoPdv) {
-    const lista = await listarItens(supabase, p.id);
+    // total, desconto e taxa são calculados no banco
+    const [lista, atual] = await Promise.all([listarItens(supabase, p.id), buscarPedido(supabase, p.id)]);
     setItens(lista);
-    // atualiza o total do pedido atual
-    const todos = await listarPedidosAbertos(supabase, unidadeId);
-    setAbertos(todos);
-    const atual = todos.find((x) => x.id === p.id);
-    if (atual) setPedido(atual);
+    setPedido(atual);
+    setAbertos((todos) => todos.map((x) => (x.id === atual.id ? atual : x)));
   }
 
   async function abrirComanda(p: PedidoPdv) {
     setErro(null);
+    setAviso(null);
     setPedido(p);
     setBusca('');
     setCategoria('todos');
-    setForma('dinheiro');
     try {
       setItens(await listarItens(supabase, p.id));
     } catch (e: any) {
@@ -360,20 +392,28 @@ export default function PdvPage() {
     if (!pedido || ocupado) return;
     setOcupado(true);
     setErro(null);
+    setAviso(null);
     try {
       // só avisa: se faltar estoque, o atendente decide se envia mesmo assim
       const falta = await verificarEstoqueEnvio(supabase, unidadeId, pedido.id);
       if (falta.length > 0) {
         setFaltas(falta);
       } else {
-        await enviarParaCozinha(supabase, pedido.id);
+        const n = await enviarProducao(supabase, pedido.id, [], terminalId());
+        avisarEnvio(n);
         await recarregarComanda(pedido);
         atualizarSemEstoque();
       }
     } catch (e: any) {
-      setErro(e.message || 'Erro ao enviar para a cozinha');
+      setErro(erroImpressao(e, 'Erro ao enviar para a produção'));
     }
     setOcupado(false);
+  }
+
+  function avisarEnvio(n: number) {
+    setAviso(
+      n === 1 ? '1 item enviado. O ticket foi para a impressora do setor.' : n + ' itens enviados. Os tickets foram para as impressoras dos setores.'
+    );
   }
 
   async function enviarMesmoAssim() {
@@ -381,56 +421,101 @@ export default function PdvPage() {
     setOcupado(true);
     try {
       const itensSemEstoque = [...new Set(faltas.flatMap((f) => f.itemIds))];
-      await enviarParaCozinha(supabase, pedido.id, itensSemEstoque);
+      const n = await enviarProducao(supabase, pedido.id, itensSemEstoque, terminalId());
       await registrarPendenciasEnvio(supabase, { unidadeId, origem: tituloComanda, faltas });
       window.dispatchEvent(new Event(EVENTO_PENDENCIAS));
       setFaltas(null);
+      avisarEnvio(n);
       await recarregarComanda(pedido);
       atualizarSemEstoque();
     } catch (e: any) {
-      setErro(e.message || 'Erro ao enviar para a cozinha');
+      setErro(erroImpressao(e, 'Erro ao enviar para a produção'));
       setFaltas(null);
     }
     setOcupado(false);
   }
 
-  async function fechar() {
+  function abrirFechamento() {
     if (!pedido) return;
-    if (itens.length === 0) {
+    if (itensValidos.length === 0) {
       setErro('Adicione pelo menos um item antes de fechar a conta.');
       return;
     }
+    if (naoEnviados > 0 && !window.confirm('Há ' + naoEnviados + ' item(ns) que não foram enviados para a produção. Fechar a conta mesmo assim?')) {
+      return;
+    }
+    setErro(null);
+    setMostrarFechamento(true);
+  }
+
+  async function preConta() {
+    if (!pedido) return;
+    const resposta = window.prompt('Pré-conta de ' + tituloComanda + '.\nDividir por quantas pessoas?', String(pedido.pessoas || 1));
+    if (resposta === null) return;
+    const pessoas = Math.max(parseInt(resposta, 10) || 1, 1);
     setOcupado(true);
+    setErro(null);
     try {
-      await fecharPedido(supabase, pedido.id, forma);
-      voltar();
+      await imprimirPreConta(supabase, pedido.id, pessoas, terminalId());
+      setAviso('Pré-conta enviada para impressão.');
+      await recarregarComanda(pedido);
     } catch (e: any) {
-      setErro(e.message || 'Erro ao fechar a conta');
+      setErro(erroImpressao(e, 'Erro ao imprimir a pré-conta'));
     }
     setOcupado(false);
   }
 
   async function cancelar() {
     if (!pedido) return;
+    // com itens na produção precisa de gerente; sem nada enviado é só confirmar
+    if (itensValidos.some((i) => i.status_cozinha)) {
+      setCancelandoPedido(true);
+      return;
+    }
     if (!window.confirm('Cancelar este pedido? Os itens serão descartados.')) return;
     setOcupado(true);
     try {
-      await cancelarPedido(supabase, pedido.id);
+      await cancelarPedidoAutorizado(supabase, { pedidoId: pedido.id, motivo: '', pin: '', terminalId: terminalId() });
       voltar();
     } catch (e: any) {
-      setErro(e.message || 'Erro ao cancelar');
+      setErro(erroImpressao(e, 'Erro ao cancelar'));
     }
     setOcupado(false);
+  }
+
+  async function mudarParaViagem(valor: boolean) {
+    if (!pedido) return;
+    try {
+      await definirParaViagem(supabase, pedido.id, valor);
+      await recarregarComanda(pedido);
+    } catch (e: any) {
+      setErro(e.message || 'Erro ao salvar');
+    }
+  }
+
+  function abrirCancelarItem(i: ItemPdv) {
+    setQtdCancelar(i.quantidade);
+    setDevolverEstoque(i.status_cozinha !== 'pronto');
+    setCancelandoItem(i);
   }
 
   function voltar() {
     setPedido(null);
     setItens([]);
     setErro(null);
+    setAviso(null);
+    setMostrarFechamento(false);
     carregarInicio();
   }
 
-  const totalPedido = itens.reduce((s, i) => s + i.quantidade * Number(i.preco_unitario), 0);
+  async function confirmarReabertura(c: ContaFechada, pin: string, motivo: string) {
+    await reabrirConta(supabase, { pedidoId: c.id, motivo, pin, terminalId: terminalId() });
+    setReabrindo(null);
+    await carregarInicio();
+    await abrirComanda(await buscarPedido(supabase, c.id));
+  }
+
+  const itensValidos = itens.filter((i) => !i.cancelado);
   const filtrado = cardapio.filter(
     (p) =>
       (categoria === 'todos' || p.tipo_produto === categoria) &&
@@ -443,12 +528,19 @@ export default function PdvPage() {
       : 'Balcão #' + pedido.numero
     : '';
 
-  const naoEnviados = itens.filter((i) => !i.status_cozinha).length;
+  const naoEnviados = itensValidos.filter((i) => !i.status_cozinha).length;
+  const tituloConta = (c: { canal: string; mesa_id: string | null; numero: number }) =>
+    c.canal === 'mesa' ? 'Mesa ' + (mesas.find((m) => m.id === c.mesa_id)?.numero ?? '') : 'Balcão #' + c.numero;
 
-  const avisoErro = erro && (
-    <div role="alert" className="mb-4 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
-      {erro}
-    </div>
+  const avisoErro = (
+    <>
+      {erro && (
+        <div role="alert" className="mb-4 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+          {erro}
+        </div>
+      )}
+      {aviso && <div className="mb-4 text-sm text-[#1E6B3F] bg-[#D9F0E3] rounded-lg px-3 py-2">{aviso}</div>}
+    </>
   );
 
   // ---------------- COMANDA ----------------
@@ -464,10 +556,27 @@ export default function PdvPage() {
             >
               ←
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-[#16252B]">{tituloComanda}</h1>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-[#16252B]">
+                {tituloComanda}
+                {pedido.reaberturas > 0 && (
+                  <span className="ml-2 align-middle rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#FADBD6] text-[#B3261E]">
+                    Reaberta
+                  </span>
+                )}
+              </h1>
               <p className="text-sm text-[#5B6B73]">Toque em um item do cardápio para adicionar</p>
             </div>
+            {pedido.canal === 'balcao' && (
+              <label className="flex items-center gap-2 text-sm font-medium text-[#2B3C44] bg-white border border-[#DCE3E7] rounded-lg px-3 py-2">
+                <input
+                  type="checkbox"
+                  checked={pedido.para_viagem}
+                  onChange={(e) => mudarParaViagem(e.target.checked)}
+                />
+                Para levar (retirada)
+              </label>
+            )}
           </div>
 
           {avisoErro}
@@ -539,71 +648,118 @@ export default function PdvPage() {
                 <p className="text-sm text-[#5B6B73] py-6 text-center">Nenhum item ainda.</p>
               ) : (
                 <ul className="divide-y divide-[#E6ECEF] mb-4">
-                  {itens.map((i) => (
-                    <li key={i.id} className="py-3 flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[#16252B] truncate">{i.nome}</p>
-                        <p className="text-xs text-[#5B6B73]">{moeda(i.preco_unitario)} cada</p>
-                      </div>
-                      {i.status_cozinha ? (
-                        <span className="flex items-center gap-2">
-                          <span className="w-7 text-center text-sm font-semibold text-[#16252B]">
-                            {i.quantidade}
+                  {itens.map((i) =>
+                    i.cancelado ? (
+                      <li key={i.id} className="py-2.5">
+                        <p className="text-sm text-[#8FA0A8] line-through">
+                          {i.quantidade}× {i.nome}
+                        </p>
+                        <p className="text-xs text-[#B3261E]">
+                          Cancelado · {i.cancelado_motivo} · {i.cancelado_por}
+                        </p>
+                      </li>
+                    ) : (
+                      <li key={i.id} className="py-3">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setEditando(i)}
+                            className="flex-1 min-w-0 text-left group"
+                            title="Observação, restrição e adicionais"
+                          >
+                            <p className="text-sm font-medium text-[#16252B] truncate group-hover:text-[#0E6B7E]">
+                              {i.nome}
+                            </p>
+                            <p className="text-xs text-[#5B6B73]">
+                              {moeda(i.preco_unitario)} cada · <span className="text-[#0E6B7E]">obs.</span>
+                            </p>
+                          </button>
+                          {i.status_cozinha ? (
+                            <span className="flex items-center gap-2">
+                              <span className="w-7 text-center text-sm font-semibold text-[#16252B]">
+                                {i.quantidade}
+                              </span>
+                              <span className={'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + SELO_COZINHA[i.status_cozinha].cor}>
+                                {SELO_COZINHA[i.status_cozinha].rotulo}
+                              </span>
+                            </span>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => mudarQtd(i, -1)}
+                                disabled={ocupado}
+                                className="h-8 w-8 rounded-lg border border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]"
+                                aria-label="Diminuir"
+                              >
+                                −
+                              </button>
+                              <span className="w-7 text-center text-sm font-semibold text-[#16252B]">
+                                {i.quantidade}
+                              </span>
+                              <button
+                                onClick={() => mudarQtd(i, 1)}
+                                disabled={ocupado}
+                                className="h-8 w-8 rounded-lg border border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]"
+                                aria-label="Aumentar"
+                              >
+                                +
+                              </button>
+                            </div>
+                          )}
+                          <span className="w-20 text-right text-sm font-semibold text-[#16252B]">
+                            {i.cortesia ? 'Cortesia' : moeda(valorItem(i))}
                           </span>
-                          <span className={'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + SELO_COZINHA[i.status_cozinha].cor}>
-                            {SELO_COZINHA[i.status_cozinha].rotulo}
-                          </span>
-                        </span>
-                      ) : (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => mudarQtd(i, -1)}
-                          disabled={ocupado}
-                          className="h-8 w-8 rounded-lg border border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]"
-                          aria-label="Diminuir"
-                        >
-                          −
-                        </button>
-                        <span className="w-7 text-center text-sm font-semibold text-[#16252B]">
-                          {i.quantidade}
-                        </span>
-                        <button
-                          onClick={() => mudarQtd(i, 1)}
-                          disabled={ocupado}
-                          className="h-8 w-8 rounded-lg border border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]"
-                          aria-label="Aumentar"
-                        >
-                          +
-                        </button>
-                      </div>
-                      )}
-                      <span className="w-20 text-right text-sm font-semibold text-[#16252B]">
-                        {moeda(i.quantidade * Number(i.preco_unitario))}
-                      </span>
-                    </li>
-                  ))}
+                        </div>
+                        {i.restricao && (
+                          <p className="mt-1 text-xs font-semibold text-[#B3261E] bg-[#FADBD6] rounded px-2 py-0.5">
+                            ⚠ {i.restricao}
+                          </p>
+                        )}
+                        {(i.adicionais || []).map((a, k) => (
+                          <p key={k} className="text-xs text-[#2B3C44] mt-0.5">
+                            + {a.nome} {Number(a.valor) > 0 && '(' + moeda(a.valor) + ')'}
+                          </p>
+                        ))}
+                        {i.observacao && (
+                          <p className="mt-1 text-xs text-[#7A5A0A] bg-[#FFF0C7] rounded px-2 py-0.5">{i.observacao}</p>
+                        )}
+                        {i.status_cozinha && (
+                          <button
+                            onClick={() => abrirCancelarItem(i)}
+                            className="mt-1 text-xs text-[#8FA0A8] hover:text-[#B3261E]"
+                          >
+                            Cancelar item
+                          </button>
+                        )}
+                      </li>
+                    )
+                  )}
                 </ul>
               )}
 
-              <div className="flex justify-between items-center border-t border-[#DCE3E7] pt-3 mb-4">
-                <span className="text-sm font-medium text-[#5B6B73]">Total</span>
-                <span className="text-xl font-bold text-[#16252B]">{moeda(totalPedido)}</span>
+              <div className="border-t border-[#DCE3E7] pt-3 mb-4 space-y-1 text-sm">
+                {(Number(pedido.desconto) > 0 || Number(pedido.taxa_servico) > 0) && (
+                  <div className="flex justify-between text-[#5B6B73]">
+                    <span>Itens</span>
+                    <span>{moeda(pedido.subtotal)}</span>
+                  </div>
+                )}
+                {Number(pedido.desconto) > 0 && (
+                  <div className="flex justify-between text-[#5B6B73]">
+                    <span>Desconto</span>
+                    <span>- {moeda(pedido.desconto)}</span>
+                  </div>
+                )}
+                {Number(pedido.taxa_servico) > 0 && (
+                  <div className="flex justify-between text-[#5B6B73]">
+                    <span>Taxa de serviço {Number(pedido.taxa_servico_pct)}%</span>
+                    <span>{moeda(pedido.taxa_servico)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-[#5B6B73]">Total</span>
+                  <span className="text-xl font-bold text-[#16252B]">{moeda(pedido.total)}</span>
+                </div>
               </div>
-
-              <label className="block text-sm font-medium text-[#2B3C44] mb-1">
-                Forma de pagamento
-              </label>
-              <select
-                value={forma}
-                onChange={(e) => setForma(e.target.value)}
-                className={INPUT + ' w-full mb-4'}
-              >
-                {FORMAS_PAGAMENTO.map((f) => (
-                  <option key={f.valor} value={f.valor}>
-                    {f.rotulo}
-                  </option>
-                ))}
-              </select>
 
               <button
                 onClick={enviarCozinha}
@@ -611,15 +767,22 @@ export default function PdvPage() {
                 className={BTN_PRIMARY + ' w-full mb-2'}
               >
                 {naoEnviados > 0
-                  ? 'Enviar para a cozinha (' + naoEnviados + (naoEnviados === 1 ? ' item)' : ' itens)')
-                  : 'Tudo enviado para a cozinha'}
+                  ? 'Enviar para a produção (' + naoEnviados + (naoEnviados === 1 ? ' item)' : ' itens)')
+                  : 'Tudo enviado para a produção'}
               </button>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <button onClick={preConta} disabled={ocupado || itensValidos.length === 0} className={BTN_SECONDARY}>
+                  Pré-conta
+                </button>
+                <button onClick={abrirFechamento} disabled={ocupado || itensValidos.length === 0} className={BTN_SECONDARY}>
+                  Fechar conta
+                </button>
+              </div>
               <button
-                onClick={fechar}
-                disabled={ocupado || itens.length === 0}
+                onClick={() => setHistorico({ id: pedido.id, titulo: tituloComanda })}
                 className={BTN_SECONDARY + ' w-full mb-2'}
               >
-                Fechar conta
+                Impressões e histórico
               </button>
               <button
                 onClick={cancelar}
@@ -631,6 +794,112 @@ export default function PdvPage() {
             </div>
           </div>
         </div>
+
+        {editando && (
+          <EditarItem
+            supabase={supabase}
+            item={editando}
+            onFechar={() => setEditando(null)}
+            onSalvo={async () => {
+              setEditando(null);
+              await recarregarComanda(pedido);
+            }}
+          />
+        )}
+
+        {cancelandoItem && (
+          <ModalPin
+            titulo={'Cancelar ' + cancelandoItem.nome}
+            descricao="O item já foi para a produção: o setor recebe um ticket de CANCELAMENTO. Precisa de gerente."
+            perigo
+            textoConfirmar="Cancelar item"
+            sugestoesMotivo={['Cliente desistiu', 'Lançado errado', 'Demora', 'Item com problema']}
+            onFechar={() => setCancelandoItem(null)}
+            onConfirmar={async ({ pin, motivo }) => {
+              await cancelarItem(supabase, {
+                itemId: cancelandoItem.id,
+                quantidade: qtdCancelar,
+                motivo,
+                devolverEstoque,
+                pin,
+                terminalId: terminalId(),
+              });
+              setCancelandoItem(null);
+              setAviso('Item cancelado. O setor recebeu o aviso de cancelamento.');
+              await recarregarComanda(pedido);
+            }}
+          >
+            {cancelandoItem.quantidade > 1 && (
+              <div>
+                <label className="block text-sm font-medium text-[#2B3C44] mb-1">Quantas unidades cancelar?</label>
+                <select
+                  value={qtdCancelar}
+                  onChange={(e) => setQtdCancelar(Number(e.target.value))}
+                  className={INPUT + ' w-full'}
+                >
+                  {Array.from({ length: Math.floor(cancelandoItem.quantidade) }, (_, k) => k + 1).map((n) => (
+                    <option key={n} value={n}>
+                      {n} de {cancelandoItem.quantidade}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {cancelandoItem.status_cozinha === 'pronto' && (
+              <label className="flex items-start gap-2 text-sm text-[#2B3C44]">
+                <input
+                  type="checkbox"
+                  checked={devolverEstoque}
+                  onChange={(e) => setDevolverEstoque(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>Devolver ao estoque (o prato não foi consumido nem descartado)</span>
+              </label>
+            )}
+          </ModalPin>
+        )}
+
+        {cancelandoPedido && (
+          <ModalPin
+            titulo={'Cancelar o pedido · ' + tituloComanda}
+            descricao="Há itens na produção: cada setor recebe um ticket de cancelamento. Precisa de gerente."
+            perigo
+            textoConfirmar="Cancelar pedido"
+            sugestoesMotivo={['Cliente foi embora', 'Pedido em duplicidade', 'Lançado errado']}
+            onFechar={() => setCancelandoPedido(false)}
+            onConfirmar={async ({ pin, motivo }) => {
+              await cancelarPedidoAutorizado(supabase, { pedidoId: pedido.id, motivo, pin, terminalId: terminalId() });
+              setCancelandoPedido(false);
+              voltar();
+            }}
+          />
+        )}
+
+        {mostrarFechamento && (
+          <FechamentoConta
+            supabase={supabase}
+            unidadeId={unidadeId}
+            pedido={pedido}
+            itens={itens}
+            titulo={tituloComanda}
+            onAtualizar={() => recarregarComanda(pedido)}
+            onFechada={voltar}
+            onVoltar={() => {
+              setMostrarFechamento(false);
+              recarregarComanda(pedido).catch(() => null);
+            }}
+          />
+        )}
+
+        {historico && (
+          <HistoricoPedido
+            supabase={supabase}
+            unidadeId={unidadeId}
+            pedidoId={historico.id}
+            titulo={historico.titulo}
+            onFechar={() => setHistorico(null)}
+          />
+        )}
 
         {faltas && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -690,6 +959,9 @@ export default function PdvPage() {
             <h1 className="text-2xl font-bold text-[#16252B]">PDV</h1>
             <p className="text-sm text-[#5B6B73]">Mesas, reservas e vendas no balcão</p>
           </div>
+          <Link href="/impressao" className={BTN_SECONDARY}>
+            Impressão
+          </Link>
           <button onClick={novaVendaBalcao} className={BTN_PRIMARY}>
             Venda no balcão
           </button>
@@ -699,6 +971,19 @@ export default function PdvPage() {
         </div>
 
         {avisoErro}
+
+        {problemasFila > 0 && (
+          <Link
+            href="/impressao"
+            className="mb-4 flex items-center justify-between gap-3 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2 hover:underline"
+          >
+            <span>
+              {problemasFila === 1 ? '1 impressão com problema' : problemasFila + ' impressões com problema'} (falha, sem
+              impressora ou parada na fila).
+            </span>
+            <span className="font-semibold whitespace-nowrap">Ver fila →</span>
+          </Link>
+        )}
 
         {mostrarNovaMesa && (
           <form
@@ -755,7 +1040,9 @@ export default function PdvPage() {
                       key={m.id}
                       className={
                         'rounded-xl border p-4 transition ' +
-                        (p
+                        (p?.pre_conta_em
+                          ? 'bg-[#DCEEF2] border-[#9CCBD6]'
+                          : p
                           ? 'bg-[#FFF0C7] border-[#E8D28A]'
                           : reservada
                           ? 'bg-[#FADBD6] border-[#F2C2BB]'
@@ -778,7 +1065,7 @@ export default function PdvPage() {
                           }
                         >
                           {p
-                            ? 'Ocupada · ' + moeda(p.total)
+                            ? (p.pre_conta_em ? 'Conta pedida · ' : 'Ocupada · ') + moeda(p.total)
                             : reservada
                             ? 'Reservada · ' + hora(reservaHoje!.data_hora)
                             : 'Livre'}
@@ -893,9 +1180,81 @@ export default function PdvPage() {
                 </div>
               </>
             )}
+
+            {fechadasHoje.length > 0 && (
+              <>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-[#5B6B73] mb-3 mt-8">
+                  Contas fechadas hoje
+                </h2>
+                <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Hora</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Conta</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Pagamento</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Total</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E6ECEF]">
+                      {fechadasHoje.map((c) => (
+                        <tr key={c.id} className="hover:bg-[#F8FAFB]">
+                          <td className="px-4 py-3 text-sm text-[#2B3C44]">{hora(c.fechado_em)}</td>
+                          <td className="px-4 py-3 text-sm font-medium text-[#16252B]">
+                            {tituloConta(c)}
+                            {c.reaberturas > 0 && (
+                              <span className="ml-2 text-xs font-normal text-[#B3261E]">reaberta {c.reaberturas}×</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-[#2B3C44]">{rotuloForma(c.forma_pagamento)}</td>
+                          <td className="px-4 py-3 text-sm text-right font-semibold text-[#16252B]">{moeda(c.total)}</td>
+                          <td className="px-4 py-3 text-center whitespace-nowrap">
+                            <button
+                              onClick={() => setHistorico({ id: c.id, titulo: tituloConta(c) })}
+                              className="text-sm px-3 py-1.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] hover:bg-[#F1F5F7] transition mr-2"
+                            >
+                              Comprovante e histórico
+                            </button>
+                            <button
+                              onClick={() => setReabrindo(c)}
+                              className="text-sm px-3 py-1.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] hover:bg-[#FADBD6] transition"
+                            >
+                              Reabrir
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
+
+      {reabrindo && (
+        <ModalPin
+          titulo={'Reabrir ' + tituloConta(reabrindo) + ' (' + moeda(reabrindo.total) + ')'}
+          descricao="O fechamento anterior continua guardado. Os pagamentos seguem valendo; estorne se precisar. Precisa de gerente."
+          perigo
+          textoConfirmar="Reabrir conta"
+          sugestoesMotivo={['Pagamento lançado errado', 'Cliente pediu mais itens', 'Item cobrado errado']}
+          onFechar={() => setReabrindo(null)}
+          onConfirmar={({ pin, motivo }) => confirmarReabertura(reabrindo, pin, motivo)}
+        />
+      )}
+
+      {historico && (
+        <HistoricoPedido
+          supabase={supabase}
+          unidadeId={unidadeId}
+          pedidoId={historico.id}
+          titulo={historico.titulo}
+          onFechar={() => setHistorico(null)}
+        />
+      )}
 
       {/* Modal: nova reserva */}
       {mesaReserva && (
