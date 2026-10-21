@@ -71,12 +71,13 @@ type Props = {
   tamanho?: number; // altura do ícone em px
   mostrarNome?: boolean;
   claro?: boolean; // nome em branco (fundo escuro)
+  empilhado?: boolean; // nome embaixo do ícone
   className?: string;
 };
 
-export default function Logo({ variante = LOGO_PADRAO, tamanho = 40, mostrarNome = true, claro = false, className = '' }: Props) {
+export default function Logo({ variante = LOGO_PADRAO, tamanho = 40, mostrarNome = true, claro = false, empilhado = false, className = '' }: Props) {
   return (
-    <span className={'inline-flex items-center gap-3 ' + className}>
+    <span className={'inline-flex items-center ' + (empilhado ? 'flex-col gap-4 ' : 'gap-3 ') + className}>
       <svg width={tamanho} height={tamanho} viewBox="0 0 48 48" role="img" aria-label="Logo Império">
         <Icone v={variante} />
       </svg>
