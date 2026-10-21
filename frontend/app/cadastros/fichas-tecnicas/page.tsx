@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import { combina } from '@/lib/busca';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { listarPratos, getFichaTecnica, calcularMargem } from '@/lib/queries/fichasTecnicas';
@@ -22,6 +24,8 @@ export default function FichasTecnicasPage() {
 
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busca, setBusca] = useState('');
+  const produtosFiltrados = produtos.filter((p) => combina(busca, p.nome));
 
   async function carregar() {
     setLoading(true);
@@ -69,6 +73,10 @@ export default function FichasTecnicasPage() {
           </Link>
         </div>
 
+        {!loading && produtos.length > 0 && (
+          <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar prato..." className="mb-4" />
+        )}
+
         {loading ? (
           <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
         ) : produtos.length === 0 ? (
@@ -78,6 +86,8 @@ export default function FichasTecnicasPage() {
               Cadastre um prato em Cadastros → Pratos primeiro.
             </p>
           </div>
+        ) : produtosFiltrados.length === 0 ? (
+          <NadaEncontrado busca={busca} />
         ) : (
           <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
             <table className="w-full">
@@ -91,7 +101,7 @@ export default function FichasTecnicasPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E6ECEF]">
-                {produtos.map((p) => {
+                {produtosFiltrados.map((p) => {
                   const preco = Number(p.preco_venda) || 0;
                   const custo = p.custoTotal || 0;
                   const margemCalculo = calcularMargem(custo, preco);

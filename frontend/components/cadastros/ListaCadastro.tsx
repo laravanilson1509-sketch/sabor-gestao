@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import { combina } from '@/lib/busca';
 import { createBrowserClient } from '@supabase/ssr';
 import { listarCadastros, deletarCadastro } from '@/lib/queries/cadastros';
 import { diaMes, proximoAniversario } from '@/lib/queries/aniversarios';
@@ -27,6 +29,8 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
   const [loading, setLoading] = useState(true);
   const [paraDeletar, setParaDeletar] = useState<any | null>(null);
   const [deletando, setDeletando] = useState(false);
+  const [busca, setBusca] = useState('');
+  const itensFiltrados = itens.filter((i) => combina(busca, i.nome, ...colunas.map((c) => i[c.chave])));
 
   async function carregar() {
     setLoading(true);
@@ -98,6 +102,15 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
           </Link>
         </div>
 
+        {!loading && itens.length > 0 && (
+          <BarraBusca
+            valor={busca}
+            onChange={setBusca}
+            placeholder={'Buscar ' + singular + ' por nome' + (colunas.length ? ', ' + colunas.map((c) => c.rotulo.toLowerCase()).join(', ') : '') + '...'}
+            className="mb-4"
+          />
+        )}
+
         {loading ? (
           <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
         ) : itens.length === 0 ? (
@@ -105,6 +118,8 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
             <p className="text-[#16252B]">Nenhum {singular} cadastrado</p>
             <p className="text-sm text-[#5B6B73] mt-2">Clique em + Novo {singular} para começar</p>
           </div>
+        ) : itensFiltrados.length === 0 ? (
+          <NadaEncontrado busca={busca} />
         ) : (
           <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
             <table className="w-full">
@@ -121,7 +136,7 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E6ECEF]">
-                {itens.map((item) => (
+                {itensFiltrados.map((item) => (
                   <tr key={item.id} className={'hover:bg-[#F8FAFB] ' + (item.ativo ? '' : 'opacity-60')}>
                     <td className="px-4 py-4 text-sm font-medium text-[#16252B]">{item.nome}</td>
                     {colunas.map((c) => (

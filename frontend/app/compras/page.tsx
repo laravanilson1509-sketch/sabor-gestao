@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import { combina } from '@/lib/busca';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { listarSolicitacoes, getStatusLabel } from '@/lib/queries/compras';
@@ -22,6 +24,10 @@ export default function ComprasPage() {
 
   const [itens, setItens] = useState<Solicitacao[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busca, setBusca] = useState('');
+  const itensFiltrados = itens.filter((s) =>
+    combina(busca, s.fornecedores?.nome, s.observacao, getStatusLabel(s.status).label, new Date(s.criado_em).toLocaleDateString('pt-BR'))
+  );
 
   async function carregar() {
     setLoading(true);
@@ -52,6 +58,10 @@ export default function ComprasPage() {
           </Link>
         </div>
 
+        {!loading && itens.length > 0 && (
+          <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar por fornecedor, observação ou situação..." className="mb-4" />
+        )}
+
         {loading ? (
           <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
         ) : itens.length === 0 ? (
@@ -59,9 +69,11 @@ export default function ComprasPage() {
             <p className="text-[#2B3C44]">Nenhuma solicitação de compra ainda</p>
             <p className="text-sm text-[#5B6B73] mt-2">Clica em "+ Nova solicitação" para começar</p>
           </div>
+        ) : itensFiltrados.length === 0 ? (
+          <NadaEncontrado busca={busca} />
         ) : (
           <div className="grid gap-3">
-            {itens.map((s) => {
+            {itensFiltrados.map((s) => {
               const statusInfo = getStatusLabel(s.status);
               const data = new Date(s.criado_em).toLocaleDateString('pt-BR');
               return (

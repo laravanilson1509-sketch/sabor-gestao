@@ -1,5 +1,7 @@
 'use client';
 
+import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import { combina } from '@/lib/busca';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import {
@@ -107,6 +109,7 @@ export default function CaixaPage() {
   const [data, setData] = useState(hojeLocal());
   const [vendasDia, setVendasDia] = useState<Venda[]>([]);
   const [carregandoDia, setCarregandoDia] = useState(false);
+  const [buscaVenda, setBuscaVenda] = useState('');
   const [aberta, setAberta] = useState<string | null>(null);
   const [itensAbertos, setItensAbertos] = useState<ItemPdv[]>([]);
 
@@ -250,6 +253,9 @@ export default function CaixaPage() {
   const resumoCaixa = resumirVendas(vendasCaixa);
   const dinheiro = caixa ? calcularDinheiroEsperado(caixa, vendasCaixa, movs) : null;
   const resumoDia = resumirVendas(vendasDia);
+  const vendasFiltradas = vendasDia.filter((v) =>
+    combina(buscaVenda, v.titulo, rotuloForma(v.forma), v.valor.toFixed(2).replace('.', ','), hora(v.quando))
+  );
   const maiorForma = Math.max(1, ...resumoDia.porForma.map((f) => f.valor));
   const contadoNum = parseFloat(valorContado.replace(',', '.'));
   const diferenca = dinheiro && !isNaN(contadoNum) ? contadoNum - dinheiro.esperado : null;
@@ -536,6 +542,11 @@ export default function CaixaPage() {
               <h3 className="text-sm font-semibold uppercase tracking-wide text-[#5B6B73] px-4 pt-4 pb-3">
                 Histórico de pedidos
               </h3>
+              {vendasDia.length > 0 && (
+                <div className="px-4 pb-3">
+                  <BarraBusca valor={buscaVenda} onChange={setBuscaVenda} placeholder="Buscar por mesa, pedido, forma de pagamento ou valor..." />
+                </div>
+              )}
               {carregandoDia ? (
                 <p className="text-sm text-[#5B6B73] py-8 text-center">Carregando...</p>
               ) : vendasDia.length === 0 ? (
@@ -551,7 +562,14 @@ export default function CaixaPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E6ECEF]">
-                    {vendasDia.map((v) => (
+                    {vendasFiltradas.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-6 text-center text-sm text-[#5B6B73]">
+                          Nada encontrado para “{buscaVenda}”.
+                        </td>
+                      </tr>
+                    )}
+                    {vendasFiltradas.map((v) => (
                       <Fragment key={v.id}>
                         <tr
                           onClick={() => alternarVenda(v)}

@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import { combina } from '@/lib/busca';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { listarPratos } from '@/lib/queries/fichasTecnicas';
@@ -29,6 +31,8 @@ export default function PratosPage() {
   const [nome, setNome] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [busca, setBusca] = useState('');
+  const pratosFiltrados = pratos.filter((p) => combina(busca, p.nome));
 
   async function carregar() {
     setLoading(true);
@@ -161,6 +165,10 @@ export default function PratosPage() {
           </form>
         )}
 
+        {!loading && pratos.length > 0 && (
+          <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar prato..." className="mb-4" />
+        )}
+
         {loading ? (
           <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
         ) : pratos.length === 0 ? (
@@ -168,6 +176,8 @@ export default function PratosPage() {
             <p className="text-[#16252B]">Nenhum prato cadastrado</p>
             <p className="text-sm text-[#5B6B73] mt-2">Clique em + Novo prato para começar</p>
           </div>
+        ) : pratosFiltrados.length === 0 ? (
+          <NadaEncontrado busca={busca} />
         ) : (
           <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
             <table className="w-full">
@@ -180,7 +190,7 @@ export default function PratosPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E6ECEF]">
-                {pratos.map((p) => (
+                {pratosFiltrados.map((p) => (
                   <tr key={p.id} className={'hover:bg-[#F8FAFB] ' + (p.ativo ? '' : 'opacity-60')}>
                     <td className="px-4 py-4 text-sm font-medium text-[#16252B]">{p.nome}</td>
                     <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">

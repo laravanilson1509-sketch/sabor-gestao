@@ -3,6 +3,8 @@
 import { grupoDaCategoria, rotuloCategoria } from '@/lib/queries/bebidas';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import { combina } from '@/lib/busca';
 import { createBrowserClient } from '@supabase/ssr';
 import {
   getEstoqueComStatus,
@@ -104,6 +106,7 @@ export default function EstoquePage() {
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos');
   const [filtroAtivo, setFiltroAtivo] = useState<FiltroAtivo>('ativo');
   const [filtroBebida, setFiltroBebida] = useState<FiltroBebida>('todas');
+  const [busca, setBusca] = useState('');
 
   const [itemMovimentacao, setItemMovimentacao] = useState<ItemEstoque | null>(null);
   const [tipoMovimentacao, setTipoMovimentacao] = useState<'entrada' | 'consumo'>('entrada');
@@ -118,6 +121,7 @@ export default function EstoquePage() {
 
   // sub-filtro das bebidas: alcoólicas ou não alcoólicas
   function passaFiltroBebida(item: ItemEstoque) {
+    if (!combina(busca, item.ingredientes?.nome, rotuloCategoria(item.ingredientes?.categoria_bebida))) return false;
     if (filtroTipo !== 'bebida' || filtroBebida === 'todas') return true;
     return grupoDaCategoria(item.ingredientes?.categoria_bebida) === filtroBebida;
   }
@@ -204,6 +208,9 @@ export default function EstoquePage() {
         <ConferenciasPendentes unidadeId={unidadeId} onAlterado={carregar} />
 
         <div className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-6 flex flex-wrap gap-6">
+          <div className="w-full">
+            <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar produto ou ingrediente..." />
+          </div>
           <div>
             <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Tipo</label>
             <div className="flex gap-1.5 flex-wrap">
@@ -271,6 +278,8 @@ export default function EstoquePage() {
 
         {loading ? (
           <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
+        ) : itens.filter(passaFiltroBebida).length === 0 && busca ? (
+          <NadaEncontrado busca={busca} />
         ) : itens.length === 0 ? (
           <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
             <p className="text-[#16252B]">Nenhum item encontrado</p>

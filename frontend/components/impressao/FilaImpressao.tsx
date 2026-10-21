@@ -16,6 +16,8 @@ import {
   type Impressora,
 } from '@/lib/queries/impressao';
 import { NOME_DOCUMENTO } from '@/lib/impressao/layout';
+import BarraBusca from '@/components/BarraBusca';
+import { combina } from '@/lib/busca';
 import { htmlDoTicket } from '@/lib/impressao/navegador';
 import { terminalId } from '@/lib/impressao/terminal';
 import { BTN_LINK, BTN_SECONDARY, CARTAO, hora } from '@/components/pdv/estilos';
@@ -33,6 +35,7 @@ export default function FilaImpressao({ supabase, unidadeId, impressoras, onMudo
   const [erro, setErro] = useState<string | null>(null);
   const [previa, setPrevia] = useState<Impressao | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [busca, setBusca] = useState('');
 
   async function carregar() {
     const inicio = new Date();
@@ -70,6 +73,7 @@ export default function FilaImpressao({ supabase, unidadeId, impressoras, onMudo
   }
 
   const nomeImpressora = (id: string | null) => impressoras.find((i) => i.id === id)?.nome || '—';
+  const filaFiltrada = fila.filter((i) => combina(busca, i.titulo, NOME_DOCUMENTO[i.documento], i.solicitado_por, nomeImpressora(i.impressora_id), i.erro));
   const parada = (i: Impressao) => i.status === 'pendente' && Date.now() - new Date(i.criado_em).getTime() > 120000;
   const impressoraPrevia = impressoras.find((i) => i.id === previa?.impressora_id);
   const semEstacao = impressoras.filter((i) => i.ativo && i.conexao === 'navegador' && !impressoraOnline(i));
@@ -84,11 +88,11 @@ export default function FilaImpressao({ supabase, unidadeId, impressoras, onMudo
       )}
 
       <div className="flex flex-wrap items-center gap-3">
+        <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar por mesa, documento ou quem pediu..." className="flex-1 min-w-[14rem]" />
         <label className="flex items-center gap-2 text-sm text-[#2B3C44]">
           <input type="checkbox" checked={apenasProblemas} onChange={(e) => setApenasProblemas(e.target.checked)} />
           Só os com problema
         </label>
-        <span className="flex-1" />
         <button onClick={carregar} className={BTN_SECONDARY}>
           Atualizar
         </button>
@@ -103,6 +107,8 @@ export default function FilaImpressao({ supabase, unidadeId, impressoras, onMudo
       <div className={CARTAO + ' overflow-x-auto'}>
         {carregando ? (
           <p className="text-center py-10 text-sm text-[#5B6B73]">Carregando...</p>
+        ) : fila.length > 0 && filaFiltrada.length === 0 ? (
+          <p className="text-center py-10 text-sm text-[#5B6B73]">Nada encontrado para “{busca}”.</p>
         ) : fila.length === 0 ? (
           <p className="text-center py-10 text-sm text-[#5B6B73]">
             {apenasProblemas ? 'Nenhum problema hoje.' : 'Nada impresso hoje ainda.'}
@@ -119,7 +125,7 @@ export default function FilaImpressao({ supabase, unidadeId, impressoras, onMudo
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E6ECEF]">
-              {fila.map((i) => (
+              {filaFiltrada.map((i) => (
                 <tr key={i.id} className="hover:bg-[#F8FAFB] align-top">
                   <td className="px-4 py-3 text-sm text-[#2B3C44] whitespace-nowrap">{hora(i.criado_em)}</td>
                   <td className="px-4 py-3 text-sm">

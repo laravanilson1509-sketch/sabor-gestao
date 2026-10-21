@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import { combina } from '@/lib/busca';
 import { createBrowserClient } from '@supabase/ssr';
 import {
   listarContas,
@@ -71,6 +73,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<Filtro>('abertas');
+  const [busca, setBusca] = useState('');
 
   // formulário de nova conta
   const [descricao, setDescricao] = useState('');
@@ -185,7 +188,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
         : filtro === 'canceladas'
           ? c.status === 'cancelada'
           : true
-  );
+  ).filter((c) => combina(busca, c.descricao, c.pessoa, categorias[c.categoria], c.observacao, c.valor.toFixed(2).replace('.', ',')));
   // pagas mais recentes primeiro; abertas pela data de vencimento
   if (filtro === 'quitadas') visiveis.sort((a, b) => (b.quitado_em || '').localeCompare(a.quitado_em || ''));
 
@@ -287,6 +290,8 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
 
       {erro && <p className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">{erro}</p>}
 
+      <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar por descrição, nome ou valor..." />
+
       <div className="flex gap-2 flex-wrap">
         {(
           [
@@ -312,7 +317,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
       </div>
 
       {visiveis.length === 0 ? (
-        <p className="text-sm text-[#5B6B73]">Nenhuma conta aqui</p>
+        <p className="text-sm text-[#5B6B73]">{busca ? 'Nenhuma conta encontrada para “' + busca + '”' : 'Nenhuma conta aqui'}</p>
       ) : (
         <div className="divide-y divide-[#E6ECEF] border border-[#DCE3E7] rounded-lg">
           {visiveis.map((c) => {

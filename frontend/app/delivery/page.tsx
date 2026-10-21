@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import { combina } from '@/lib/busca';
 import { createBrowserClient } from '@supabase/ssr';
 import {
   listarPedidosDelivery,
@@ -58,6 +60,10 @@ export default function DeliveryPage() {
   const [pedidoAberto, setPedidoAberto] = useState<Pedido | null>(null);
   const [atualizando, setAtualizando] = useState<string | null>(null);
   const [paraCancelar, setParaCancelar] = useState<Pedido | null>(null);
+  const [busca, setBusca] = useState('');
+  const pedidosFiltrados = pedidos.filter((p) =>
+    combina(busca, p.telefone_cliente, p.endereco_entrega, p.forma_pagamento, p.valor_total, ...(p.itens || []).map((i) => i.nome))
+  );
 
   async function carregar() {
     setLoading(true);
@@ -125,6 +131,8 @@ export default function DeliveryPage() {
           </button>
         </div>
 
+        <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar por telefone, endereço ou item..." className="mb-4" />
+
         {/* Filtros */}
         <div className="flex flex-wrap gap-2 mb-6">
           {FILTROS.map((f) => (
@@ -145,13 +153,15 @@ export default function DeliveryPage() {
 
         {loading ? (
           <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
+        ) : pedidos.length > 0 && pedidosFiltrados.length === 0 ? (
+          <NadaEncontrado busca={busca} />
         ) : pedidos.length === 0 ? (
           <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
             <p className="text-[#16252B]">Nenhum pedido encontrado</p>
           </div>
         ) : (
           <div className="grid gap-4">
-            {pedidos.map((pedido) => {
+            {pedidosFiltrados.map((pedido) => {
               const statusInfo = getStatusDelivery(pedido.status);
               const pagamentoInfo = getStatusPagamento(pedido.status_pagamento);
               const hora = new Date(pedido.criado_em).toLocaleTimeString('pt-BR', {
