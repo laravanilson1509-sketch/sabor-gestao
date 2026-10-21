@@ -1,4 +1,4 @@
-# Sabor Gestão — App
+# Império — App
 
 ## Rodando localmente
 

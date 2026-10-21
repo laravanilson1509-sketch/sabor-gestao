@@ -53,7 +53,7 @@ function LoginForm() {
     <div className="min-h-screen md:flex bg-[#EEF2F4]">
       {/* Painel da esquerda (só em telas médias ou maiores) */}
       <section className="hidden md:flex md:flex-1 flex-col justify-between bg-white border-r border-[#DCE3E7] p-12">
-        <p className="text-lg font-bold text-[#16252B]">Sabor Gestão</p>
+        <p className="text-lg font-bold text-[#16252B]">Império</p>
 
         <div>
           <h2 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-[#16252B]">
@@ -88,7 +88,7 @@ function LoginForm() {
       <section className="flex items-center justify-center px-4 py-10 md:w-[460px] md:shrink-0 md:px-10">
         <form onSubmit={entrar} className="w-full max-w-sm space-y-5">
           <div>
-            <p className="md:hidden text-lg font-bold text-[#16252B] mb-6">Sabor Gestão</p>
+            <p className="md:hidden text-lg font-bold text-[#16252B] mb-6">Império</p>
             <h1 className="text-2xl font-bold text-[#16252B]">Entrar</h1>
             <p className="mt-1 text-sm text-[#5B6B73]">Use o e-mail e a senha criados para você.</p>
           </div>

@@ -43,6 +43,11 @@ export default function RootLayout({
 
   const naLogin = pathname === '/login';
 
+  // título da aba do navegador (o layout é de cliente, então não usa metadata)
+  useEffect(() => {
+    document.title = 'Império';
+  }, [pathname]);
+
   // contador de conferências de estoque pendentes, mostrado ao lado de "Estoque"
   const [pendencias, setPendencias] = useState(0);
   useEffect(() => {
@@ -82,7 +87,7 @@ export default function RootLayout({
         <div className="min-h-screen md:flex">
           {/* Barra superior (celular) */}
           <header className="md:hidden sticky top-0 z-30 flex items-center justify-between bg-white border-b border-[#DCE3E7] px-4 h-14">
-            <span className="font-bold text-[#16252B]">Sabor Gestão</span>
+            <span className="font-bold text-[#16252B]">Império</span>
             <button
               onClick={() => setAberto((v) => !v)}
               className="h-10 w-10 text-2xl text-[#16252B]"
@@ -101,7 +106,7 @@ export default function RootLayout({
             }
           >
             <p className="hidden md:block px-3 pt-2 pb-6 text-lg font-bold text-[#16252B]">
-              Sabor Gestão
+              Império
             </p>
             <nav className="flex flex-col gap-1">
               {LINKS.map((l) => (
