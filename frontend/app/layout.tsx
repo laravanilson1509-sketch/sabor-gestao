@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { contarPendenciasAbertas, EVENTO_PENDENCIAS } from '@/lib/queries/pendenciasEstoque';
+import Logo from '@/components/Logo';
+import TelaAbertura from '@/components/TelaAbertura';
 import './globals.css';
 
 const LINKS = [
@@ -84,10 +86,11 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="bg-[#EEF2F4] text-[#16252B]">
+        <TelaAbertura ativa={!naLogin} />
         <div className="min-h-screen md:flex">
           {/* Barra superior (celular) */}
           <header className="md:hidden sticky top-0 z-30 flex items-center justify-between bg-white border-b border-[#DCE3E7] px-4 h-14">
-            <span className="font-bold text-[#16252B]">Império</span>
+            <Logo tamanho={30} />
             <button
               onClick={() => setAberto((v) => !v)}
               className="h-10 w-10 text-2xl text-[#16252B]"
@@ -105,9 +108,9 @@ export default function RootLayout({
               'bg-white border-r border-[#DCE3E7] p-4'
             }
           >
-            <p className="hidden md:block px-3 pt-2 pb-6 text-lg font-bold text-[#16252B]">
-              Império
-            </p>
+            <div className="hidden md:block px-3 pt-2 pb-6">
+              <Logo tamanho={34} />
+            </div>
             <nav className="flex flex-col gap-1">
               {LINKS.map((l) => (
                 <Link
