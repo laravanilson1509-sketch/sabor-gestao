@@ -7,6 +7,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import { contarPendenciasAbertas, EVENTO_PENDENCIAS } from '@/lib/queries/pendenciasEstoque';
 import Logo from '@/components/Logo';
 import TelaAbertura from '@/components/TelaAbertura';
+import TelaInicio from '@/components/TelaInicio';
 import './globals.css';
 
 const LINKS = [
@@ -44,6 +45,8 @@ export default function RootLayout({
   }
 
   const naLogin = pathname === '/login';
+  const naInicio = pathname === '/';
+  const tituloTela = LINKS.find((l) => pathname.startsWith(l.href))?.label || '';
 
   // título da aba do navegador (o layout é de cliente, então não usa metadata)
   useEffect(() => {
@@ -142,7 +145,32 @@ export default function RootLayout({
           </aside>
 
           {/* Conteúdo */}
-          <main className="tema-claro flex-1 min-w-0">{children}</main>
+          <main className="tema-claro flex-1 min-w-0">
+            {/* a tela inicial fica sempre aqui; as outras abrem por cima */}
+            <TelaInicio supabase={supabase} />
+            {!naInicio && (
+              <div
+                className={
+                  (aberto ? 'hidden md:flex ' : 'flex ') +
+                  'fixed z-20 flex-col bg-[#EEF2F4] overflow-hidden shadow-2xl ' +
+                  'top-14 left-0 right-0 bottom-0 ' +
+                  'md:top-3 md:right-3 md:bottom-3 md:left-[16rem] md:rounded-2xl md:border md:border-[#DCE3E7]'
+                }
+              >
+                <div className="flex items-center justify-between gap-3 bg-white border-b border-[#DCE3E7] px-4 h-11 shrink-0">
+                  <span className="text-sm font-semibold text-[#16252B]">{tituloTela}</span>
+                  <Link
+                    href="/"
+                    className="text-sm text-[#5B6B73] hover:text-[#16252B] rounded-lg px-2.5 py-1 hover:bg-[#F1F5F7] transition"
+                    aria-label="Fechar e voltar ao início"
+                  >
+                    ✕ Fechar
+                  </Link>
+                </div>
+                <div className="flex-1 overflow-y-auto">{children}</div>
+              </div>
+            )}
+          </main>
         </div>
       </body>
     </html>
