@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import Logo from './Logo';
+import { temaDoDia } from '@/lib/temasDatas';
 import { diaMes, linkParabens, listarAniversariantes, textoFaltam, type Aniversariante } from '@/lib/queries/aniversarios';
 
 const traco = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
@@ -90,6 +91,7 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
   const [nome, setNome] = useState('');
   const [empresa, setEmpresa] = useState('');
   const [aniversariantes, setAniversariantes] = useState<Aniversariante[]>([]);
+  const campanha = temaDoDia();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setNome(nomeDoEmail(data.user?.email)));
@@ -117,6 +119,20 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
         <path d="M400 260 V130 C360 120 320 150 300 190 C285 220 250 245 225 260 Z" fill="#0E6B7E" opacity="0.9" />
         <path d="M400 60 C330 40 260 90 230 150 C210 195 150 240 100 260" fill="none" stroke="#E3B341" strokeWidth="3" />
       </svg>
+
+      {/* Faixa da campanha do mês (laço + frase) */}
+      <div
+        className="relative z-10 flex items-center justify-center gap-3 px-4 py-2.5 text-center"
+        style={{ background: campanha.cor2, color: '#fff' }}
+      >
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden fill="#fff">
+          <path d="M12 2.5c-2.6 0-4.5 1.9-4.5 4.3 0 1.5.6 2.6 1.5 4.1L6 16.2l2.8 1.3 1.4 4 1.8-3.6 1.8 3.6 1.4-4 2.8-1.3-3-5.3c.9-1.5 1.5-2.6 1.5-4.1 0-2.4-1.9-4.3-4.5-4.3Zm0 2c1.4 0 2.4.9 2.4 2.3 0 .9-.5 1.8-1.4 3.2l-1 1.7-1-1.7C10.1 8.6 9.6 7.7 9.6 6.8c0-1.4 1-2.3 2.4-2.3Z" />
+        </svg>
+        <p className="text-sm font-medium">
+          <b className="font-bold">{campanha.nome}</b>
+          <span className="hidden sm:inline"> · {campanha.frase}</span>
+        </p>
+      </div>
 
       <div className="relative max-w-6xl mx-auto px-5 md:px-10 py-8 md:py-10">
         <div className="flex items-start justify-between gap-4">

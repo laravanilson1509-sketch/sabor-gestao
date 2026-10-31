@@ -24,6 +24,11 @@ const TEMAS: TemaData[] = [
   { nome: 'Dezembro Vermelho', frase: 'Prevenção ao HIV · Boas festas!', cor: '#F07070', cor2: '#3FB57A', base: '#150A0A' },
 ];
 
+// a campanha do mês seguinte já aparece a partir do dia 28 (ex.: Novembro Azul
+// entra em 28/10), para dar tempo de divulgar antes de o mês virar
+export const DIA_ANTECIPA_CAMPANHA = 28;
+
 export function temaDoDia(d: Date = new Date()): TemaData {
-  return TEMAS[d.getMonth()];
+  const mes = d.getMonth() + (d.getDate() >= DIA_ANTECIPA_CAMPANHA ? 1 : 0);
+  return TEMAS[mes % 12];
 }

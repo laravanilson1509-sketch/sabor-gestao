@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
-import { criarSolicitacao } from '@/lib/queries/compras';
+import { criarSolicitacao, sugerirCompra } from '@/lib/queries/compras';
 
 type Ingrediente = { id: string; nome: string; unidade_padrao: string | null };
 
@@ -20,6 +20,8 @@ export default function NovaSolicitacaoPage() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [observacao, setObservacao] = useState('');
+  const [origem, setOrigem] = useState<'manual' | 'sugestao'>('manual');
+  const [aviso, setAviso] = useState<string | null>(null);
 
   const [itens, setItens] = useState<{ ingrediente_id: string; quantidade: string; unidade: string }[]>([
     { ingrediente_id: '', quantidade: '', unidade: 'kg' },
@@ -30,14 +32,48 @@ export default function NovaSolicitacaoPage() {
       const { data } = await supabase
         .from('ingredientes')
         .select('id, nome, unidade_padrao')
-        .eq('tipo_produto', 'consumo')
+        .in('tipo_produto', ['ingrediente', 'acabado', 'bebida'])
         .eq('ativo', true)
         .order('nome');
       setIngredientes(data || []);
       setLoading(false);
+      // veio do botão "Montar solicitação" da lista de compras
+      if (new URLSearchParams(window.location.search).get('sugestao')) preencherPeloEstoque(true);
     }
     carregar();
   }, []);
+
+  // lista o que está no estoque mínimo ou abaixo, ainda sem pedido em andamento
+  async function preencherPeloEstoque(silencioso = false) {
+    setErro(null);
+    setAviso(null);
+    try {
+      const todas = await sugerirCompra(supabase, unidadeId);
+      const novas = todas.filter((s) => !s.jaSolicitado);
+      const jaPedidas = todas.length - novas.length;
+      if (novas.length === 0) {
+        if (!silencioso || todas.length > 0) {
+          setAviso(
+            todas.length === 0
+              ? 'Nenhum item está no estoque mínimo ou abaixo dele.'
+              : 'Todos os itens abaixo do mínimo já estão em outra solicitação em andamento.'
+          );
+        }
+        return;
+      }
+      setItens(novas.map((s) => ({ ingrediente_id: s.ingrediente_id, quantidade: String(s.sugerido), unidade: s.unidade })));
+      setOrigem('sugestao');
+      setAviso(
+        novas.length +
+          (novas.length === 1 ? ' item preenchido' : ' itens preenchidos') +
+          ' para chegar a 2× o estoque mínimo' +
+          (jaPedidas > 0 ? ' (' + jaPedidas + ' já em outra solicitação ficaram de fora)' : '') +
+          '. Ajuste as quantidades se quiser.'
+      );
+    } catch (err: any) {
+      setErro(err.message || 'Erro ao consultar o estoque');
+    }
+  }
 
   function adicionarLinha() {
     setItens([...itens, { ingrediente_id: '', quantidade: '', unidade: 'kg' }]);
@@ -72,6 +108,7 @@ export default function NovaSolicitacaoPage() {
       const id = await criarSolicitacao(supabase, {
         unidade_id: unidadeId,
         observacao: observacao.trim() || null,
+        origem,
         itens: itensValidos.map((i) => ({
           ingrediente_id: i.ingrediente_id,
           quantidade: parseFloat(i.quantidade),
@@ -104,7 +141,17 @@ export default function NovaSolicitacaoPage() {
 
         <form onSubmit={handleSalvar} className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-[#2B3C44] mb-2">Itens necessários</label>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <label className="block text-sm font-medium text-[#2B3C44]">Itens necessários</label>
+              <button
+                type="button"
+                onClick={() => preencherPeloEstoque(false)}
+                className="text-sm font-medium text-[#0E6B7E] hover:underline"
+              >
+                Preencher pelo estoque mínimo
+              </button>
+            </div>
+            {aviso && <p className="text-sm text-[#1E6B3F] bg-[#D9F0E3] rounded-lg px-3 py-2 mb-3">{aviso}</p>}
             <div className="space-y-3">
               {itens.map((item, index) => (
                 <div key={index} className="flex gap-2 items-start">
@@ -136,6 +183,8 @@ export default function NovaSolicitacaoPage() {
                     <option value="L">L</option>
                     <option value="ml">ml</option>
                     <option value="un">un</option>
+                    <option value="cx">cx</option>
+                    <option value="pct">pct</option>
                   </select>
                   {itens.length > 1 && (
                     <button

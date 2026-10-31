@@ -5,7 +5,7 @@ import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import { combina } from '@/lib/busca';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
-import { listarSolicitacoes, getStatusLabel } from '@/lib/queries/compras';
+import { listarSolicitacoes, getStatusLabel, sugerirCompra, type SugestaoCompra } from '@/lib/queries/compras';
 
 type Solicitacao = {
   id: string;
@@ -25,6 +25,7 @@ export default function ComprasPage() {
   const [itens, setItens] = useState<Solicitacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState('');
+  const [sugestoes, setSugestoes] = useState<SugestaoCompra[]>([]);
   const itensFiltrados = itens.filter((s) =>
     combina(busca, s.fornecedores?.nome, s.observacao, getStatusLabel(s.status).label, new Date(s.criado_em).toLocaleDateString('pt-BR'))
   );
@@ -37,6 +38,9 @@ export default function ComprasPage() {
     } catch (err) {
       console.error(err);
     }
+    sugerirCompra(supabase, unidadeId)
+      .then(setSugestoes)
+      .catch(() => setSugestoes([]));
     setLoading(false);
   }
 
@@ -50,13 +54,45 @@ export default function ComprasPage() {
             <h1 className="text-2xl font-bold text-[#16252B]">Compras</h1>
             <p className="text-sm text-[#5B6B73]">Solicitações, cotações e pedidos</p>
           </div>
-          <Link
-            href="/compras/nova"
-            className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
-          >
-            + Nova solicitação
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/compras/precos"
+              className="px-4 py-2.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] text-sm font-medium hover:bg-[#F1F5F7] transition"
+            >
+              Histórico de preços
+            </Link>
+            <Link
+              href="/compras/nova"
+              className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
+            >
+              + Nova solicitação
+            </Link>
+          </div>
         </div>
+
+        {(() => {
+          const novas = sugestoes.filter((s) => !s.jaSolicitado);
+          if (novas.length === 0) return null;
+          return (
+            <div className="mb-6 rounded-xl border border-[#F0DFA8] bg-[#FFFAEB] p-4 flex flex-wrap items-center gap-4">
+              <div className="flex-1 min-w-[14rem]">
+                <p className="text-sm font-semibold text-[#7A5A0A]">
+                  {novas.length === 1 ? '1 item' : novas.length + ' itens'} no estoque mínimo ou abaixo
+                </p>
+                <p className="text-sm text-[#5B6B73] mt-0.5">
+                  {novas.slice(0, 4).map((s) => s.nome).join(', ')}
+                  {novas.length > 4 && ' e mais ' + (novas.length - 4)}
+                </p>
+              </div>
+              <Link
+                href="/compras/nova?sugestao=1"
+                className="bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
+              >
+                Montar solicitação
+              </Link>
+            </div>
+          );
+        })()}
 
         {!loading && itens.length > 0 && (
           <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar por fornecedor, observação ou situação..." className="mb-4" />
