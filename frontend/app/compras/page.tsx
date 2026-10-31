@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import { combina } from '@/lib/busca';
+import { grupoDaCategoria } from '@/lib/queries/bebidas';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { listarSolicitacoes, getStatusLabel, sugerirCompra, type SugestaoCompra } from '@/lib/queries/compras';
@@ -13,7 +14,35 @@ type Solicitacao = {
   observacao: string | null;
   criado_em: string;
   fornecedores: { nome: string } | null;
+  solicitacoes_compra_itens?: { ingredientes: { tipo_produto: string; categoria_bebida?: string | null } | null }[];
 };
+
+type FiltroTipo = 'todos' | 'ingrediente' | 'acabado' | 'bebida';
+type FiltroBebida = 'todas' | 'nao_alcoolica' | 'alcoolica';
+
+const TIPOS: { valor: FiltroTipo; rotulo: string }[] = [
+  { valor: 'todos', rotulo: 'Todas' },
+  { valor: 'ingrediente', rotulo: 'Ingredientes' },
+  { valor: 'acabado', rotulo: 'Produtos acabados' },
+  { valor: 'bebida', rotulo: 'Bebidas' },
+];
+
+const BEBIDAS: { valor: FiltroBebida; rotulo: string }[] = [
+  { valor: 'todas', rotulo: 'Todas' },
+  { valor: 'nao_alcoolica', rotulo: 'Não alcoólicas' },
+  { valor: 'alcoolica', rotulo: 'Alcoólicas' },
+];
+
+const ROTULO_TIPO: Record<string, string> = { ingrediente: 'Ingredientes', acabado: 'Acabados', bebida: 'Bebidas' };
+
+const chip = (ativo: boolean) =>
+  'text-sm px-3.5 py-1.5 rounded-full font-medium transition border ' +
+  (ativo ? 'bg-[#0E6B7E] text-white border-[#0E6B7E]' : 'bg-white text-[#5B6B73] border-[#DCE3E7] hover:bg-[#F1F5F7]');
+
+// tipos de item de uma solicitação (para o filtro e para as etiquetas do cartão)
+const tiposDaSolicitacao = (s: Solicitacao) => [
+  ...new Set((s.solicitacoes_compra_itens || []).map((i) => i.ingredientes?.tipo_produto).filter(Boolean) as string[]),
+];
 
 export default function ComprasPage() {
   const supabase = createBrowserClient(
@@ -26,7 +55,19 @@ export default function ComprasPage() {
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState('');
   const [sugestoes, setSugestoes] = useState<SugestaoCompra[]>([]);
-  const itensFiltrados = itens.filter((s) =>
+  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos');
+  const [filtroBebida, setFiltroBebida] = useState<FiltroBebida>('todas');
+  // a solicitação aparece se tiver ao menos um item do tipo escolhido
+  const passaTipo = (s: Solicitacao) => {
+    if (filtroTipo === 'todos') return true;
+    const lista = s.solicitacoes_compra_itens || [];
+    return lista.some((i) => {
+      if (i.ingredientes?.tipo_produto !== filtroTipo) return false;
+      if (filtroTipo !== 'bebida' || filtroBebida === 'todas') return true;
+      return grupoDaCategoria(i.ingredientes?.categoria_bebida) === filtroBebida;
+    });
+  };
+  const itensFiltrados = itens.filter(passaTipo).filter((s) =>
     combina(busca, s.fornecedores?.nome, s.observacao, getStatusLabel(s.status).label, new Date(s.criado_em).toLocaleDateString('pt-BR'))
   );
 
@@ -95,7 +136,25 @@ export default function ComprasPage() {
         })()}
 
         {!loading && itens.length > 0 && (
-          <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar por fornecedor, observação ou situação..." className="mb-4" />
+          <div className="mb-4 space-y-3">
+            <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar por fornecedor, observação ou situação..." />
+            <div className="flex flex-wrap gap-1.5">
+              {TIPOS.map((t) => (
+                <button key={t.valor} onClick={() => setFiltroTipo(t.valor)} className={chip(filtroTipo === t.valor)}>
+                  {t.rotulo}
+                </button>
+              ))}
+            </div>
+            {filtroTipo === 'bebida' && (
+              <div className="flex flex-wrap gap-1.5">
+                {BEBIDAS.map((b) => (
+                  <button key={b.valor} onClick={() => setFiltroBebida(b.valor)} className={chip(filtroBebida === b.valor)}>
+                    {b.rotulo}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {loading ? (
@@ -124,6 +183,11 @@ export default function ComprasPage() {
                         {statusInfo.label}
                       </span>
                       <span className="text-xs text-[#8FA0A8]">{data}</span>
+                      {tiposDaSolicitacao(s).map((t) => (
+                        <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-[#F1F5F7] text-[#5B6B73]">
+                          {ROTULO_TIPO[t] || t}
+                        </span>
+                      ))}
                     </div>
                     <p className="text-sm font-medium text-[#16252B]">
                       {s.fornecedores?.nome ? `Fornecedor: ${s.fornecedores.nome}` : 'Sem fornecedor definido'}

@@ -3,9 +3,39 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import BarraBusca from '@/components/BarraBusca';
 import { criarSolicitacao, sugerirCompra } from '@/lib/queries/compras';
+import { combina } from '@/lib/busca';
+import { grupoDaCategoria, rotuloCategoria } from '@/lib/queries/bebidas';
 
-type Ingrediente = { id: string; nome: string; unidade_padrao: string | null };
+type Ingrediente = {
+  id: string;
+  nome: string;
+  unidade_padrao: string | null;
+  tipo_produto: string;
+  categoria_bebida?: string | null;
+};
+
+// o que se compra (prato não entra: é produzido na cozinha)
+type FiltroTipo = 'todos' | 'ingrediente' | 'acabado' | 'bebida';
+type FiltroBebida = 'todas' | 'nao_alcoolica' | 'alcoolica';
+
+const TIPOS: { valor: FiltroTipo; rotulo: string }[] = [
+  { valor: 'todos', rotulo: 'Todos' },
+  { valor: 'ingrediente', rotulo: 'Ingredientes' },
+  { valor: 'acabado', rotulo: 'Produtos acabados' },
+  { valor: 'bebida', rotulo: 'Bebidas' },
+];
+
+const BEBIDAS: { valor: FiltroBebida; rotulo: string }[] = [
+  { valor: 'todas', rotulo: 'Todas' },
+  { valor: 'nao_alcoolica', rotulo: 'Não alcoólicas' },
+  { valor: 'alcoolica', rotulo: 'Alcoólicas' },
+];
+
+const chip = (ativo: boolean) =>
+  'text-sm px-3.5 py-1.5 rounded-full font-medium transition border ' +
+  (ativo ? 'bg-[#0E6B7E] text-white border-[#0E6B7E]' : 'bg-white text-[#5B6B73] border-[#DCE3E7] hover:bg-[#F1F5F7]');
 
 export default function NovaSolicitacaoPage() {
   const router = useRouter();
@@ -22,6 +52,9 @@ export default function NovaSolicitacaoPage() {
   const [observacao, setObservacao] = useState('');
   const [origem, setOrigem] = useState<'manual' | 'sugestao'>('manual');
   const [aviso, setAviso] = useState<string | null>(null);
+  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos');
+  const [filtroBebida, setFiltroBebida] = useState<FiltroBebida>('todas');
+  const [busca, setBusca] = useState('');
 
   const [itens, setItens] = useState<{ ingrediente_id: string; quantidade: string; unidade: string }[]>([
     { ingrediente_id: '', quantidade: '', unidade: 'kg' },
@@ -29,13 +62,19 @@ export default function NovaSolicitacaoPage() {
 
   useEffect(() => {
     async function carregar() {
-      const { data } = await supabase
-        .from('ingredientes')
-        .select('id, nome, unidade_padrao')
-        .in('tipo_produto', ['ingrediente', 'acabado', 'bebida'])
-        .eq('ativo', true)
-        .order('nome');
-      setIngredientes(data || []);
+      const consulta = (campos: string) =>
+        supabase
+          .from('ingredientes')
+          .select(campos)
+          .in('tipo_produto', ['ingrediente', 'acabado', 'bebida'])
+          .eq('ativo', true)
+          .order('nome');
+      let { data, error } = await consulta('id, nome, unidade_padrao, tipo_produto, categoria_bebida');
+      // SQL das bebidas (0020) ainda não rodado: segue sem a categoria da bebida
+      if (error && (error.message || '').includes('categoria_bebida')) {
+        ({ data, error } = await consulta('id, nome, unidade_padrao, tipo_produto'));
+      }
+      setIngredientes((data || []) as unknown as Ingrediente[]);
       setLoading(false);
       // veio do botão "Montar solicitação" da lista de compras
       if (new URLSearchParams(window.location.search).get('sugestao')) preencherPeloEstoque(true);
@@ -74,6 +113,17 @@ export default function NovaSolicitacaoPage() {
       setErro(err.message || 'Erro ao consultar o estoque');
     }
   }
+
+  // opções do seletor: respeitam o filtro e a busca (o item já escolhido nunca some)
+  function opcoesDaLinha(escolhido: string) {
+    return ingredientes.filter((ing) => {
+      if (ing.id === escolhido) return true;
+      if (filtroTipo !== 'todos' && ing.tipo_produto !== filtroTipo) return false;
+      if (filtroTipo === 'bebida' && filtroBebida !== 'todas' && grupoDaCategoria(ing.categoria_bebida) !== filtroBebida) return false;
+      return combina(busca, ing.nome, rotuloCategoria(ing.categoria_bebida));
+    });
+  }
+  const totalFiltrado = ingredientes.filter((ing) => opcoesDaLinha('').includes(ing)).length;
 
   function adicionarLinha() {
     setItens([...itens, { ingrediente_id: '', quantidade: '', unidade: 'kg' }]);
@@ -152,6 +202,42 @@ export default function NovaSolicitacaoPage() {
               </button>
             </div>
             {aviso && <p className="text-sm text-[#1E6B3F] bg-[#D9F0E3] rounded-lg px-3 py-2 mb-3">{aviso}</p>}
+
+            {/* Filtros: facilitam achar o item na lista de escolha */}
+            <div className="rounded-lg border border-[#E6ECEF] bg-[#F8FAFB] p-3 mb-3 space-y-2.5">
+              <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar item para comprar..." />
+              <div className="flex flex-wrap gap-1.5">
+                {TIPOS.map((t) => (
+                  <button
+                    key={t.valor}
+                    type="button"
+                    onClick={() => setFiltroTipo(t.valor)}
+                    className={chip(filtroTipo === t.valor)}
+                  >
+                    {t.rotulo}
+                  </button>
+                ))}
+              </div>
+              {filtroTipo === 'bebida' && (
+                <div className="flex flex-wrap gap-1.5">
+                  {BEBIDAS.map((b) => (
+                    <button
+                      key={b.valor}
+                      type="button"
+                      onClick={() => setFiltroBebida(b.valor)}
+                      className={chip(filtroBebida === b.valor)}
+                    >
+                      {b.rotulo}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-[#8FA0A8]">
+                {totalFiltrado === 0
+                  ? 'Nenhum item com esse filtro.'
+                  : totalFiltrado + (totalFiltrado === 1 ? ' item disponível' : ' itens disponíveis') + ' na lista de escolha abaixo. Pratos não aparecem aqui.'}
+              </p>
+            </div>
             <div className="space-y-3">
               {itens.map((item, index) => (
                 <div key={index} className="flex gap-2 items-start">
@@ -161,7 +247,7 @@ export default function NovaSolicitacaoPage() {
                     className="flex-1 min-w-0 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
                   >
                     <option value="">Selecione...</option>
-                    {ingredientes.map((ing) => (
+                    {opcoesDaLinha(item.ingrediente_id).map((ing) => (
                       <option key={ing.id} value={ing.id}>{ing.nome}</option>
                     ))}
                   </select>

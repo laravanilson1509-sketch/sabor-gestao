@@ -5,10 +5,20 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export async function listarSolicitacoes(supabase: SupabaseClient, unidadeId: string) {
   const { data, error } = await supabase
     .from("solicitacoes_compra")
-    .select("*, fornecedores(nome)")
+    .select("*, fornecedores(nome), solicitacoes_compra_itens(ingredientes(tipo_produto, categoria_bebida))")
     .eq("unidade_id", unidadeId)
     .order("criado_em", { ascending: false });
 
+  // SQL das bebidas (0020) ainda não rodado: lista sem a categoria da bebida
+  if (error && (error.message || "").includes("categoria_bebida")) {
+    const r = await supabase
+      .from("solicitacoes_compra")
+      .select("*, fornecedores(nome), solicitacoes_compra_itens(ingredientes(tipo_produto))")
+      .eq("unidade_id", unidadeId)
+      .order("criado_em", { ascending: false });
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
   if (error) throw error;
   return data || [];
 }
