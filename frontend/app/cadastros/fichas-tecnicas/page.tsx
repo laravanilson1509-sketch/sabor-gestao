@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import { combina } from '@/lib/busca';
 import Link from 'next/link';
@@ -54,10 +55,10 @@ export default function FichasTecnicasPage() {
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <Link
             href="/cadastros"
-            className="h-10 w-10 flex items-center justify-center rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition"
+            className="btn-voltar"
             aria-label="Voltar para Cadastros"
           >
-            ←
+            <ConteudoVoltar />
           </Link>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-[#16252B]">Fichas técnicas</h1>

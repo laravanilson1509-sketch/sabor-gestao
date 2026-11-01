@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import { combina } from '@/lib/busca';
 import Link from 'next/link';
@@ -120,10 +121,10 @@ export default function PratosPage() {
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <Link
             href="/cadastros"
-            className="h-10 w-10 flex items-center justify-center rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition"
+            className="btn-voltar"
             aria-label="Voltar para Cadastros"
           >
-            ←
+            <ConteudoVoltar />
           </Link>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-[#16252B]">Pratos</h1>
@@ -131,7 +132,7 @@ export default function PratosPage() {
           </div>
           <button
             onClick={() => setShowForm((v) => !v)}
-            className="bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white px-4 py-2.5 rounded-lg font-medium transition"
+            className="btn btn-primario"
           >
             {showForm ? 'Cancelar' : '+ Novo prato'}
           </button>
@@ -153,7 +154,7 @@ export default function PratosPage() {
             <button
               type="submit"
               disabled={salvando}
-              className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium"
+              className="btn btn-primario"
             >
               {salvando ? 'Salvando...' : 'Cadastrar prato'}
             </button>

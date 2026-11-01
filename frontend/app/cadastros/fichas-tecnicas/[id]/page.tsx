@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
@@ -200,9 +201,9 @@ export default function EditarFichaTecnicaPage() {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => (window.history.length > 1 ? router.back() : router.push('/cadastros/pratos'))}
-            className="h-10 w-10 rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition"
+            className="btn-voltar"
           >
-            ←
+            <ConteudoVoltar />
           </button>
           <h1 className="text-2xl font-bold text-[#16252B]">{produto ? produto.nome : ''}</h1>
         </div>
@@ -281,7 +282,7 @@ export default function EditarFichaTecnicaPage() {
           <button
             type="submit"
             disabled={salvando}
-            className="w-full bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
+            className="btn btn-primario w-full"
           >
             {salvando ? 'Adicionando...' : 'Adicionar'}
           </button>
@@ -372,7 +373,7 @@ export default function EditarFichaTecnicaPage() {
             <button
               onClick={handleSalvarPreco}
               disabled={salvandoPreco}
-              className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
+              className="btn btn-primario"
             >
               {salvandoPreco ? 'Salvando...' : 'Salvar preço'}
             </button>

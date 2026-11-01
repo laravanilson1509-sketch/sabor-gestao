@@ -25,9 +25,9 @@ import { contarPendenciasAbertas } from '@/lib/queries/pendenciasEstoque';
 const INPUT =
   'border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
 const BTN_PRIMARY =
-  'bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition';
+  'btn btn-primario';
 const BTN_SECONDARY =
-  'px-4 py-2.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] text-sm font-medium hover:bg-[#F1F5F7] disabled:opacity-50 transition';
+  'btn btn-secundario';
 
 const moeda = (v: number) =>
   'R$ ' + Number(v || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');

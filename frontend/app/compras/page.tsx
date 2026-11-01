@@ -104,7 +104,7 @@ export default function ComprasPage() {
             </Link>
             <Link
               href="/compras/nova"
-              className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
+              className="btn btn-primario"
             >
               + Nova solicitação
             </Link>
@@ -127,7 +127,7 @@ export default function ComprasPage() {
               </div>
               <Link
                 href="/compras/nova?sugestao=1"
-                className="bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
+                className="btn btn-primario"
               >
                 Montar solicitação
               </Link>

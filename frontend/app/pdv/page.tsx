@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import Link from 'next/link';
 import { grupoDaCategoria, rotuloCategoria } from '@/lib/queries/bebidas';
 import { createBrowserClient } from '@supabase/ssr';
@@ -52,9 +53,9 @@ import HistoricoPedido from '@/components/pdv/HistoricoPedido';
 const INPUT =
   'border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
 const BTN_PRIMARY =
-  'bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition';
+  'btn btn-primario';
 const BTN_SECONDARY =
-  'px-4 py-2.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] text-sm font-medium hover:bg-[#F1F5F7] transition';
+  'btn btn-secundario';
 
 // etiqueta mostrada nos itens da comanda que já foram para a cozinha
 const SELO_COZINHA = {
@@ -556,10 +557,10 @@ export default function PdvPage() {
           <div className="flex items-center gap-3 mb-6">
             <button
               onClick={voltar}
-              className="h-10 w-10 rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition"
+              className="btn-voltar"
               aria-label="Voltar para o salão"
             >
-              ←
+              <ConteudoVoltar />
             </button>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-[#16252B]">

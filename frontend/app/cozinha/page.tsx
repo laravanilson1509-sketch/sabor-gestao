@@ -10,9 +10,9 @@ import {
 } from '@/lib/queries/cozinha';
 
 const BTN_PRIMARY =
-  'bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition';
+  'btn btn-primario';
 const BTN_SECONDARY =
-  'px-4 py-2.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] text-sm font-medium hover:bg-[#F1F5F7] transition';
+  'btn btn-secundario';
 
 // de quanto em quanto tempo a tela busca pedidos novos sozinha
 const INTERVALO_ATUALIZACAO_MS = 15000;

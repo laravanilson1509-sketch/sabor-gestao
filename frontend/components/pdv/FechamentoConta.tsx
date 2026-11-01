@@ -7,6 +7,7 @@
 // clicado de novo, o banco reconhece a chave e não cobra duas vezes.
 
 import { useEffect, useMemo, useState } from 'react';
+import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   aplicarDesconto,
@@ -315,10 +316,10 @@ export default function FechamentoConta({
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={onVoltar}
-            className="h-10 w-10 rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition"
+            className="btn-voltar"
             aria-label="Voltar para a comanda"
           >
-            ←
+            <ConteudoVoltar />
           </button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-[#16252B]">Fechar conta · {titulo}</h1>

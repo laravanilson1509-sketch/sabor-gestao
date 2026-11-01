@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
+import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import {
@@ -161,10 +162,10 @@ function FormInner({ tabela, singular, rota, campos }: Props) {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.push(rota)}
-            className="h-10 w-10 rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition"
+            className="btn-voltar"
             aria-label="Voltar"
           >
-            ←
+            <ConteudoVoltar />
           </button>
           <h1 className="text-2xl font-bold text-[#16252B]">
             {editando ? 'Editar ' + singular : 'Novo ' + singular}
@@ -223,14 +224,14 @@ function FormInner({ tabela, singular, rota, campos }: Props) {
             <button
               type="submit"
               disabled={salvando}
-              className="flex-1 bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white py-2.5 rounded-lg font-medium transition"
+              className="btn btn-primario flex-1"
             >
               {salvando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Cadastrar ' + singular}
             </button>
             <button
               type="button"
               onClick={() => router.push(rota)}
-              className="flex-1 bg-[#F1F5F7] hover:bg-[#E3E9EC] text-[#2B3C44] py-2.5 rounded-lg font-medium transition"
+              className="btn btn-secundario flex-1"
             >
               Cancelar
             </button>

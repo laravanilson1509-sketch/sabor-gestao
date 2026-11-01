@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
@@ -201,7 +202,7 @@ export default function DetalheSolicitacaoPage() {
     <div className="p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => router.push('/compras')} className="h-10 w-10 rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition">←</button>
+          <button onClick={() => router.push('/compras')} className="btn-voltar"><ConteudoVoltar /></button>
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold text-[#16252B]">Solicitação de compra</h1>
@@ -331,7 +332,7 @@ export default function DetalheSolicitacaoPage() {
                   <button
                     type="submit"
                     disabled={salvandoCotacao}
-                    className="flex-1 bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
+                    className="btn btn-primario flex-1"
                   >
                     {salvandoCotacao ? 'Salvando...' : 'Salvar cotação'}
                   </button>
@@ -363,7 +364,7 @@ export default function DetalheSolicitacaoPage() {
               <button
                 onClick={marcarPedidoEnviado}
                 disabled={processando}
-                className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
+                className="btn btn-primario"
               >
                 Marcar pedido como enviado
               </button>
@@ -463,7 +464,7 @@ export default function DetalheSolicitacaoPage() {
               <button
                 onClick={confirmarExclusao}
                 disabled={processando}
-                className="flex-1 bg-[#B3261E] hover:bg-[#971F18] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
+                className="btn btn-perigo-cheio flex-1"
               >
                 {processando ? 'Excluindo...' : 'Sim, excluir'}
               </button>

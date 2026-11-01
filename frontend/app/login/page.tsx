@@ -157,7 +157,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={carregando}
-            className="w-full h-12 rounded-xl bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-60 text-white font-semibold"
+            className="btn btn-primario w-full h-12 rounded-xl disabled:opacity-60"
           >
             {carregando ? 'Entrando...' : 'Entrar'}
           </button>

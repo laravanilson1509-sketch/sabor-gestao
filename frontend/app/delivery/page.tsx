@@ -207,7 +207,7 @@ export default function DeliveryPage() {
                         <button
                           onClick={() => avancarStatus(pedido)}
                           disabled={atualizando === pedido.id}
-                          className="text-sm px-4 py-2 rounded-lg bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white font-medium transition"
+                          className="btn btn-primario"
                         >
                           {atualizando === pedido.id ? '...' : limpar(statusInfo.labelProximo)}
                         </button>
@@ -273,7 +273,7 @@ export default function DeliveryPage() {
                   avancarStatus(pedidoAberto);
                   setPedidoAberto(null);
                 }}
-                className="w-full bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white py-2.5 rounded-lg font-medium"
+                className="btn btn-primario w-full"
               >
                 {limpar(getStatusDelivery(pedidoAberto.status).labelProximo)}
               </button>
@@ -295,13 +295,13 @@ export default function DeliveryPage() {
               <button
                 onClick={() => cancelar(paraCancelar)}
                 disabled={atualizando === paraCancelar.id}
-                className="flex-1 bg-[#B3261E] hover:bg-[#971F18] disabled:opacity-50 text-white py-2.5 rounded-lg font-medium"
+                className="btn btn-perigo-cheio flex-1"
               >
                 {atualizando === paraCancelar.id ? 'Cancelando...' : 'Sim, cancelar'}
               </button>
               <button
                 onClick={() => setParaCancelar(null)}
-                className="flex-1 bg-[#F1F5F7] hover:bg-[#E3E9EC] text-[#2B3C44] py-2.5 rounded-lg font-medium"
+                className="btn btn-secundario flex-1"
               >
                 Voltar
               </button>

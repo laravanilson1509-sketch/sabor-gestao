@@ -282,7 +282,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
         <button
           type="submit"
           disabled={salvando}
-          className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
+          className="btn btn-primario"
         >
           {salvando ? 'Salvando...' : '+ Adicionar conta'}
         </button>
@@ -364,7 +364,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
                     </select>
                     <button
                       onClick={() => confirmarQuitacao(c)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white font-medium transition"
+                      className="btn btn-primario text-xs"
                     >
                       Confirmar
                     </button>
@@ -378,7 +378,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
                       <>
                         <button
                           onClick={() => abrirQuitacao(c)}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white font-medium transition"
+                          className="btn btn-primario text-xs"
                         >
                           {textos.quitar}
                         </button>

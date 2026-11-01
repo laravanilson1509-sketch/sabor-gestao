@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import Link from 'next/link';
 import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import { combina } from '@/lib/busca';
@@ -88,15 +89,15 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <Link
             href="/cadastros"
-            className="h-10 w-10 flex items-center justify-center rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition"
+            className="btn-voltar"
             aria-label="Voltar para Cadastros"
           >
-            ←
+            <ConteudoVoltar />
           </Link>
           <h1 className="flex-1 text-2xl font-bold text-[#16252B]">{titulo}</h1>
           <Link
             href={rota + '/cadastro'}
-            className="bg-[#0E6B7E] hover:bg-[#0B5A6A] text-white px-4 py-2.5 rounded-lg font-medium transition"
+            className="btn btn-primario"
           >
             + Novo {singular}
           </Link>
@@ -192,13 +193,13 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
               <button
                 onClick={confirmarExclusao}
                 disabled={deletando}
-                className="flex-1 bg-[#B3261E] hover:bg-[#971F18] disabled:opacity-50 text-white py-2.5 rounded-lg font-medium"
+                className="btn btn-perigo-cheio flex-1"
               >
                 {deletando ? 'Excluindo...' : 'Sim, excluir'}
               </button>
               <button
                 onClick={() => setParaDeletar(null)}
-                className="flex-1 bg-[#F1F5F7] hover:bg-[#E3E9EC] text-[#2B3C44] py-2.5 rounded-lg font-medium"
+                className="btn btn-secundario flex-1"
               >
                 Cancelar
               </button>

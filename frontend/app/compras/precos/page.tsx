@@ -4,6 +4,7 @@
 // juntando o que foi cotado e o que veio na nota.
 
 import { useEffect, useMemo, useState } from 'react';
+import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { listarHistoricoPrecos, type PontoPreco } from '@/lib/queries/compras';
@@ -148,8 +149,8 @@ export default function HistoricoPrecosPage() {
     <div className="p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <Link href="/compras" className="h-10 w-10 flex items-center justify-center rounded-lg text-xl text-[#5B6B73] hover:bg-white hover:text-[#16252B] transition" aria-label="Voltar para Compras">
-            ←
+          <Link href="/compras" className="btn-voltar" aria-label="Voltar para Compras">
+            <ConteudoVoltar />
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-[#16252B]">Histórico de preços</h1>

@@ -169,7 +169,7 @@ export default function CustosFixos({ versao }: { versao: number }) {
         <button
           type="submit"
           disabled={salvando}
-          className="bg-[#0E6B7E] hover:bg-[#0B5A6A] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition"
+          className="btn btn-primario"
         >
           {salvando ? 'Salvando...' : '+ Adicionar'}
         </button>
