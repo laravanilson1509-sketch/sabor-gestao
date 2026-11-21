@@ -87,3 +87,63 @@ export function calcularMargem(custoTotal: number, precoVenda: number) {
   const margemPct = (margemReais / precoVenda) * 100;
   return { margemReais, margemPct };
 }
+// ---------- consulta (somente leitura) ----------
+
+export type FichaConsulta = {
+  produto: { id: string; nome: string; tipo_produto: string; preco_venda: number | null; categoria_bebida?: string | null };
+  itens: { id: string; nome: string; quantidade: number; unidade: string; custo_unitario: number; disponivel: number | null; unidadeEstoque: string | null }[];
+  custoTotal: number;
+};
+
+// a ficha de um prato com o saldo em estoque de cada ingrediente (para consultar na cozinha)
+export async function getFichaParaConsulta(
+  supabase: SupabaseClient,
+  produtoId: string,
+  unidadeId: string
+): Promise<FichaConsulta> {
+  let { data: produto, error } = await supabase
+    .from("ingredientes")
+    .select("id, nome, tipo_produto, preco_venda, categoria_bebida")
+    .eq("id", produtoId)
+    .single();
+  // SQL das bebidas (0020) ainda não rodado: busca sem a categoria
+  if (error && (error.message || "").includes("categoria_bebida")) {
+    ({ data: produto, error } = await supabase
+      .from("ingredientes")
+      .select("id, nome, tipo_produto, preco_venda")
+      .eq("id", produtoId)
+      .single());
+  }
+  if (error || !produto) throw error || new Error("Produto não encontrado");
+
+  const { itens, custoTotal } = await getFichaTecnica(supabase, produtoId, unidadeId);
+
+  const ids = itens.map((i) => i.ingrediente_id);
+  const saldo = new Map<string, { disponivel: number; unidade: string | null }>();
+  if (ids.length > 0) {
+    const { data: estoques } = await supabase
+      .from("estoque_saldo")
+      .select("ingrediente_id, quantidade_disponivel, unidade")
+      .eq("unidade_id", unidadeId)
+      .in("ingrediente_id", ids);
+    (estoques || []).forEach((e: any) =>
+      saldo.set(e.ingrediente_id, { disponivel: Number(e.quantidade_disponivel) || 0, unidade: e.unidade })
+    );
+  }
+
+  return {
+    produto: produto as FichaConsulta["produto"],
+    custoTotal,
+    itens: itens
+      .map((i) => ({
+        id: i.id,
+        nome: i.ingredientes?.nome || "Ingrediente",
+        quantidade: Number(i.quantidade),
+        unidade: i.unidade,
+        custo_unitario: i.custo_unitario,
+        disponivel: saldo.get(i.ingrediente_id)?.disponivel ?? null,
+        unidadeEstoque: saldo.get(i.ingrediente_id)?.unidade ?? null,
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome)),
+  };
+}

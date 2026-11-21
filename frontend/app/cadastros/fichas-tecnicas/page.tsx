@@ -7,6 +7,7 @@ import { combina } from '@/lib/busca';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { listarPratos, getFichaTecnica, calcularMargem } from '@/lib/queries/fichasTecnicas';
+import ModalFichaPrato from '@/components/fichas/ModalFichaPrato';
 
 type Produto = {
   id: string;
@@ -26,6 +27,7 @@ export default function FichasTecnicasPage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState('');
+  const [consultando, setConsultando] = useState<Produto | null>(null);
   const produtosFiltrados = produtos.filter((p) => combina(busca, p.nome));
 
   async function carregar() {
@@ -117,7 +119,11 @@ export default function FichasTecnicasPage() {
 
                   return (
                     <tr key={p.id} className="hover:bg-[#F8FAFB]">
-                      <td className="px-4 py-4 text-sm font-medium text-[#16252B]">{p.nome}</td>
+                      <td className="px-4 py-4 text-sm font-medium text-[#16252B]">
+                        <button onClick={() => setConsultando(p)} className="text-left hover:text-[#0E6B7E] hover:underline" title="Consultar a ficha">
+                          {p.nome}
+                        </button>
+                      </td>
                       <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">R$ {custo.toFixed(2)}</td>
                       <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">
                         {preco > 0 ? 'R$ ' + preco.toFixed(2) : 'Não definido'}
@@ -125,13 +131,18 @@ export default function FichasTecnicasPage() {
                       <td className={'px-4 py-4 text-right text-sm font-semibold ' + corMargem}>
                         {preco > 0 ? margemPct.toFixed(0) + '% (R$ ' + margemReais.toFixed(2) + ')' : '-'}
                       </td>
-                      <td className="px-4 py-4 text-center">
-                        <Link
-                          href={'/cadastros/fichas-tecnicas/' + p.id}
-                          className="text-sm px-3 py-1.5 rounded-lg bg-[#DCEEF2] text-[#0B4F5E] font-medium hover:bg-[#C9E3EA] transition"
-                        >
-                          Editar receita
-                        </Link>
+                      <td className="px-4 py-4">
+                        <div className="flex justify-center gap-2 flex-wrap">
+                          <button onClick={() => setConsultando(p)} className="btn btn-secundario !px-3 !py-1.5">
+                            Ver ficha
+                          </button>
+                          <Link
+                            href={'/cadastros/fichas-tecnicas/' + p.id}
+                            className="text-sm px-3 py-1.5 rounded-lg bg-[#DCEEF2] text-[#0B4F5E] font-medium hover:bg-[#C9E3EA] transition"
+                          >
+                            Editar receita
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -141,6 +152,16 @@ export default function FichasTecnicasPage() {
           </div>
         )}
       </div>
+
+      {consultando && (
+        <ModalFichaPrato
+          supabase={supabase}
+          unidadeId={unidadeId}
+          produtoId={consultando.id}
+          nomeInicial={consultando.nome}
+          onFechar={() => setConsultando(null)}
+        />
+      )}
     </div>
   );
 }

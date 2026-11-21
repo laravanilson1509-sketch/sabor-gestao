@@ -8,6 +8,9 @@ import {
   type CartaoCozinha,
   type StatusCozinha,
 } from '@/lib/queries/cozinha';
+import MenuCartao from '@/components/cozinha/MenuCartao';
+import ModalFichaPrato from '@/components/fichas/ModalFichaPrato';
+import HistoricoPedido from '@/components/pdv/HistoricoPedido';
 
 const BTN_PRIMARY =
   'btn btn-primario';
@@ -63,6 +66,21 @@ const hora = (iso: string) =>
 const minutosDesde = (iso: string, agora: number) =>
   Math.max(0, Math.floor((agora - new Date(iso).getTime()) / 60000));
 
+// 45 min · 2h 10min · 3 dias
+function formatarTempo(minutos: number) {
+  if (minutos < 60) return minutos + ' min';
+  if (minutos < 1440) {
+    const h = Math.floor(minutos / 60);
+    const m = minutos % 60;
+    return h + 'h' + (m ? ' ' + m + 'min' : '');
+  }
+  const d = Math.floor(minutos / 1440);
+  return d + (d === 1 ? ' dia' : ' dias');
+}
+
+const dataHora = (iso: string) =>
+  new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
 // pedido esperando há muito tempo fica amarelo e depois vermelho
 function corTempo(minutos: number, status: StatusCozinha) {
   if (status === 'pronto') return 'text-[#1E6B3F]';
@@ -87,6 +105,9 @@ export default function CozinhaPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [atualizadoEm, setAtualizadoEm] = useState<number>(Date.now());
   const [ocupado, setOcupado] = useState<string | null>(null);
+  const [ficha, setFicha] = useState<{ produtoId: string; nome: string } | null>(null);
+  const [detalhes, setDetalhes] = useState<CartaoCozinha | null>(null);
+  const [impressoes, setImpressoes] = useState<CartaoCozinha | null>(null);
 
   async function carregar() {
     try {
@@ -173,12 +194,23 @@ export default function CozinhaPage() {
                                   {c.subtitulo ? ' · ' + c.subtitulo : ''}
                                 </p>
                               </div>
-                              <div className="text-right shrink-0">
-                                <p className={'text-sm ' + corTempo(minutos, c.status)}>
-                                  {c.status === 'pronto' ? 'pronto há ' : 'há '}
-                                  {minutos} min
-                                </p>
-                                <p className="text-xs text-[#8FA0A8]">chegou {hora(c.chegouEm)}</p>
+                              <div className="flex items-start gap-1 shrink-0">
+                                <div className="text-right">
+                                  <p className={'text-sm ' + corTempo(minutos, c.status)}>
+                                    {c.status === 'pronto' ? 'pronto há ' : 'há '}
+                                    {formatarTempo(minutos)}
+                                  </p>
+                                  <p className="text-xs text-[#8FA0A8]">
+                                    chegou {minutos >= 1440 ? dataHora(c.chegouEm) : hora(c.chegouEm)}
+                                  </p>
+                                </div>
+                                <MenuCartao
+                                  itens={c.itens}
+                                  temPedido={Boolean(c.pedidoId)}
+                                  onFicha={(produtoId, nome) => setFicha({ produtoId, nome })}
+                                  onDetalhes={() => setDetalhes(c)}
+                                  onImpressoes={() => setImpressoes(c)}
+                                />
                               </div>
                             </div>
 
@@ -233,6 +265,84 @@ export default function CozinhaPage() {
           </div>
         )}
       </div>
+
+      {ficha && (
+        <ModalFichaPrato
+          supabase={supabase}
+          unidadeId={unidadeId}
+          produtoId={ficha.produtoId}
+          nomeInicial={ficha.nome}
+          onFechar={() => setFicha(null)}
+        />
+      )}
+
+      {impressoes?.pedidoId && (
+        <HistoricoPedido
+          supabase={supabase}
+          unidadeId={unidadeId}
+          pedidoId={impressoes.pedidoId}
+          titulo={impressoes.titulo}
+          onFechar={() => setImpressoes(null)}
+        />
+      )}
+
+      {detalhes && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={() => setDetalhes(null)}>
+          <div
+            role="dialog"
+            aria-label={'Detalhes do pedido ' + detalhes.titulo}
+            className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-[#16252B]">{detalhes.titulo}</h2>
+                <p className="text-sm text-[#5B6B73]">
+                  {ROTULO_ORIGEM[detalhes.origem]}
+                  {detalhes.subtitulo ? ' · ' + detalhes.subtitulo : ''}
+                </p>
+              </div>
+              <button onClick={() => setDetalhes(null)} className="text-xl text-[#8FA0A8] hover:text-[#16252B] h-9 w-9" aria-label="Fechar">
+                ✕
+              </button>
+            </div>
+            <dl className="grid grid-cols-2 gap-3 text-sm">
+              <div className="bg-[#F4F7F8] rounded-lg p-3">
+                <dt className="text-xs text-[#5B6B73]">Situação</dt>
+                <dd className="font-semibold text-[#16252B]">{COLUNAS.find((x) => x.status === detalhes.status)?.titulo}</dd>
+              </div>
+              <div className="bg-[#F4F7F8] rounded-lg p-3">
+                <dt className="text-xs text-[#5B6B73]">Tempo desde que chegou</dt>
+                <dd className="font-semibold text-[#16252B]">{formatarTempo(minutosDesde(detalhes.chegouEm, atualizadoEm))}</dd>
+              </div>
+              <div className="bg-[#F4F7F8] rounded-lg p-3">
+                <dt className="text-xs text-[#5B6B73]">Chegou na cozinha</dt>
+                <dd className="font-semibold text-[#16252B]">{dataHora(detalhes.chegouEm)}</dd>
+              </div>
+              <div className="bg-[#F4F7F8] rounded-lg p-3">
+                <dt className="text-xs text-[#5B6B73]">Na situação atual desde</dt>
+                <dd className="font-semibold text-[#16252B]">{dataHora(detalhes.desde)}</dd>
+              </div>
+            </dl>
+            <ul className="divide-y divide-[#E6ECEF] border border-[#E6ECEF] rounded-lg">
+              {detalhes.itens.map((i, k) => (
+                <li key={k} className="px-3 py-2 text-sm">
+                  <span className="font-bold">{i.quantidade}×</span> {i.nome}
+                  {i.observacao && <p className="text-xs text-[#7A5A0A] mt-0.5">{i.observacao}</p>}
+                </li>
+              ))}
+            </ul>
+            {minutosDesde(detalhes.chegouEm, atualizadoEm) >= 1440 && (
+              <p className="text-sm text-[#7A5A0A] bg-[#FFF0C7] rounded-lg px-3 py-2">
+                Este pedido está parado há mais de um dia. Confira se ele ainda é necessário e, se já foi entregue, marque como pronto para sair da fila.
+              </p>
+            )}
+            <button onClick={() => setDetalhes(null)} className="btn btn-primario w-full">
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
