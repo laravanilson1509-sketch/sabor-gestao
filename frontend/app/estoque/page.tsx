@@ -126,6 +126,8 @@ export default function EstoquePage() {
   const [busca, setBusca] = useState('');
   const [situacao, setSituacao] = useState<FiltroSituacao>('todas');
   const [ordem, setOrdem] = useState<Ordem>('critico');
+  // linhas marcadas na tabela: o card de valor passa a somar só elas
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
 
   const [itemMovimentacao, setItemMovimentacao] = useState<ItemEstoque | null>(null);
   const [tipoMovimentacao, setTipoMovimentacao] = useState<'entrada' | 'consumo'>('entrada');
@@ -170,6 +172,23 @@ export default function EstoquePage() {
       if (ordem === 'critico') return ORDEM_STATUS[statusDe(a)] - ORDEM_STATUS[statusDe(b)] || nomeA.localeCompare(nomeB);
       return nomeA.localeCompare(nomeB);
     });
+
+  // só conta a seleção do que está visível (se um filtro esconder a linha, ela sai da soma)
+  const marcados = visiveis.filter((i) => selecionados.has(i.id));
+  const valorCard = marcados.length > 0 ? marcados.reduce((soma, i) => soma + Math.max(valorDe(i), 0), 0) : resumo.valor;
+  const todosMarcados = visiveis.length > 0 && marcados.length === visiveis.length;
+
+  function alternarLinha(id: string) {
+    setSelecionados((atual) => {
+      const novo = new Set(atual);
+      novo.has(id) ? novo.delete(id) : novo.add(id);
+      return novo;
+    });
+  }
+
+  function alternarTodos() {
+    setSelecionados(todosMarcados ? new Set() : new Set(visiveis.map((i) => i.id)));
+  }
 
   async function carregar() {
     setLoading(true);
@@ -296,8 +315,19 @@ export default function EstoquePage() {
             <span className={'block text-2xl font-bold mt-1 ' + (resumo.zerados > 0 ? 'text-[#B3261E]' : 'text-[#16252B]')}>{resumo.zerados}</span>
           </button>
           <div className="rounded-xl border border-[#DCE3E7] bg-white p-4">
-            <span className="block text-xs font-medium text-[#5B6B73]">Valor em estoque</span>
-            <span className="block text-2xl font-bold text-[#0E6B7E] mt-1">{brl(resumo.valor)}</span>
+            <span className="block text-xs font-medium text-[#5B6B73]">
+              {marcados.length > 0
+                ? marcados.length === 1
+                  ? 'Valor de ' + (marcados[0].ingredientes?.nome || 'produto selecionado')
+                  : 'Valor dos ' + marcados.length + ' selecionados'
+                : 'Valor em estoque'}
+            </span>
+            <span className="block text-2xl font-bold text-[#0E6B7E] mt-1">{brl(valorCard)}</span>
+            {marcados.length > 0 && (
+              <button onClick={() => setSelecionados(new Set())} className="mt-1 text-xs font-medium text-[#0E6B7E] hover:underline">
+                Limpar seleção
+              </button>
+            )}
           </div>
         </div>
 
@@ -392,9 +422,18 @@ export default function EstoquePage() {
           </div>
         ) : (
           <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
-            <table className="w-full min-w-[820px]">
+            <table className="w-full min-w-[860px]">
               <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
                 <tr>
+                  <th className="pl-4 pr-1 py-3 w-8">
+                    <input
+                      type="checkbox"
+                      checked={todosMarcados}
+                      onChange={alternarTodos}
+                      aria-label="Selecionar todos os produtos da lista"
+                      className="h-4 w-4 accent-[#0E6B7E] cursor-pointer"
+                    />
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Produto</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Situação</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Quantidade</th>
@@ -422,7 +461,25 @@ export default function EstoquePage() {
                       : 'Ingrediente';
 
                   return (
-                    <tr key={item.id} className={'hover:bg-[#F8FAFB] ' + (inativo ? 'opacity-50' : '')}>
+                    <tr
+                      key={item.id}
+                      onClick={() => alternarLinha(item.id)}
+                      aria-selected={selecionados.has(item.id)}
+                      className={
+                        'cursor-pointer transition ' +
+                        (selecionados.has(item.id) ? 'bg-[#E4F1F4] hover:bg-[#DCEBEF] ' : 'hover:bg-[#F8FAFB] ') +
+                        (inativo ? 'opacity-50' : '')
+                      }
+                    >
+                      <td className="pl-4 pr-1 py-3.5 w-8" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selecionados.has(item.id)}
+                          onChange={() => alternarLinha(item.id)}
+                          aria-label={'Selecionar ' + (item.ingredientes?.nome || 'produto')}
+                          className="h-4 w-4 accent-[#0E6B7E] cursor-pointer"
+                        />
+                      </td>
                       <td className="px-4 py-3.5">
                         <span className="block text-sm font-medium text-[#16252B]">
                           {item.ingredientes ? item.ingredientes.nome : 'N/A'}
@@ -446,7 +503,7 @@ export default function EstoquePage() {
                       </td>
                       <td className="px-4 py-3.5 text-right text-sm text-[#2B3C44]">{brl(item.custo_unitario || 0)}</td>
                       <td className="px-4 py-3.5 text-right text-sm font-semibold text-[#16252B]">{brl(valorDe(item))}</td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-1.5 justify-center flex-wrap">
                           <button
                             onClick={() => {
@@ -497,7 +554,9 @@ export default function EstoquePage() {
               </tbody>
             </table>
             <p className="px-4 py-2.5 text-xs text-[#8FA0A8] border-t border-[#E6ECEF] bg-[#F8FAFB]">
-              {visiveis.length} {visiveis.length === 1 ? 'produto' : 'produtos'} · a barra mostra o saldo: cheia = 2× o mínimo
+              {visiveis.length} {visiveis.length === 1 ? 'produto' : 'produtos'}
+              {marcados.length > 0 && ' · ' + marcados.length + (marcados.length === 1 ? ' selecionado' : ' selecionados') + ' (' + brl(valorCard) + ')'}
+              {' · '}clique nas linhas para somar o valor · a barra mostra o saldo: cheia = 2× o mínimo
             </p>
           </div>
         )}
