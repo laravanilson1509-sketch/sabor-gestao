@@ -129,6 +129,8 @@ export default function EstoquePage() {
   // linhas marcadas na tabela: o card de valor passa a somar só elas
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [mostrarTodos, setMostrarTodos] = useState(false);
+  // com linhas marcadas, a tabela mostra só elas (dá para voltar a ver todos os filtrados)
+  const [soSelecionados, setSoSelecionados] = useState(false);
 
   const [itemMovimentacao, setItemMovimentacao] = useState<ItemEstoque | null>(null);
   const [tipoMovimentacao, setTipoMovimentacao] = useState<'entrada' | 'consumo'>('entrada');
@@ -181,19 +183,22 @@ export default function EstoquePage() {
 
   // só conta a seleção do que está visível (se um filtro esconder a linha, ela sai da soma)
   const marcados = linhas.filter((i) => selecionados.has(i.id));
+  const mostrando = soSelecionados && marcados.length > 0 ? marcados : linhas;
   const valorCard = marcados.length > 0 ? marcados.reduce((soma, i) => soma + Math.max(valorDe(i), 0), 0) : resumo.valor;
   const todosMarcados = linhas.length > 0 && marcados.length === linhas.length;
 
   function alternarLinha(id: string) {
-    setSelecionados((atual) => {
-      const novo = new Set(atual);
-      novo.has(id) ? novo.delete(id) : novo.add(id);
-      return novo;
-    });
+    const novo = new Set(selecionados);
+    novo.has(id) ? novo.delete(id) : novo.add(id);
+    // primeira marcação: a lista passa a mostrar só o que foi selecionado
+    if (selecionados.size === 0 && novo.size > 0) setSoSelecionados(true);
+    if (novo.size === 0) setSoSelecionados(false);
+    setSelecionados(novo);
   }
 
   function alternarTodos() {
     setSelecionados(todosMarcados ? new Set() : new Set(linhas.map((i) => i.id)));
+    setSoSelecionados(false);
   }
 
   async function carregar() {
@@ -333,7 +338,13 @@ export default function EstoquePage() {
             </span>
             <span className="block text-2xl font-bold text-[#0E6B7E] mt-1">{brl(valorCard)}</span>
             {marcados.length > 0 && (
-              <button onClick={() => setSelecionados(new Set())} className="mt-1 text-xs font-medium text-[#0E6B7E] hover:underline">
+              <button
+                onClick={() => {
+                  setSelecionados(new Set());
+                  setSoSelecionados(false);
+                }}
+                className="mt-1 text-xs font-medium text-[#0E6B7E] hover:underline"
+              >
                 Limpar seleção
               </button>
             )}
@@ -405,6 +416,7 @@ export default function EstoquePage() {
                     setFiltroAtivo('ativo');
                     setMostrarTodos(false);
                     setSelecionados(new Set());
+                    setSoSelecionados(false);
                   }}
                   className="btn btn-secundario !py-1.5"
                 >
@@ -458,6 +470,18 @@ export default function EstoquePage() {
           </div>
         ) : (
           <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
+            {marcados.length > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-[#E4F1F4] border-b border-[#CFE3E8] text-sm text-[#0A4E5C]">
+                <span>
+                  {soSelecionados
+                    ? 'Mostrando só ' + (marcados.length === 1 ? 'o produto selecionado' : 'os ' + marcados.length + ' produtos selecionados')
+                    : marcados.length + (marcados.length === 1 ? ' produto selecionado' : ' produtos selecionados') + ' entre os filtrados'}
+                </span>
+                <button onClick={() => setSoSelecionados((v) => !v)} className="font-semibold hover:underline">
+                  {soSelecionados ? 'Mostrar todos os filtrados' : 'Mostrar só os selecionados'}
+                </button>
+              </div>
+            )}
             <table className="w-full min-w-[860px]">
               <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
                 <tr>
@@ -480,7 +504,7 @@ export default function EstoquePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E6ECEF]">
-                {linhas.map((item) => {
+                {mostrando.map((item) => {
                   const status = statusDe(item);
                   const info = SITUACAO[status];
                   const qtdAtual = Number(item.quantidade_disponivel) || 0;
@@ -524,7 +548,7 @@ export default function EstoquePage() {
                         <span className="block text-xs text-[#8FA0A8] mt-0.5">{rotulo}</span>
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className={'inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ' + info.etiqueta}>{info.rotulo}</span>
+                        <span className={'inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ' + info.etiqueta}>{info.rotulo}</span>
                       </td>
                       <td className="px-4 py-3.5 min-w-[9rem]">
                         <span className="block text-sm font-semibold text-[#16252B]">
@@ -534,13 +558,13 @@ export default function EstoquePage() {
                           <span className="block h-full rounded-full" style={{ width: nivel + '%', background: info.barra }} />
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-right text-sm text-[#5B6B73]">
+                      <td className="px-4 py-3.5 text-right text-sm text-[#5B6B73] whitespace-nowrap">
                         {num(minimo)} {item.unidade}
                       </td>
-                      <td className="px-4 py-3.5 text-right text-sm text-[#2B3C44]">{brl(item.custo_unitario || 0)}</td>
-                      <td className="px-4 py-3.5 text-right text-sm font-semibold text-[#16252B]">{brl(valorDe(item))}</td>
+                      <td className="px-4 py-3.5 text-right text-sm text-[#2B3C44] whitespace-nowrap">{brl(item.custo_unitario || 0)}</td>
+                      <td className="px-4 py-3.5 text-right text-sm font-semibold text-[#16252B] whitespace-nowrap">{brl(valorDe(item))}</td>
                       <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex gap-1.5 justify-center flex-wrap">
+                        <div className="flex gap-1.5 justify-center flex-nowrap">
                           <button
                             onClick={() => {
                               setItemMovimentacao(item);
@@ -590,7 +614,7 @@ export default function EstoquePage() {
               </tbody>
             </table>
             <p className="px-4 py-2.5 text-xs text-[#8FA0A8] border-t border-[#E6ECEF] bg-[#F8FAFB]">
-              {linhas.length} {linhas.length === 1 ? 'produto' : 'produtos'}
+              {mostrando.length} {mostrando.length === 1 ? 'produto' : 'produtos'}
               {marcados.length > 0 && ' · ' + marcados.length + (marcados.length === 1 ? ' selecionado' : ' selecionados') + ' (' + brl(valorCard) + ')'}
               {' · '}clique nas linhas para somar o valor · a barra mostra o saldo: cheia = 2× o mínimo
             </p>
