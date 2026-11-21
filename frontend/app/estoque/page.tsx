@@ -128,6 +128,7 @@ export default function EstoquePage() {
   const [ordem, setOrdem] = useState<Ordem>('critico');
   // linhas marcadas na tabela: o card de valor passa a somar só elas
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [mostrarTodos, setMostrarTodos] = useState(false);
 
   const [itemMovimentacao, setItemMovimentacao] = useState<ItemEstoque | null>(null);
   const [tipoMovimentacao, setTipoMovimentacao] = useState<'entrada' | 'consumo'>('entrada');
@@ -173,10 +174,15 @@ export default function EstoquePage() {
       return nomeA.localeCompare(nomeB);
     });
 
+  // a tela começa vazia: a lista só aparece com busca ou filtro (ou em "Mostrar todos")
+  const filtrando = busca.trim() !== '' || filtroTipo !== 'todos' || situacao !== 'todas' || filtroAtivo !== 'ativo';
+  const listaAparece = filtrando || mostrarTodos;
+  const linhas = listaAparece ? visiveis : [];
+
   // só conta a seleção do que está visível (se um filtro esconder a linha, ela sai da soma)
-  const marcados = visiveis.filter((i) => selecionados.has(i.id));
+  const marcados = linhas.filter((i) => selecionados.has(i.id));
   const valorCard = marcados.length > 0 ? marcados.reduce((soma, i) => soma + Math.max(valorDe(i), 0), 0) : resumo.valor;
-  const todosMarcados = visiveis.length > 0 && marcados.length === visiveis.length;
+  const todosMarcados = linhas.length > 0 && marcados.length === linhas.length;
 
   function alternarLinha(id: string) {
     setSelecionados((atual) => {
@@ -187,7 +193,7 @@ export default function EstoquePage() {
   }
 
   function alternarTodos() {
-    setSelecionados(todosMarcados ? new Set() : new Set(visiveis.map((i) => i.id)));
+    setSelecionados(todosMarcados ? new Set() : new Set(linhas.map((i) => i.id)));
   }
 
   async function carregar() {
@@ -294,7 +300,10 @@ export default function EstoquePage() {
         {/* Resumo */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           <button
-            onClick={() => setSituacao('todas')}
+            onClick={() => {
+              setSituacao('todas');
+              setMostrarTodos(true);
+            }}
             className={'text-left rounded-xl border p-4 transition bg-white hover:border-[#0E6B7E] ' + (situacao === 'todas' ? 'border-[#0E6B7E] ring-1 ring-[#0E6B7E]' : 'border-[#DCE3E7]')}
           >
             <span className="block text-xs font-medium text-[#5B6B73]">Produtos</span>
@@ -385,6 +394,25 @@ export default function EstoquePage() {
               </div>
             </div>
 
+            {listaAparece && (
+              <div className="self-end">
+                <button
+                  onClick={() => {
+                    setBusca('');
+                    setFiltroTipo('todos');
+                    setFiltroBebida('todas');
+                    setSituacao('todas');
+                    setFiltroAtivo('ativo');
+                    setMostrarTodos(false);
+                    setSelecionados(new Set());
+                  }}
+                  className="btn btn-secundario !py-1.5"
+                >
+                  Limpar filtros
+                </button>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Ordenar por</label>
               <select
@@ -402,6 +430,14 @@ export default function EstoquePage() {
 
         {loading ? (
           <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
+        ) : !listaAparece ? (
+          <div className="bg-white border border-dashed border-[#C9D3D8] rounded-xl py-16 px-6 text-center">
+            <p className="text-[#16252B] font-medium">Escolha um filtro ou busque um produto</p>
+            <p className="text-sm text-[#5B6B73] mt-1">Os itens aparecem aqui conforme você filtra.</p>
+            <button onClick={() => setMostrarTodos(true)} className="mt-4 text-sm font-medium text-[#0E6B7E] hover:underline">
+              Mostrar todos os produtos
+            </button>
+          </div>
         ) : itens.length > 0 && visiveis.length === 0 ? (
           busca ? (
             <NadaEncontrado busca={busca} />
@@ -444,7 +480,7 @@ export default function EstoquePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E6ECEF]">
-                {visiveis.map((item) => {
+                {linhas.map((item) => {
                   const status = statusDe(item);
                   const info = SITUACAO[status];
                   const qtdAtual = Number(item.quantidade_disponivel) || 0;
@@ -554,7 +590,7 @@ export default function EstoquePage() {
               </tbody>
             </table>
             <p className="px-4 py-2.5 text-xs text-[#8FA0A8] border-t border-[#E6ECEF] bg-[#F8FAFB]">
-              {visiveis.length} {visiveis.length === 1 ? 'produto' : 'produtos'}
+              {linhas.length} {linhas.length === 1 ? 'produto' : 'produtos'}
               {marcados.length > 0 && ' · ' + marcados.length + (marcados.length === 1 ? ' selecionado' : ' selecionados') + ' (' + brl(valorCard) + ')'}
               {' · '}clique nas linhas para somar o valor · a barra mostra o saldo: cheia = 2× o mínimo
             </p>
