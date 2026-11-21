@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { moeda } from '@/lib/numeros';
 import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import { combina } from '@/lib/busca';
@@ -124,12 +125,12 @@ export default function FichasTecnicasPage() {
                           {p.nome}
                         </button>
                       </td>
-                      <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">R$ {custo.toFixed(2)}</td>
+                      <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">{moeda(custo)}</td>
                       <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">
-                        {preco > 0 ? 'R$ ' + preco.toFixed(2) : 'Não definido'}
+                        {preco > 0 ? moeda(preco) : 'Não definido'}
                       </td>
                       <td className={'px-4 py-4 text-right text-sm font-semibold ' + corMargem}>
-                        {preco > 0 ? margemPct.toFixed(0) + '% (R$ ' + margemReais.toFixed(2) + ')' : '-'}
+                        {preco > 0 ? margemPct.toFixed(0) + '% (' + moeda(margemReais) + ')' : '-'}
                       </td>
                       <td className="px-4 py-4">
                         <div className="flex justify-center gap-2 flex-wrap">

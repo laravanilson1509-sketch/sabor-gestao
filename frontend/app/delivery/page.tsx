@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { moeda } from '@/lib/numeros';
 import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import { combina } from '@/lib/busca';
 import { createBrowserClient } from '@supabase/ssr';
@@ -192,7 +193,7 @@ export default function DeliveryPage() {
                         <span className={pagamentoInfo.cor}>{limpar(pagamentoInfo.label)}</span>
                       </p>
                       <p className="text-base font-bold text-[#16252B] mt-2">
-                        Total: R$ {Number(pedido.valor_total).toFixed(2)}
+                        Total: {moeda(Number(pedido.valor_total))}
                       </p>
                     </div>
 
@@ -250,13 +251,13 @@ export default function DeliveryPage() {
                     {item.quantidade}x {item.nome}
                   </span>
                   <span className="font-medium">
-                    R$ {(item.quantidade * item.preco_unitario).toFixed(2)}
+                    {moeda(item.quantidade * item.preco_unitario)}
                   </span>
                 </div>
               ))}
               <div className="border-t border-[#DCE3E7] pt-2 flex justify-between font-bold text-[#16252B]">
                 <span>Total</span>
-                <span>R$ {Number(pedidoAberto.valor_total).toFixed(2)}</span>
+                <span>{moeda(Number(pedidoAberto.valor_total))}</span>
               </div>
             </div>
             <div className="text-sm text-[#5B6B73] space-y-1 mb-4">

@@ -1,6 +1,7 @@
 'use client';
 
 import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import { moeda } from '@/lib/numeros';
 import CampoMoeda from '@/components/CampoMoeda';
 import { combina } from '@/lib/busca';
 import { Fragment, useEffect, useMemo, useState } from 'react';
@@ -30,8 +31,6 @@ const BTN_PRIMARY =
 const BTN_SECONDARY =
   'btn btn-secundario';
 
-const moeda = (v: number) =>
-  'R$ ' + Number(v || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
 const hora = (iso: string) =>
   new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });

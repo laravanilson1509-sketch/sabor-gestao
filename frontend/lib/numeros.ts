@@ -29,3 +29,6 @@ export function numeroCanonico(texto: string): string {
 
 export const formatarBR = (n: number) =>
   Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// R$ 14.500,00 — ponto nos milhares e vírgula nos centavos
+export const moeda = (v: number) => 'R$ ' + formatarBR(Number.isFinite(Number(v)) ? Number(v) : 0);

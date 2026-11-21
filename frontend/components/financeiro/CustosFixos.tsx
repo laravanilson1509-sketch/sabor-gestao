@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { moeda } from '@/lib/numeros';
 import CampoMoeda from '@/components/CampoMoeda';
 import { createBrowserClient } from '@supabase/ssr';
 import {
@@ -49,7 +50,7 @@ export default function CustosFixos({ versao }: { versao: number }) {
     setErro(null);
     const v = parseFloat(valor);
     if (!nome.trim() || isNaN(v) || v <= 0) {
-      setErro('Informe o nome e um valor mensal valido.');
+      setErro('Informe o nome e um valor mensal válido.');
       return;
     }
     setSalvando(true);
@@ -98,13 +99,13 @@ export default function CustosFixos({ versao }: { versao: number }) {
     <div className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-4">
       <div>
         <h2 className="text-lg font-bold text-[#16252B]">Custos fixos mensais</h2>
-        <p className="text-sm text-[#5B6B73]">Aluguel, energia, salarios, internet...</p>
+        <p className="text-sm text-[#5B6B73]">Aluguel, energia, salários, internet...</p>
       </div>
 
       <div className="grid grid-cols-3 gap-3 text-center">
         <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
-          <p className="text-xs text-[#5B6B73]">Total ativo / mes</p>
-          <p className="font-bold text-[#16252B]">R$ {resumo.total.toFixed(2)}</p>
+          <p className="text-xs text-[#5B6B73]">Total ativo / mês</p>
+          <p className="font-bold text-[#16252B]">{moeda(resumo.total)}</p>
         </div>
         <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
           <p className="text-xs text-[#5B6B73]">Vendas previstas</p>
@@ -112,12 +113,12 @@ export default function CustosFixos({ versao }: { versao: number }) {
         </div>
         <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
           <p className="text-xs text-[#5B6B73]">Custo fixo por prato</p>
-          <p className="font-bold text-[#0E6B7E]">R$ {resumo.porPrato.toFixed(2)}</p>
+          <p className="font-bold text-[#0E6B7E]">{moeda(resumo.porPrato)}</p>
         </div>
       </div>
       {vendas === 0 && (
         <p className="text-xs text-[#7A5A0A] bg-[#FFF0C7] border border-[#E8D28A] rounded-lg px-3 py-2">
-          Defina as vendas previstas por mes nos parametros acima para o rateio funcionar.
+          Defina as vendas previstas por mês nos parâmetros acima para o rateio funcionar.
         </p>
       )}
 
@@ -129,7 +130,7 @@ export default function CustosFixos({ versao }: { versao: number }) {
             <div key={c.id} className={'flex items-center justify-between p-3 ' + (c.ativo ? '' : 'opacity-50')}>
               <div>
                 <p className="text-sm font-medium text-[#16252B]">{c.nome}</p>
-                <p className="text-xs text-[#5B6B73]">R$ {c.valor_mensal.toFixed(2)} por mes</p>
+                <p className="text-xs text-[#5B6B73]">{moeda(c.valor_mensal)} por mês</p>
               </div>
               <div className="flex gap-2">
                 <button

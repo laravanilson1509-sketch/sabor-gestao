@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { moeda } from '@/lib/numeros';
 import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import { combina } from '@/lib/busca';
@@ -196,7 +197,7 @@ export default function PratosPage() {
                     <td className="px-4 py-4 text-sm font-medium text-[#16252B]">{p.nome}</td>
                     <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">
                       {Number(p.preco_venda) > 0
-                        ? 'R$ ' + Number(p.preco_venda).toFixed(2)
+                        ? moeda(Number(p.preco_venda))
                         : 'Não definido'}
                     </td>
                     <td className="px-4 py-4 text-sm">

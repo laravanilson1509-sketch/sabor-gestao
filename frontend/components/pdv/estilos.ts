@@ -1,5 +1,5 @@
 // classes usadas nas telas do PDV, da conta e da impressão
-import { lerNumeroBR } from '@/lib/numeros';
+import { lerNumeroBR, moeda } from '@/lib/numeros';
 
 export const INPUT =
   'border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
@@ -14,8 +14,7 @@ export const BTN_LINK = 'text-xs font-medium text-[#0E6B7E] hover:underline disa
 export const CARTAO = 'bg-white border border-[#DCE3E7] rounded-xl';
 export const TITULO_SECAO = 'text-sm font-semibold uppercase tracking-wide text-[#5B6B73] mb-3';
 
-export const moeda = (v: number) =>
-  'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export { moeda };
 
 export const qtd = (v: number) => Number(v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
 

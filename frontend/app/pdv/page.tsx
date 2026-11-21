@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { moeda } from '@/lib/numeros';
 import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import Link from 'next/link';
 import { grupoDaCategoria, rotuloCategoria } from '@/lib/queries/bebidas';
@@ -66,7 +67,6 @@ const SELO_COZINHA = {
 
 const qtd = (v: number) => Number(v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
 
-const moeda = (v: number) => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
 
 const hora = (iso: string) =>
   new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });

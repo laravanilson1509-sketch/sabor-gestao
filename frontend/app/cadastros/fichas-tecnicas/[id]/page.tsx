@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { moeda } from '@/lib/numeros';
 import CampoMoeda from '@/components/CampoMoeda';
 import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import Link from 'next/link';
@@ -23,9 +24,6 @@ import {
 
 type IngredienteConsumo = { id: string; nome: string; unidade_padrao: string | null };
 
-function moeda(v: number) {
-  return 'R$ ' + v.toFixed(2);
-}
 
 export default function EditarFichaTecnicaPage() {
   const router = useRouter();
