@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import CampoMoeda from '@/components/CampoMoeda';
 import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
@@ -351,11 +352,9 @@ export default function EditarFichaTecnicaPage() {
           )}
 
           <div className="flex gap-2 mb-2 flex-wrap">
-            <input
-              type="number"
-              step="0.01"
+            <CampoMoeda
               value={precoInput}
-              onChange={(e) => setPrecoInput(e.target.value)}
+              onChange={setPrecoInput}
               placeholder="Defina o preço final"
               className="flex-1 min-w-40 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
             />

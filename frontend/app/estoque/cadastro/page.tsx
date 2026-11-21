@@ -1,6 +1,7 @@
 'use client';
 
 import { GRUPOS_BEBIDA, categoriasDoGrupo, grupoDaCategoria, setorSugerido, type GrupoBebida } from '@/lib/queries/bebidas';
+import CampoMoeda from '@/components/CampoMoeda';
 import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -296,13 +297,10 @@ function CadastroEstoquePageInner() {
                 Preço de venda (R$)
                 <span className="ml-1 text-xs text-[#8FA0A8]">(aparece no PDV)</span>
               </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
+              <CampoMoeda
                 value={precoVenda}
-                onChange={(e) => setPrecoVenda(e.target.value)}
-                placeholder="0.00"
+                onChange={setPrecoVenda}
+                placeholder="0,00"
                 className={INPUT}
               />
             </div>
@@ -347,13 +345,10 @@ function CadastroEstoquePageInner() {
               <label className={LABEL}>
                 Custo unitário (R$) <span className="text-[#B3261E]">*</span>
               </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
+              <CampoMoeda
                 value={custo}
-                onChange={(e) => setCusto(e.target.value)}
-                placeholder="0.00"
+                onChange={setCusto}
+                placeholder="0,00"
                 className={INPUT}
               />
             </div>

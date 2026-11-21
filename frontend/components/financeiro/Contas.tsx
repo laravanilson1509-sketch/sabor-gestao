@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import CampoMoeda from '@/components/CampoMoeda';
 import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import { combina } from '@/lib/busca';
 import { createBrowserClient } from '@supabase/ssr';
@@ -249,15 +250,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
             placeholder={textos.pessoa}
             className={classeInput}
           />
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={valor}
-            onChange={(e) => setValor(e.target.value)}
-            placeholder="Valor (R$)"
-            className={classeInput}
-          />
+          <CampoMoeda value={valor} onChange={setValor} placeholder="Valor (R$)" className={classeInput} />
           <label className="text-xs text-[#5B6B73] space-y-1">
             <span>Vencimento</span>
             <input

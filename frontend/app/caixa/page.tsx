@@ -1,6 +1,7 @@
 'use client';
 
 import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import CampoMoeda from '@/components/CampoMoeda';
 import { combina } from '@/lib/busca';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
@@ -171,7 +172,7 @@ export default function CaixaPage() {
 
   function handleAbrir(e: React.FormEvent) {
     e.preventDefault();
-    const valor = parseFloat(trocoInicial.replace(',', '.')) || 0;
+    const valor = parseFloat(trocoInicial) || 0;
     if (valor < 0) {
       setErro('O troco inicial não pode ser negativo.');
       return;
@@ -292,12 +293,9 @@ export default function CaixaPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#2B3C44] mb-1">Troco inicial (R$)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
+                  <CampoMoeda
                     value={trocoInicial}
-                    onChange={(e) => setTrocoInicial(e.target.value)}
+                    onChange={setTrocoInicial}
                     placeholder="0,00"
                     className={INPUT + ' w-full'}
                   />
@@ -380,12 +378,9 @@ export default function CaixaPage() {
                     ))}
                   </div>
                   <div className="flex gap-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
+                    <CampoMoeda
                       value={movValor}
-                      onChange={(e) => setMovValor(e.target.value)}
+                      onChange={setMovValor}
                       placeholder="Valor"
                       className={INPUT + ' w-28'}
                     />
@@ -661,13 +656,10 @@ export default function CaixaPage() {
               <label className="block text-sm font-medium text-[#2B3C44] mb-1">
                 Quanto dinheiro tem na gaveta? (R$)
               </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
+              <CampoMoeda
                 autoFocus
                 value={valorContado}
-                onChange={(e) => setValorContado(e.target.value)}
+                onChange={setValorContado}
                 placeholder="Conte as notas e moedas"
                 className={INPUT + ' w-full'}
               />

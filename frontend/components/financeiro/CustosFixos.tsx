@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import CampoMoeda from '@/components/CampoMoeda';
 import { createBrowserClient } from '@supabase/ssr';
 import {
   listarCustosFixos,
@@ -47,7 +48,7 @@ export default function CustosFixos({ versao }: { versao: number }) {
     e.preventDefault();
     setErro(null);
     const v = parseFloat(valor);
-    if (!nome.trim() || isNaN(v) || v < 0) {
+    if (!nome.trim() || isNaN(v) || v <= 0) {
       setErro('Informe o nome e um valor mensal valido.');
       return;
     }
@@ -157,13 +158,10 @@ export default function CustosFixos({ versao }: { versao: number }) {
           placeholder="Ex: Aluguel"
           className="flex-1 min-w-40 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
         />
-        <input
-          type="number"
-          step="0.01"
-          min="0"
+        <CampoMoeda
           value={valor}
-          onChange={(e) => setValor(e.target.value)}
-          placeholder="Valor mensal"
+          onChange={setValor}
+          placeholder="Ex: 4.000,00"
           className="w-36 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
         />
         <button

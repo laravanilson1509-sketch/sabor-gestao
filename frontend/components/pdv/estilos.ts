@@ -1,4 +1,5 @@
 // classes usadas nas telas do PDV, da conta e da impressão
+import { lerNumeroBR } from '@/lib/numeros';
 
 export const INPUT =
   'border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
@@ -24,10 +25,5 @@ export const hora = (iso: string) =>
 export const dataHora = (iso: string) =>
   new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
-// "12,50" ou "12.50" -> 12.5
-export const lerValor = (texto: string) => {
-  const limpo = texto.replace(/\s|R\$/g, '');
-  const normal = limpo.includes(',') ? limpo.replace(/\./g, '').replace(',', '.') : limpo;
-  const n = Number(normal);
-  return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN;
-};
+// "12,50", "12.50" ou "1.250" (mil duzentos e cinquenta) -> número
+export const lerValor = (texto: string) => lerNumeroBR(texto);

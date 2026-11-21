@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import CampoMoeda from '@/components/CampoMoeda';
 import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
@@ -302,13 +303,10 @@ export default function DetalheSolicitacaoPage() {
                       <span className="text-sm text-[#2B3C44] flex-1">
                         {item.ingredientes?.nome} <span className="text-[#8FA0A8]">({qtd(item.quantidade)} {item.unidade})</span>
                       </span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
+                      <CampoMoeda
                         placeholder={'R$/' + item.unidade}
                         value={precos[item.id] || ''}
-                        onChange={(e) => setPrecos({ ...precos, [item.id]: e.target.value })}
+                        onChange={(v) => setPrecos({ ...precos, [item.id]: v })}
                         className="w-28 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
                       />
                     </div>
