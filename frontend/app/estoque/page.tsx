@@ -359,7 +359,14 @@ export default function EstoquePage() {
               <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Tipo</label>
               <div className="flex gap-1.5 flex-wrap">
                 {(['todos', 'ingrediente', 'acabado', 'bebida'] as FiltroTipo[]).map((t) => (
-                  <button key={t} onClick={() => setFiltroTipo(t)} className={chip(filtroTipo === t)}>
+                  <button
+                    key={t}
+                    onClick={() => {
+                      setFiltroTipo(t);
+                      if (t === 'todos') setMostrarTodos(true);
+                    }}
+                    className={chip(filtroTipo === t)}
+                  >
                     {rotuloTipo(t)}
                   </button>
                 ))}
@@ -386,7 +393,14 @@ export default function EstoquePage() {
               <div className="flex gap-1.5 flex-wrap">
                 {([['todas', 'Todas'], ['baixo', 'Abaixo do mínimo'], ['zerado', 'Sem estoque'], ['ok', 'Normal']] as [FiltroSituacao, string][]).map(
                   ([valor, rotulo]) => (
-                    <button key={valor} onClick={() => setSituacao(valor)} className={chip(situacao === valor)}>
+                    <button
+                      key={valor}
+                      onClick={() => {
+                        setSituacao(valor);
+                        if (valor === 'todas') setMostrarTodos(true);
+                      }}
+                      className={chip(situacao === valor)}
+                    >
                       {rotulo}
                     </button>
                   )
