@@ -3,7 +3,7 @@
 // Barra do topo: vidro fixo com o título da tela, botão de tema e menu do usuário.
 
 import Link from 'next/link';
-import { LogOut, Menu, X } from 'lucide-react';
+import { CalendarDays, LogOut, Menu, X } from 'lucide-react';
 import BotaoTema from '@/components/ui/BotaoTema';
 import Dropdown from '@/components/ui/Dropdown';
 
@@ -13,9 +13,10 @@ type Props = {
   onAbrirMenu: () => void;
   email: string | null;
   onSair: () => void;
+  onAbrirTemas: () => void;
 };
 
-export default function Navbar({ titulo, painelAberto, onAbrirMenu, email, onSair }: Props) {
+export default function Navbar({ titulo, painelAberto, onAbrirMenu, email, onSair, onAbrirTemas }: Props) {
   const inicial = (email || 'U').charAt(0).toUpperCase();
   const nome = email ? email.split('@')[0] : 'Usuário';
 
@@ -55,7 +56,10 @@ export default function Navbar({ titulo, painelAberto, onAbrirMenu, email, onSai
         gatilho={
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-contrast">{inicial}</span>
         }
-        itens={[{ rotulo: 'Sair', icone: <LogOut size={16} aria-hidden />, onClick: onSair, perigo: true }]}
+        itens={[
+          { rotulo: 'Temas por data', icone: <CalendarDays size={16} aria-hidden />, onClick: onAbrirTemas },
+          { rotulo: 'Sair', icone: <LogOut size={16} aria-hidden />, onClick: onSair, perigo: true },
+        ]}
       />
     </header>
   );

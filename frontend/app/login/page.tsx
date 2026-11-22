@@ -4,7 +4,8 @@ import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Logo from '@/components/Logo'
-import { temaDoDia } from '@/lib/temasDatas'
+import { useTemaDoDia } from '@/lib/temasPreferencia'
+import IconeTema from '@/components/ui/IconeTema'
 
 function LacoCampanha({ cor }: { cor: string }) {
   return (
@@ -27,7 +28,7 @@ function LacoCampanha({ cor }: { cor: string }) {
 }
 
 function LoginForm() {
-  const campanha = temaDoDia()
+  const tema = useTemaDoDia()
   const router = useRouter()
   const params = useSearchParams()
   const [email, setEmail] = useState('')
@@ -69,17 +70,23 @@ function LoginForm() {
           </p>
         </div>
 
-        {/* campanha do mês (muda sozinha: Novembro Azul, Dezembro Vermelho...) */}
-        <div className="flex items-center gap-6 rounded-card border border-line bg-surface-hover p-6">
-          <div className="shrink-0">
-            <LacoCampanha cor={campanha.cor2} />
+        {/* tema do dia (muda sozinho: Novembro Azul, Natal, Dia das Mães...) */}
+        {tema && !tema.neutro ? (
+          <div className="flex items-center gap-6 rounded-card border border-line bg-surface-hover p-6">
+            <div className="shrink-0">
+              {tema.icone === 'laco' ? <LacoCampanha cor={tema.cor2} /> : <IconeTema nome={tema.icone} size={64} color={tema.cor} />}
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-accent-ink">{tema.nome}</p>
+              <p className="mt-1 text-xl font-bold leading-snug text-ink">
+                {tema.tipo === 'saude' ? 'Cuidar de você também é prioridade.' : tema.frase}
+              </p>
+              {tema.tipo === 'saude' && <p className="mt-2 text-sm text-ink-muted">{tema.frase}</p>}
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-accent-ink">{campanha.nome}</p>
-            <p className="mt-1 text-xl font-bold leading-snug text-ink">Cuidar de você também é prioridade.</p>
-            <p className="mt-2 text-sm text-ink-muted">{campanha.frase}</p>
-          </div>
-        </div>
+        ) : (
+          <div />
+        )}
       </section>
 
       {/* Formulário */}

@@ -10,6 +10,8 @@ import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 import TelaAbertura from '@/components/TelaAbertura';
 import TelaInicio from '@/components/TelaInicio';
+import TemasPorData from '@/components/TemasPorData';
+import { EVENTO_ABRIR_TEMAS } from '@/lib/temasPreferencia';
 import './design-tokens.css';
 import './globals.css';
 
@@ -21,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const [gavetaAberta, setGavetaAberta] = useState(false); // menu no celular
   const [recolhida, setRecolhida] = useState(false); // menu recolhido no computador
   const [email, setEmail] = useState<string | null>(null);
+  const [temasAberto, setTemasAberto] = useState(false); // janela do calendário de temas
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -81,6 +84,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return () => window.removeEventListener(EVENTO_PENDENCIAS, atualizar);
   }, [pathname]);
 
+  // outros pontos da tela (ex.: botão "Ver datas" da faixa) pedem para abrir o calendário de temas
+  useEffect(() => {
+    const abrir = () => setTemasAberto(true);
+    window.addEventListener(EVENTO_ABRIR_TEMAS, abrir);
+    return () => window.removeEventListener(EVENTO_ABRIR_TEMAS, abrir);
+  }, []);
+
   // trocou de tela: fecha a gaveta do celular
   useEffect(() => setGavetaAberta(false), [pathname]);
 
@@ -101,6 +111,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           ) : (
             <>
               <TelaAbertura ativa />
+              <TemasPorData aberto={temasAberto} onFechar={() => setTemasAberto(false)} />
               <div
                 className="min-h-screen md:flex"
                 style={{ '--sidebar-w': recolhida ? '64px' : '240px', '--navbar-h': '56px' } as React.CSSProperties}
@@ -121,6 +132,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     onAbrirMenu={() => setGavetaAberta(true)}
                     email={email}
                     onSair={handleSair}
+                    onAbrirTemas={() => setTemasAberto(true)}
                   />
 
                   <main className="relative flex-1 min-w-0">

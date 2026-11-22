@@ -31,6 +31,7 @@ import {
 import { CATEGORIAS, dataLocal, formatarReais, hojeISO } from '@/lib/queries/financeiroContas';
 import { rotuloForma } from '@/lib/queries/caixa';
 import { temaDoDia } from '@/lib/temasDatas';
+import { usePreferenciaTemas } from '@/lib/temasPreferencia';
 
 type Pendencias = Awaited<ReturnType<typeof carregarPendencias>>;
 type Ponto = { chave: string; rotulo: string; valor: number; quantidade: number };
@@ -494,7 +495,8 @@ export default function PainelFinanceiro() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
   const unidadeId = process.env.NEXT_PUBLIC_UNIDADE_ID!;
-  const tema = temaDoDia();
+  const preferenciaTemas = usePreferenciaTemas();
+  const tema = temaDoDia(new Date(), preferenciaTemas);
   const hoje = hojeISO();
 
   const [tipo, setTipo] = useState<TipoPeriodo>('mes');
