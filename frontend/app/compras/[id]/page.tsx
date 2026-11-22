@@ -455,7 +455,7 @@ export default function DetalheSolicitacaoPage() {
 
       {paraDeletar && (
         <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-          <div className="ui-modal-panel p-6 w-full max-w-md">
+          <div role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-md">
             <h2 className="text-lg font-bold mb-2 text-ink">Excluir solicitação?</h2>
             <p className="text-sm text-ink-muted mb-6">Essa ação não pode ser desfeita.</p>
             <div className="flex gap-3">

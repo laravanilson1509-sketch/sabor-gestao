@@ -72,7 +72,7 @@ export default function EditarItem({ supabase, item, onSalvo, onFechar }: Props)
     <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
       <form
         onSubmit={salvar}
-        className="ui-modal-panel p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto"
+        role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto"
       >
         <div>
           <h2 className="text-lg font-bold text-ink">

@@ -638,7 +638,7 @@ export default function EstoquePage() {
 
       {itemMovimentacao && (
         <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-          <form onSubmit={handleMovimentacao} className="ui-modal-panel p-6 w-full max-w-md">
+          <form onSubmit={handleMovimentacao} role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-md">
             <h2 className="text-lg font-bold text-ink mb-4">
               {tipoMovimentacao === 'entrada' ? 'Entrada' : 'Consumo'} —{' '}
               {itemMovimentacao.ingredientes ? itemMovimentacao.ingredientes.nome : ''}
@@ -694,7 +694,7 @@ export default function EstoquePage() {
 
       {showHistorico && (
         <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-          <div className="ui-modal-panel p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+          <div role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-ink">
                 Histórico — {showHistorico.ingredientes ? showHistorico.ingredientes.nome : ''}
@@ -743,7 +743,7 @@ export default function EstoquePage() {
 
       {itemParaDeletar && (
         <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-          <div className="ui-modal-panel p-6 w-full max-w-md">
+          <div role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-md">
             <h2 className="text-lg font-bold mb-2 text-danger">Excluir produto?</h2>
             <p className="text-sm text-ink-muted mb-6">
               Tem certeza que quer excluir{' '}

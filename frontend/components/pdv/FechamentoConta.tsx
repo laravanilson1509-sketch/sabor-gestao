@@ -280,7 +280,7 @@ export default function FechamentoConta({
   if (fechada) {
     return (
       <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-        <div className="ui-modal-panel p-8 w-full max-w-md text-center space-y-4">
+        <div role="dialog" aria-modal="true" className="ui-modal-panel p-8 w-full max-w-md text-center space-y-4">
           <p className="text-4xl">✓</p>
           <h2 className="text-xl font-bold text-ink">Conta fechada · {titulo}</h2>
           {fechada.troco > 0 && (
@@ -311,9 +311,9 @@ export default function FechamentoConta({
       : 0;
 
   return (
-    <div className="fixed inset-0 bg-app z-50 overflow-y-auto">
+    <div className="absolute inset-0 bg-app overflow-y-auto">
       <div className="max-w-6xl mx-auto p-4 md:p-8">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-3 mb-6">
           <button
             onClick={onVoltar}
             className="btn-voltar"
@@ -321,11 +321,11 @@ export default function FechamentoConta({
           >
             <ConteudoVoltar />
           </button>
-          <div className="flex-1">
+          <div className="flex-1 min-w-[12rem]">
             <h1 className="text-2xl font-bold text-ink">Fechar conta · {titulo}</h1>
             <p className="text-sm text-ink-muted">Confira os itens, divida e receba</p>
           </div>
-          <button onClick={preConta} disabled={ocupado} className={BTN_SECONDARY}>
+          <button onClick={preConta} disabled={ocupado} className={BTN_SECONDARY + ' max-sm:w-full'}>
             Imprimir pré-conta
           </button>
         </div>
@@ -418,7 +418,7 @@ export default function FechamentoConta({
             <div className="border-t border-line mt-3 pt-3 space-y-1.5 text-sm">
               <div className="flex justify-between text-ink-soft">
                 <span>Subtotal</span>
-                <span>{moeda(subtotal)}</span>
+                <span className="whitespace-nowrap tabular-nums">{moeda(subtotal)}</span>
               </div>
               <div className="flex justify-between items-center text-ink-soft">
                 <span>
@@ -431,7 +431,7 @@ export default function FechamentoConta({
                     </button>
                   )}
                 </span>
-                <span>{Number(pedido.desconto) > 0 ? '- ' + moeda(pedido.desconto) : moeda(0)}</span>
+                <span className="whitespace-nowrap tabular-nums">{Number(pedido.desconto) > 0 ? '- ' + moeda(pedido.desconto) : moeda(0)}</span>
               </div>
               <div className="flex justify-between items-center text-ink-soft">
                 <span>
@@ -459,7 +459,7 @@ export default function FechamentoConta({
                     </button>
                   )}
                 </span>
-                <span>{moeda(pedido.taxa_servico)}</span>
+                <span className="whitespace-nowrap tabular-nums">{moeda(pedido.taxa_servico)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold text-ink pt-1">
                 <span>Total</span>

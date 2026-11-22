@@ -1291,7 +1291,7 @@ export default function PdvPage() {
         <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
           <form
             onSubmit={salvarReserva}
-            className="ui-modal-panel p-6 w-full max-w-md space-y-4"
+            role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-md space-y-4"
           >
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold text-ink">

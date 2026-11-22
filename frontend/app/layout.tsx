@@ -135,7 +135,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     onAbrirTemas={() => setTemasAberto(true)}
                   />
 
-                  <main className="relative flex-1 min-w-0">
+                  {/* com uma tela aberta, a área fica do tamanho da janela: o painel ocupa tudo e a tela inicial só aparece atrás */}
+                  <main className={'relative min-w-0 ' + (naInicio ? 'flex-1' : 'flex-none h-[calc(100vh-var(--navbar-h))] overflow-hidden')}>
                     {/* a tela inicial fica sempre aqui; as outras abrem por cima */}
                     <div
                       aria-hidden={!naInicio || undefined}
@@ -145,13 +146,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       <TelaInicio supabase={supabase} />
                     </div>
                     {!naInicio && (
-                      <div
-                        className={
-                          'fixed z-20 overflow-hidden border-line bg-app shadow-token-lg ' +
-                          'left-0 right-0 bottom-0 top-[var(--navbar-h)] ' +
-                          'md:left-[calc(var(--sidebar-w)+12px)] md:right-3 md:bottom-3 md:top-[calc(var(--navbar-h)+8px)] md:rounded-card md:border'
-                        }
-                      >
+                      // "absolute" (e não "fixed") de propósito: não cria camada de empilhamento própria,
+                      // então janelas e telas cheias abertas aqui dentro ficam acima do menu e da barra do topo
+                      <div className="absolute inset-0 overflow-hidden border-line bg-app shadow-token-lg md:inset-x-3 md:bottom-3 md:top-2 md:rounded-card md:border">
                         <div className="h-full overflow-y-auto">{children}</div>
                       </div>
                     )}

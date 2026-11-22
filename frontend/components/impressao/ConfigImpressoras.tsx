@@ -462,7 +462,7 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
       {/* ---------------- FORMULÁRIO DA IMPRESSORA ---------------- */}
       {form && (
         <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-          <form onSubmit={salvarForm} className="ui-modal-panel p-6 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto">
+          <form onSubmit={salvarForm} role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-bold text-ink">{form.id ? 'Editar impressora' : 'Nova impressora'}</h2>
             <div>
               <label className={LABEL}>Nome</label>

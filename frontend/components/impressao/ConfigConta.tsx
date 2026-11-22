@@ -320,7 +320,7 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
       {/* ---------------- FORMULÁRIO DO OPERADOR ---------------- */}
       {form && (
         <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-          <form onSubmit={salvarForm} className="ui-modal-panel p-6 w-full max-w-md space-y-4">
+          <form onSubmit={salvarForm} role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-md space-y-4">
             <h2 className="text-lg font-bold text-ink">{form.id ? 'Editar operador' : 'Novo operador'}</h2>
             <div>
               <label className={LABEL}>Nome</label>

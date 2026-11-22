@@ -233,7 +233,7 @@ export default function DeliveryPage() {
       {/* Janela: ver itens */}
       {pedidoAberto && (
         <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-          <div className="ui-modal-panel p-6 w-full max-w-md">
+          <div role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-ink">Itens do pedido</h2>
               <button
@@ -286,7 +286,7 @@ export default function DeliveryPage() {
       {/* Janela: confirmar cancelamento */}
       {paraCancelar && (
         <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-          <div className="ui-modal-panel p-6 w-full max-w-md">
+          <div role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-md">
             <h2 className="text-lg font-bold mb-2 text-danger">Cancelar pedido?</h2>
             <p className="text-sm text-ink-muted mb-6">
               Tem certeza que quer cancelar o pedido de{' '}

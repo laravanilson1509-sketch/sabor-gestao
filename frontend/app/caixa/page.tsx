@@ -616,7 +616,7 @@ export default function CaixaPage() {
 
       {mostrarFechamento && caixa && dinheiro && (
         <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-          <form onSubmit={handleFechar} className="ui-modal-panel p-6 w-full max-w-md space-y-4">
+          <form onSubmit={handleFechar} role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-md space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-ink">Fechar caixa</h2>
               <button

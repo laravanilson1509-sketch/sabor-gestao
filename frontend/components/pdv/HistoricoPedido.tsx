@@ -105,7 +105,7 @@ export default function HistoricoPedido({ supabase, unidadeId, pedidoId, titulo,
 
   return (
     <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-      <div className="ui-modal-panel p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-5">
+      <div role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-ink">Impressões e histórico · {titulo}</h2>
           <button onClick={onFechar} className="text-xl text-ink-subtle hover:text-ink" aria-label="Fechar">
