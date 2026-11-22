@@ -14,18 +14,49 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-export type ItemMenu = { href: string; rotulo: string; icone: LucideIcon };
+export type FilhoMenu = { href: string; rotulo: string };
+// filhos: atalhos que aparecem no painel flutuante ao passar o mouse (ou focar) no item
+export type ItemMenu = { href: string; rotulo: string; icone: LucideIcon; filhos?: FilhoMenu[] };
 
 export const MENU: ItemMenu[] = [
   { href: '/whatsapp', rotulo: 'WhatsApp', icone: MessageCircle },
-  { href: '/estoque', rotulo: 'Estoque', icone: Package },
+  {
+    href: '/estoque',
+    rotulo: 'Estoque',
+    icone: Package,
+    filhos: [
+      { href: '/estoque', rotulo: 'Lista do estoque' },
+      { href: '/estoque/cadastro', rotulo: 'Novo produto' },
+    ],
+  },
   { href: '/pdv', rotulo: 'PDV', icone: Store },
   { href: '/cozinha', rotulo: 'Cozinha', icone: ChefHat },
   { href: '/caixa', rotulo: 'Caixa', icone: Wallet },
   { href: '/impressao', rotulo: 'Impressão', icone: Printer },
-  { href: '/cadastros', rotulo: 'Cadastros', icone: BookUser },
+  {
+    href: '/cadastros',
+    rotulo: 'Cadastros',
+    icone: BookUser,
+    filhos: [
+      { href: '/cadastros/pratos', rotulo: 'Pratos' },
+      { href: '/cadastros/fichas-tecnicas', rotulo: 'Fichas técnicas' },
+      { href: '/cadastros/fornecedores', rotulo: 'Fornecedores' },
+      { href: '/cadastros/clientes', rotulo: 'Clientes' },
+      { href: '/cadastros/funcionarios', rotulo: 'Funcionários' },
+      { href: '/cadastros/motoboys', rotulo: 'Motoboys' },
+    ],
+  },
   { href: '/delivery', rotulo: 'Delivery', icone: Bike },
-  { href: '/compras', rotulo: 'Compras', icone: ShoppingBasket },
+  {
+    href: '/compras',
+    rotulo: 'Compras',
+    icone: ShoppingBasket,
+    filhos: [
+      { href: '/compras', rotulo: 'Solicitações' },
+      { href: '/compras/nova', rotulo: 'Nova solicitação' },
+      { href: '/compras/precos', rotulo: 'Histórico de preços' },
+    ],
+  },
   { href: '/financeiro', rotulo: 'Financeiro', icone: TrendingUp },
 ];
 
