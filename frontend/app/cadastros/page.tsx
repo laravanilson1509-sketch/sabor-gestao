@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
-import { Bike, ClipboardList, Plus, Truck, UserCog, Users, UtensilsCrossed, type LucideIcon } from 'lucide-react';
+import { Bike, ClipboardList, Package, Plus, Truck, UserCog, Users, UtensilsCrossed, type LucideIcon } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 
 type Cartao = {
@@ -12,7 +12,7 @@ type Cartao = {
   titulo: string;
   descricao: string;
   icone: LucideIcon;
-  contar?: { tabela: string; tipoProduto?: string }; // de onde vem o número do cartão
+  contar?: { tabela: string; tipoProduto?: string; exceto?: string }; // de onde vem o número do cartão
 };
 
 const CARTOES: Cartao[] = [
@@ -22,6 +22,13 @@ const CARTOES: Cartao[] = [
     descricao: 'Pratos do cardápio, preço de venda e se vendem no WhatsApp.',
     icone: UtensilsCrossed,
     contar: { tabela: 'ingredientes', tipoProduto: 'prato' },
+  },
+  {
+    href: '/cadastros/produtos',
+    titulo: 'Produtos do estoque',
+    descricao: 'Cadastre ingredientes, produtos acabados e bebidas, com unidade e estoque mínimo.',
+    icone: Package,
+    contar: { tabela: 'ingredientes', exceto: 'prato' },
   },
   {
     href: '/cadastros/fichas-tecnicas',
@@ -80,7 +87,9 @@ export default function CadastrosPage() {
       CARTOES.filter((c) => c.contar).map(async (c) => {
         let consulta = supabase.from(c.contar!.tabela).select('id', { count: 'exact', head: true }).eq('unidade_id', unidadeId);
         // pratos ficam na mesma tabela dos ingredientes: filtra pelo tipo
-        if (c.contar!.tipoProduto) consulta = supabase.from(c.contar!.tabela).select('id', { count: 'exact', head: true }).eq('tipo_produto', c.contar!.tipoProduto);
+        if (c.contar!.tipoProduto || c.contar!.exceto) consulta = supabase.from(c.contar!.tabela).select('id', { count: 'exact', head: true });
+        if (c.contar!.tipoProduto) consulta = consulta.eq('tipo_produto', c.contar!.tipoProduto);
+        if (c.contar!.exceto) consulta = consulta.neq('tipo_produto', c.contar!.exceto);
         const { count, error } = await consulta;
         return [c.href, error ? null : count ?? 0] as const;
       })

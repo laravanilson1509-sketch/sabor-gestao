@@ -144,7 +144,7 @@ function CadastroEstoquePageInner() {
         });
         if (tipoProduto === 'bebida') await sugerirSetor(novoId);
       }
-      router.push('/estoque');
+      router.push(editando ? '/estoque' : '/cadastros');
     } catch (err: any) {
       setErro(err.message || 'Erro ao salvar');
     } finally {
@@ -166,7 +166,7 @@ function CadastroEstoquePageInner() {
         {/* Cabeçalho */}
         <div className="flex items-center gap-3 mb-6">
           <button
-            onClick={() => router.push('/estoque')}
+            onClick={() => router.push(editando ? '/estoque' : '/cadastros')}
             className="btn-voltar"
             aria-label="Voltar"
           >
@@ -419,7 +419,7 @@ function CadastroEstoquePageInner() {
             </button>
             <button
               type="button"
-              onClick={() => router.push('/estoque')}
+              onClick={() => router.push(editando ? '/estoque' : '/cadastros')}
               className="btn btn-secundario flex-1"
             >
               Cancelar

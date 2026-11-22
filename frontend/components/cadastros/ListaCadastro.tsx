@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
@@ -72,6 +72,7 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
   const [status, setStatus] = useState<FiltroStatus>('todos');
   const [ordem, setOrdem] = useState<Ordem>({ chave: 'nome', direcao: 'asc' });
   const [pagina, setPagina] = useState(1);
+  const paginaDaUrl = useRef<number | null>(null);
 
   const [paraDeletar, setParaDeletar] = useState<Registro | null>(null);
   const [deletando, setDeletando] = useState(false);
@@ -121,8 +122,43 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
 
   const visiveis = useMemo(() => ordenados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA), [ordenados, pagina]);
 
+  // Busca, situação, ordem e página ficam na URL (?q=ana&status=ativo&sort=nome&dir=asc&page=2):
+  // ao voltar de uma edição ou recarregar, a tela abre do mesmo jeito.
+  const [urlLida, setUrlLida] = useState(false);
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const st = p.get('status');
+    if (st === 'ativo' || st === 'inativo') setStatus(st);
+    if (p.get('q')) setBusca(p.get('q')!);
+    if (p.get('sort')) setOrdem({ chave: p.get('sort')!, direcao: p.get('dir') === 'desc' ? 'desc' : 'asc' });
+    const pg = Number(p.get('page'));
+    // a página lida da URL precisa sobreviver ao "volta para a primeira página" abaixo
+    paginaDaUrl.current = pg > 1 ? pg : null;
+    setUrlLida(true);
+  }, []);
+
   // mudou busca/filtro/ordem: volta para a primeira página
-  useEffect(() => setPagina(1), [busca, status, ordem]);
+  useEffect(() => {
+    if (!urlLida) return;
+    if (paginaDaUrl.current) {
+      setPagina(paginaDaUrl.current);
+      paginaDaUrl.current = null;
+    } else setPagina(1);
+  }, [busca, status, ordem, urlLida]);
+
+  useEffect(() => {
+    if (!urlLida) return;
+    const p = new URLSearchParams();
+    if (busca) p.set('q', busca);
+    if (status !== 'todos') p.set('status', status);
+    if (ordem && !(ordem.chave === 'nome' && ordem.direcao === 'asc')) {
+      p.set('sort', ordem.chave);
+      p.set('dir', ordem.direcao);
+    }
+    if (pagina > 1) p.set('page', String(pagina));
+    const qs = p.toString();
+    window.history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : ''));
+  }, [busca, status, ordem, pagina, urlLida]);
 
   const totais = useMemo(
     () => ({ todos: itens.length, ativo: itens.filter((i) => i.ativo).length, inativo: itens.filter((i) => !i.ativo).length }),

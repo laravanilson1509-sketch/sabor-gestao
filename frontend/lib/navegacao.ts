@@ -24,10 +24,6 @@ export const MENU: ItemMenu[] = [
     href: '/estoque',
     rotulo: 'Estoque',
     icone: Package,
-    filhos: [
-      { href: '/estoque', rotulo: 'Lista do estoque' },
-      { href: '/estoque/cadastro', rotulo: 'Novo produto' },
-    ],
   },
   { href: '/pdv', rotulo: 'PDV', icone: Store },
   { href: '/cozinha', rotulo: 'Cozinha', icone: ChefHat },
@@ -37,14 +33,6 @@ export const MENU: ItemMenu[] = [
     href: '/cadastros',
     rotulo: 'Cadastros',
     icone: BookUser,
-    filhos: [
-      { href: '/cadastros/pratos', rotulo: 'Pratos' },
-      { href: '/cadastros/fichas-tecnicas', rotulo: 'Fichas técnicas' },
-      { href: '/cadastros/fornecedores', rotulo: 'Fornecedores' },
-      { href: '/cadastros/clientes', rotulo: 'Clientes' },
-      { href: '/cadastros/funcionarios', rotulo: 'Funcionários' },
-      { href: '/cadastros/motoboys', rotulo: 'Motoboys' },
-    ],
   },
   { href: '/delivery', rotulo: 'Delivery', icone: Bike },
   {

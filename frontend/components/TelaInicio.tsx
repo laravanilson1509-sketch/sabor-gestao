@@ -39,19 +39,6 @@ const RECURSOS = [
     ),
   },
   {
-    titulo: 'Equipe',
-    texto: 'Organização e desempenho',
-    href: '/cadastros/funcionarios',
-    icone: (
-      <>
-        <circle cx="12" cy="9" r="3" {...traco} />
-        <circle cx="5.5" cy="10.5" r="2" {...traco} />
-        <circle cx="18.5" cy="10.5" r="2" {...traco} />
-        <path d="M6.5 19 a5.5 5 0 0 1 11 0" {...traco} />
-      </>
-    ),
-  },
-  {
     titulo: 'Estoque',
     texto: 'Nunca falte o que você precisa',
     href: '/estoque',
@@ -76,7 +63,6 @@ const RECURSOS = [
 ];
 
 const DICAS = [
-  { titulo: 'Cadastrar um prato', texto: 'Monte a ficha técnica e defina o preço de venda.', href: '/cadastros/pratos', botao: 'Cadastrar' },
   { titulo: 'Lançar um pedido', texto: 'Abra uma mesa ou venda no balcão e envie para a produção.', href: '/pdv', botao: 'Abrir PDV' },
   { titulo: 'Configurar impressoras', texto: 'Defina onde sai a comanda da cozinha, do bar e a conta.', href: '/impressao', botao: 'Configurar' },
   { titulo: 'Abrir o caixa', texto: 'Informe o troco inicial para receber os pagamentos.', href: '/caixa', botao: 'Abrir caixa' },

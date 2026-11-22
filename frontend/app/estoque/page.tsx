@@ -276,9 +276,6 @@ export default function EstoquePage() {
             <Link href="/compras" className="btn btn-secundario">
               Compras
             </Link>
-            <Link href="/estoque/cadastro" className="btn btn-primario">
-              <IconPlus /> Novo produto
-            </Link>
           </div>
         </div>
 
@@ -479,7 +476,7 @@ export default function EstoquePage() {
           <div className="bg-surface border border-line rounded-xl p-8 text-center">
             <p className="text-ink">Nenhum item encontrado</p>
             <p className="text-sm text-ink-muted mt-2">
-              Tente mudar os filtros ou cadastre um novo produto
+              Tente mudar os filtros
             </p>
           </div>
         ) : (
@@ -605,7 +602,7 @@ export default function EstoquePage() {
                             <IconList />
                           </button>
                           <Link
-                            href={'/estoque/cadastro?id=' + (item.ingredientes ? item.ingredientes.id : '')}
+                            href={'/cadastros/produtos?id=' + (item.ingredientes ? item.ingredientes.id : '')}
                             className={BTN_ACAO}
                             title="Editar"
                             aria-label="Editar"
