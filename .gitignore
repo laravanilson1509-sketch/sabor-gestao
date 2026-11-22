@@ -30,3 +30,6 @@ Thumbs.db
 # editores
 .vscode/
 .idea/
+
+# backups locais (têm dados reais de clientes: nunca commitar)
+backups/
