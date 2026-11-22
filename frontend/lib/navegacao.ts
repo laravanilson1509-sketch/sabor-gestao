@@ -18,6 +18,16 @@ export type FilhoMenu = { href: string; rotulo: string };
 // filhos: atalhos que aparecem no painel flutuante ao passar o mouse (ou focar) no item
 export type ItemMenu = { href: string; rotulo: string; icone: LucideIcon; filhos?: FilhoMenu[] };
 
+export const ABAS_FINANCEIRO = [
+  { id: 'painel', rotulo: 'Painel' },
+  { id: 'pagar', rotulo: 'Contas a pagar' },
+  { id: 'receber', rotulo: 'Contas a receber' },
+  { id: 'fluxo', rotulo: 'Fluxo de caixa' },
+  { id: 'dre', rotulo: 'DRE (lucro)' },
+  { id: 'precos', rotulo: 'Preços e custos fixos' },
+] as const;
+export type AbaFinanceiro = (typeof ABAS_FINANCEIRO)[number]['id'];
+
 export const MENU: ItemMenu[] = [
   { href: '/whatsapp', rotulo: 'WhatsApp', icone: MessageCircle },
   {
@@ -54,7 +64,12 @@ export const MENU: ItemMenu[] = [
       { href: '/compras/precos', rotulo: 'Histórico de preços' },
     ],
   },
-  { href: '/financeiro', rotulo: 'Financeiro', icone: TrendingUp },
+  {
+    href: '/financeiro',
+    rotulo: 'Financeiro',
+    icone: TrendingUp,
+    filhos: ABAS_FINANCEIRO.map((a) => ({ href: '/financeiro/' + a.id, rotulo: a.rotulo })),
+  },
 ];
 
 export const tituloDaRota = (caminho: string) => MENU.find((i) => caminho.startsWith(i.href))?.rotulo || '';
