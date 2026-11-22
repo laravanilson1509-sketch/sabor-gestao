@@ -1052,7 +1052,7 @@ export default function PdvPage() {
           <p className="text-center py-12 text-ink-muted">Carregando...</p>
         ) : (
           <>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">
+            <h2 id="mesas" className="scroll-mt-4 text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">
               Mesas
             </h2>
             {mesas.length === 0 ? (
@@ -1130,7 +1130,7 @@ export default function PdvPage() {
             )}
 
             {/* Lista de reservas */}
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">
+            <h2 id="reservas" className="scroll-mt-4 text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">
               Reservas
             </h2>
             {reservas.length === 0 ? (
@@ -1190,7 +1190,7 @@ export default function PdvPage() {
 
             {balcaoAbertos.length > 0 && (
               <>
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">
+                <h2 id="balcao" className="scroll-mt-4 text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">
                   Vendas no balcão em aberto
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -1214,7 +1214,7 @@ export default function PdvPage() {
 
             {fechadasHoje.length > 0 && (
               <>
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3 mt-8">
+                <h2 id="fechadas" className="scroll-mt-4 text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3 mt-8">
                   Contas fechadas hoje
                 </h2>
                 <div className="bg-surface border border-line rounded-xl overflow-x-auto">

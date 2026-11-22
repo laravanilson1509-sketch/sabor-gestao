@@ -28,6 +28,13 @@ export const ABAS_FINANCEIRO = [
 ] as const;
 export type AbaFinanceiro = (typeof ABAS_FINANCEIRO)[number]['id'];
 
+export const ABAS_COZINHA = [
+  { id: 'producao', rotulo: 'Em produção' },
+  { id: 'prontos', rotulo: 'Pedidos prontos' },
+  { id: 'finalizados', rotulo: 'Finalizados' },
+] as const;
+export type AbaCozinha = (typeof ABAS_COZINHA)[number]['id'];
+
 export const MENU: ItemMenu[] = [
   { href: '/whatsapp', rotulo: 'WhatsApp', icone: MessageCircle },
   {
@@ -35,8 +42,21 @@ export const MENU: ItemMenu[] = [
     rotulo: 'Estoque',
     icone: Package,
   },
-  { href: '/pdv', rotulo: 'PDV', icone: Store },
-  { href: '/cozinha', rotulo: 'Cozinha', icone: ChefHat },
+  {
+    href: '/pdv',
+    rotulo: 'PDV',
+    icone: Store,
+    filhos: [
+      { href: '/pdv#mesas', rotulo: 'Mesas' },
+      { href: '/pdv#reservas', rotulo: 'Reservas' },
+    ],
+  },
+  {
+    href: '/cozinha',
+    rotulo: 'Cozinha',
+    icone: ChefHat,
+    filhos: ABAS_COZINHA.map((a) => ({ href: '/cozinha/' + a.id, rotulo: a.rotulo })),
+  },
   { href: '/caixa', rotulo: 'Caixa', icone: Wallet },
   { href: '/impressao', rotulo: 'Impressão', icone: Printer },
   {
