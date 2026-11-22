@@ -33,6 +33,15 @@ export const MENU: ItemMenu[] = [
     href: '/cadastros',
     rotulo: 'Cadastros',
     icone: BookUser,
+    filhos: [
+      { href: '/cadastros/pratos', rotulo: 'Pratos' },
+      { href: '/cadastros/produtos', rotulo: 'Produtos do estoque' },
+      { href: '/cadastros/fichas-tecnicas', rotulo: 'Fichas técnicas' },
+      { href: '/cadastros/fornecedores', rotulo: 'Fornecedores' },
+      { href: '/cadastros/clientes', rotulo: 'Clientes' },
+      { href: '/cadastros/funcionarios', rotulo: 'Funcionários' },
+      { href: '/cadastros/motoboys', rotulo: 'Motoboys' },
+    ],
   },
   { href: '/delivery', rotulo: 'Delivery', icone: Bike },
   {
