@@ -109,7 +109,7 @@ export default function CadastrosPage() {
             const quantidade = contagens[c.href];
             return (
               <li key={c.href} className="group relative flex flex-col rounded-card border border-line bg-surface p-5 shadow-token-sm transition-colors hover:border-accent">
-                <div className="flex items-start gap-4">
+                <div className="flex flex-1 items-start gap-4">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-token bg-accent-soft text-accent">
                     <Icone size={22} strokeWidth={1.75} aria-hidden />
                   </span>
@@ -124,7 +124,7 @@ export default function CadastrosPage() {
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-center justify-between border-t border-line pt-3">
+                <div className="mt-5 flex min-h-[2.75rem] items-center justify-between border-t border-line pt-3">
                   {c.contar ? (
                     carregando ? (
                       <span className="ui-skeleton h-4 w-16" aria-hidden />
@@ -136,7 +136,7 @@ export default function CadastrosPage() {
                       </span>
                     )
                   ) : (
-                    <span className="text-xs text-ink-subtle">Receitas dos pratos</span>
+                    <span className="text-sm text-ink-subtle">Receitas dos pratos</span>
                   )}
                   {c.novo && (
                     <Link
