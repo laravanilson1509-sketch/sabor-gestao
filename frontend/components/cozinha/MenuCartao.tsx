@@ -13,7 +13,7 @@ type Props = {
 };
 
 const ITEM =
-  'w-full text-left px-3 py-2 text-sm text-[#2B3C44] hover:bg-[#F1F5F7] rounded-lg flex items-center gap-2 transition disabled:opacity-50';
+  'w-full text-left px-3 py-2 text-sm text-ink-soft hover:bg-surface-hover rounded-lg flex items-center gap-2 transition disabled:opacity-50';
 
 export default function MenuCartao({ itens, temPedido, onFicha, onDetalhes, onImpressoes }: Props) {
   const [aberto, setAberto] = useState(false);
@@ -45,7 +45,7 @@ export default function MenuCartao({ itens, temPedido, onFicha, onDetalhes, onIm
     <div ref={raiz} className="relative">
       <button
         onClick={() => setAberto((v) => !v)}
-        className="h-8 w-8 flex items-center justify-center rounded-lg text-[#5B6B73] hover:bg-[#F1F5F7] hover:text-[#16252B] transition"
+        className="h-8 w-8 flex items-center justify-center rounded-lg text-ink-muted hover:bg-surface-hover hover:text-ink transition"
         aria-label="Mais opções do pedido"
         aria-haspopup="menu"
         aria-expanded={aberto}
@@ -58,14 +58,14 @@ export default function MenuCartao({ itens, temPedido, onFicha, onDetalhes, onIm
       </button>
 
       {aberto && (
-        <div role="menu" className="absolute right-0 top-9 z-30 w-64 bg-white border border-[#DCE3E7] rounded-xl shadow-lg p-1.5">
-          <p className="px-3 pt-1.5 pb-1 text-xs font-semibold uppercase tracking-wide text-[#8FA0A8]">Ficha do prato</p>
+        <div role="menu" className="absolute right-0 top-9 z-30 w-64 bg-surface border border-line rounded-xl shadow-lg p-1.5">
+          <p className="px-3 pt-1.5 pb-1 text-xs font-semibold uppercase tracking-wide text-ink-subtle">Ficha do prato</p>
           {pratos.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-[#8FA0A8]">Sem ficha para consultar neste pedido</p>
+            <p className="px-3 py-2 text-sm text-ink-subtle">Sem ficha para consultar neste pedido</p>
           ) : (
             pratos.map((p) => (
               <button key={p.produtoId} role="menuitem" onClick={() => escolher(() => onFicha(p.produtoId!, p.nome))} className={ITEM}>
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0 text-[#0E6B7E]">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0 text-accent">
                   <path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2V5Z" />
                   <path d="M8 7h6M8 11h6" />
                 </svg>
@@ -74,9 +74,9 @@ export default function MenuCartao({ itens, temPedido, onFicha, onDetalhes, onIm
             ))
           )}
 
-          <div className="my-1 border-t border-[#E6ECEF]" />
+          <div className="my-1 border-t border-line-soft" />
           <button role="menuitem" onClick={() => escolher(onDetalhes)} className={ITEM}>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0 text-[#0E6B7E]">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0 text-accent">
               <circle cx="12" cy="12" r="9" />
               <path d="M12 8v5l3 2" />
             </svg>
@@ -84,7 +84,7 @@ export default function MenuCartao({ itens, temPedido, onFicha, onDetalhes, onIm
           </button>
           {temPedido && (
             <button role="menuitem" onClick={() => escolher(onImpressoes)} className={ITEM}>
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0 text-[#0E6B7E]">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0 text-accent">
                 <path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2" />
                 <path d="M7 14h10v7H7z" />
               </svg>

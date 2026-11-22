@@ -1,73 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* ===== Tema claro (ponte) ===== */
-.tema-claro { color: #16252B; }
-.tema-claro .bg-gray-900 { background-color: #EEF2F4; }
-.tema-claro .bg-gray-800 { background-color: #FFFFFF; }
-.tema-claro .bg-gray-700 { background-color: #F1F5F7; }
-.tema-claro .bg-gray-600 { background-color: #E3E9EC; }
-.tema-claro .hover\:bg-gray-700:hover { background-color: #E8EEF1; }
-.tema-claro .hover\:bg-gray-800:hover { background-color: #F1F5F7; }
-.tema-claro .border-gray-700,
-.tema-claro .border-gray-600,
-.tema-claro .border-gray-800 { border-color: #DCE3E7; }
-.tema-claro .divide-gray-700 > :not([hidden]) ~ :not([hidden]) { border-color: #DCE3E7; }
 
-.tema-claro .text-white { color: #16252B; }
-.tema-claro .text-gray-100,
-.tema-claro .text-gray-200 { color: #16252B; }
-.tema-claro .text-gray-300 { color: #2B3C44; }
-.tema-claro .text-gray-400,
-.tema-claro .text-gray-500 { color: #5B6B73; }
-.tema-claro .placeholder-gray-400::placeholder,
-.tema-claro .placeholder-gray-500::placeholder { color: #8FA0A8; }
-
-/* azul vira petróleo */
-.tema-claro .text-blue-400,
-.tema-claro .text-blue-300 { color: #0E6B7E; }
-.tema-claro .bg-blue-600,
-.tema-claro .bg-blue-500 { background-color: #0E6B7E; }
-.tema-claro .hover\:bg-blue-700:hover,
-.tema-claro .hover\:bg-blue-600:hover { background-color: #0B5A6A; }
-
-/* botões coloridos mantêm texto branco */
-.tema-claro [class*="bg-blue-5"].text-white,
-.tema-claro [class*="bg-blue-6"].text-white,
-.tema-claro [class*="bg-blue-7"].text-white,
-.tema-claro [class*="bg-green-5"].text-white,
-.tema-claro [class*="bg-green-6"].text-white,
-.tema-claro [class*="bg-green-7"].text-white,
-.tema-claro [class*="bg-red-5"].text-white,
-.tema-claro [class*="bg-red-6"].text-white,
-.tema-claro [class*="bg-red-7"].text-white,
-.tema-claro [class*="bg-orange-5"].text-white,
-.tema-claro [class*="bg-orange-6"].text-white,
-.tema-claro [class*="bg-yellow-6"].text-white { color: #FFFFFF; }
-
-/* selos de status (verde / amarelo / vermelho) */
-.tema-claro [class*="bg-green-9"],
-.tema-claro [class*="bg-green-8"] { background-color: #D9F0E3; }
-.tema-claro [class*="bg-yellow-9"],
-.tema-claro [class*="bg-yellow-8"] { background-color: #FFF0C7; }
-.tema-claro [class*="bg-red-9"],
-.tema-claro [class*="bg-red-8"] { background-color: #FADBD6; }
-.tema-claro .text-green-300,
-.tema-claro .text-green-400 { color: #1E6B3F; }
-.tema-claro .text-yellow-300,
-.tema-claro .text-yellow-400 { color: #8A5F00; }
-.tema-claro .text-red-300,
-.tema-claro .text-red-400 { color: #B3261E; }
-/* áreas escuras dentro do tema claro (ex.: painel financeiro) mantêm o texto branco */
-.tema-claro .tema-escuro,
-.tema-claro .tema-escuro .text-white { color: #FFFFFF; }
-
-/* botões azul-petróleo e vermelhos sólidos mantêm texto branco (a regra
-   ".tema-claro .text-white" acima deixava o texto deles escuro) */
-.tema-claro [class*="bg-[#0E6B7E]"].text-white,
-.tema-claro [class*="bg-[#0B5A6A]"].text-white,
-.tema-claro [class*="bg-[#B3261E]"].text-white,
-.tema-claro [class*="bg-[#E3B341]"].text-white { color: #FFFFFF; }
+/* Cores, espaços e sombras vêm de app/design-tokens.css (tema escuro e claro). */
 
 /* ===== Botões do sistema ===== */
 @layer components {
@@ -76,7 +11,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-md);
     padding: 0.625rem 1.25rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -84,46 +19,41 @@
     letter-spacing: 0.005em;
     cursor: pointer;
     user-select: none;
-    transition: background-color 0.15s, box-shadow 0.15s, transform 0.15s, border-color 0.15s, color 0.15s;
+    transition: background-color var(--duration-fast), box-shadow var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast), transform var(--duration-fast);
   }
-  .btn:focus-visible { outline: 2px solid #0E6B7E; outline-offset: 2px; }
+  .btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
   .btn:disabled, .btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+  .btn:active:not(:disabled) { transform: translateY(1px); }
 
-  /* principal: azul-petróleo com leve degradê e sombra */
+  /* principal */
   .btn-primario {
-    color: #fff !important;
-    background-image: linear-gradient(180deg, #138198 0%, #0E6B7E 100%);
-    box-shadow: 0 1px 2px rgba(14, 107, 126, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    background: var(--accent);
+    color: var(--accent-contrast) !important;
+    box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   }
   .btn-primario:hover:not(:disabled):not([aria-disabled="true"]) {
-    background-image: linear-gradient(180deg, #0E6B7E 0%, #0B5A6A 100%);
-    box-shadow: 0 6px 14px rgba(14, 107, 126, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-    transform: translateY(-1px);
+    background: var(--accent-hover);
+    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   }
-  .btn-primario:active:not(:disabled) { transform: translateY(0); box-shadow: 0 1px 2px rgba(14, 107, 126, 0.35); }
 
-  /* secundário: fundo branco, contorno suave */
+  /* secundário */
   .btn-secundario {
-    background: #fff;
-    color: #0A4E5C;
-    border: 1px solid #C5D6DB;
-    box-shadow: 0 1px 2px rgba(22, 37, 43, 0.05);
+    background: var(--surface);
+    color: var(--accent-ink);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-sm);
   }
   .btn-secundario:hover:not(:disabled):not([aria-disabled="true"]) {
-    background: #F1F8FA;
-    border-color: #0E6B7E;
-    color: #0E6B7E;
+    background: var(--accent-faint);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
-  /* perigo: contorno vermelho; "cheio" para a confirmação final */
-  .btn-perigo { background: #fff; color: #B3261E; border: 1px solid #F2C2BB; }
-  .btn-perigo:hover:not(:disabled) { background: #FADBD6; border-color: #E8A79E; }
-  .btn-perigo-cheio {
-    color: #fff !important;
-    background-image: linear-gradient(180deg, #C4322A 0%, #B3261E 100%);
-    box-shadow: 0 1px 2px rgba(179, 38, 30, 0.35);
-  }
-  .btn-perigo-cheio:hover:not(:disabled) { background-image: linear-gradient(180deg, #B3261E 0%, #931F18 100%); }
+  /* perigo: contorno; "cheio" para a confirmação final */
+  .btn-perigo { background: var(--surface); color: var(--danger); border: 1px solid var(--danger-line); }
+  .btn-perigo:hover:not(:disabled) { background: var(--danger-soft); }
+  .btn-perigo-cheio { background: var(--danger-solid); color: #fff !important; box-shadow: var(--shadow-sm); }
+  .btn-perigo-cheio:hover:not(:disabled) { background: var(--danger-solid-hover); }
 
   /* voltar: pílula com seta que "recua" ao passar o mouse */
   .btn-voltar {
@@ -132,18 +62,18 @@
     gap: 0.375rem;
     height: 2.5rem;
     padding: 0 1rem 0 0.75rem;
-    border-radius: 9999px;
-    border: 1px solid #DCE3E7;
-    background: #fff;
-    color: #2B3C44;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-soft);
     font-size: 0.875rem;
     font-weight: 500;
     white-space: nowrap;
-    box-shadow: 0 1px 2px rgba(22, 37, 43, 0.05);
-    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    box-shadow: var(--shadow-sm);
+    transition: background-color var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
   }
-  .btn-voltar svg { transition: transform 0.15s; }
-  .btn-voltar:hover { background: #F1F8FA; border-color: #0E6B7E; color: #0E6B7E; }
+  .btn-voltar svg { transition: transform var(--duration-fast); }
+  .btn-voltar:hover { background: var(--accent-faint); border-color: var(--accent); color: var(--accent); }
   .btn-voltar:hover svg { transform: translateX(-3px); }
-  .btn-voltar:focus-visible { outline: 2px solid #0E6B7E; outline-offset: 2px; }
+  .btn-voltar:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 }

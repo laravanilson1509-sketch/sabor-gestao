@@ -88,7 +88,7 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
     setConfig((c) => (c ? { ...c, [chave]: valor } : c));
 
   const caixa = (chave: keyof ConfigPdv, rotulo: string, ajuda?: string) => (
-    <label className="flex items-start gap-2 text-sm text-[#2B3C44]">
+    <label className="flex items-start gap-2 text-sm text-ink-soft">
       <input
         type="checkbox"
         checked={Boolean(config?.[chave])}
@@ -97,7 +97,7 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
       />
       <span>
         {rotulo}
-        {ajuda && <span className="block text-xs text-[#8FA0A8]">{ajuda}</span>}
+        {ajuda && <span className="block text-xs text-ink-subtle">{ajuda}</span>}
       </span>
     </label>
   );
@@ -105,11 +105,11 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
   return (
     <div className="space-y-8">
       {erro && (
-        <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+        <div role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
           {erro}
         </div>
       )}
-      {aviso && <div className="text-sm text-[#1E6B3F] bg-[#D9F0E3] rounded-lg px-3 py-2">{aviso}</div>}
+      {aviso && <div className="text-sm text-success bg-success-soft rounded-lg px-3 py-2">{aviso}</div>}
 
       {/* ---------------- EQUIPE ---------------- */}
       <section>
@@ -126,19 +126,19 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
           </button>
         </div>
         {!temGestor && (
-          <p className="text-sm text-[#7A5A0A] bg-[#FFF0C7] rounded-lg px-3 py-2 mb-3">
+          <p className="text-sm text-warning bg-warning-soft rounded-lg px-3 py-2 mb-3">
             Comece cadastrando você como Administrador com um PIN. Sem isso, ninguém consegue autorizar desconto,
             cancelamento ou reabertura.
           </p>
         )}
         {operadores.length > 0 && (
-          <ul className={CARTAO + ' divide-y divide-[#E6ECEF]'}>
+          <ul className={CARTAO + ' divide-y divide-line-soft'}>
             {operadores.map((o) => (
               <li key={o.id} className="px-4 py-3 flex items-center gap-3">
-                <span className={'flex-1 text-sm font-medium ' + (o.ativo ? 'text-[#16252B]' : 'text-[#8FA0A8] line-through')}>
+                <span className={'flex-1 text-sm font-medium ' + (o.ativo ? 'text-ink' : 'text-ink-subtle line-through')}>
                   {o.nome}
                 </span>
-                <span className="text-xs rounded-full px-2.5 py-0.5 bg-[#F1F5F7] text-[#2B3C44]">{PERFIS[o.perfil]}</span>
+                <span className="text-xs rounded-full px-2.5 py-0.5 bg-surface-hover text-ink-soft">{PERFIS[o.perfil]}</span>
                 <button
                   onClick={() => {
                     setErroForm(null);
@@ -159,23 +159,23 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
         <h2 className={TITULO_SECAO}>Quem pode autorizar</h2>
         <div className={CARTAO + ' overflow-x-auto'}>
           <table className="w-full">
-            <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
+            <thead className="bg-surface-hover border-b border-line">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Ação</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Ação</th>
                 {(['atendente', 'caixa', 'gerente', 'administrador'] as const).map((p) => (
-                  <th key={p} className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">
+                  <th key={p} className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide text-ink-muted">
                     {PERFIS[p]}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E6ECEF]">
+            <tbody className="divide-y divide-line-soft">
               {PERMISSOES.map((p) => (
                 <tr key={p.acao}>
-                  <td className="px-4 py-2.5 text-sm text-[#2B3C44]">{p.rotulo}</td>
+                  <td className="px-4 py-2.5 text-sm text-ink-soft">{p.rotulo}</td>
                   {(['atendente', 'caixa', 'gerente', 'administrador'] as const).map((perfil) => (
                     <td key={perfil} className="px-3 py-2.5 text-center text-sm">
-                      {p.perfis.includes(perfil) ? <span className="text-[#1E6B3F]">✓</span> : <span className="text-[#C9D3D8]">—</span>}
+                      {p.perfis.includes(perfil) ? <span className="text-success">✓</span> : <span className="text-ink-subtle">—</span>}
                     </td>
                   ))}
                 </tr>
@@ -183,7 +183,7 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-[#8FA0A8] mt-2">
+        <p className="text-xs text-ink-subtle mt-2">
           Sem PIN: lançar itens, tirar da comanda o que ainda não foi enviado, enviar para a produção, pré-conta,
           receber pagamento, fechar conta paga e reimprimir (a reimpressão fica registrada com o login).
         </p>
@@ -242,8 +242,8 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
               </div>
             </div>
 
-            <div className="border-t border-[#E6ECEF] pt-4 space-y-3">
-              <p className="text-sm font-semibold text-[#16252B]">Taxa de serviço</p>
+            <div className="border-t border-line-soft pt-4 space-y-3">
+              <p className="text-sm font-semibold text-ink">Taxa de serviço</p>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -254,15 +254,15 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
                   onChange={(e) => campo('taxa_servico_pct', Number(e.target.value) || 0)}
                   className={INPUT + ' w-24'}
                 />
-                <span className="text-sm text-[#2B3C44]">% sobre os itens (depois do desconto)</span>
+                <span className="text-sm text-ink-soft">% sobre os itens (depois do desconto)</span>
               </div>
               {caixa('taxa_servico_mesa', 'Cobrar nas mesas')}
               {caixa('taxa_servico_balcao', 'Cobrar no balcão')}
               {caixa('remover_taxa_exige_pin', 'Retirar a taxa pede PIN', 'Desmarcado: qualquer um retira (fica registrado)')}
             </div>
 
-            <div className="border-t border-[#E6ECEF] pt-4 space-y-3">
-              <p className="text-sm font-semibold text-[#16252B]">Desconto e caixa</p>
+            <div className="border-t border-line-soft pt-4 space-y-3">
+              <p className="text-sm font-semibold text-ink">Desconto e caixa</p>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -273,13 +273,13 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
                   onChange={(e) => campo('desconto_max_caixa_pct', Number(e.target.value) || 0)}
                   className={INPUT + ' w-24'}
                 />
-                <span className="text-sm text-[#2B3C44]">% de desconto máximo com PIN do caixa (acima disso, gerente)</span>
+                <span className="text-sm text-ink-soft">% de desconto máximo com PIN do caixa (acima disso, gerente)</span>
               </div>
               {caixa('exigir_caixa_aberto', 'Só receber pagamento com o caixa aberto', 'Recomendado: assim o dinheiro sempre cai em um caixa para conferência')}
             </div>
 
-            <div className="border-t border-[#E6ECEF] pt-4 space-y-3">
-              <p className="text-sm font-semibold text-[#16252B]">Impressão automática</p>
+            <div className="border-t border-line-soft pt-4 space-y-3">
+              <p className="text-sm font-semibold text-ink">Impressão automática</p>
               {caixa('imprimir_producao_auto', 'Imprimir o ticket de produção ao enviar o pedido')}
               {caixa('imprimir_comprovante_auto', 'Imprimir o comprovante ao fechar a conta')}
               {caixa('imprimir_via_estabelecimento', 'Imprimir também a via do estabelecimento', 'Mostra itens cancelados, para controle interno')}
@@ -296,16 +296,16 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
       <section>
         <h2 className={TITULO_SECAO}>Auditoria · últimos 7 dias</h2>
         {auditoria.length === 0 ? (
-          <div className={CARTAO + ' p-6 text-center text-sm text-[#5B6B73]'}>Nenhuma ação sensível registrada.</div>
+          <div className={CARTAO + ' p-6 text-center text-sm text-ink-muted'}>Nenhuma ação sensível registrada.</div>
         ) : (
-          <ul className={CARTAO + ' divide-y divide-[#E6ECEF]'}>
+          <ul className={CARTAO + ' divide-y divide-line-soft'}>
             {auditoria.map((a) => (
               <li key={a.id} className="px-4 py-3 text-sm">
-                <p className="text-[#16252B]">
+                <p className="text-ink">
                   <span className="font-medium">{ROTULO_ACAO[a.acao] || a.acao}</span>
                   {resumoDetalhes(a.acao, a.detalhes) && ' · ' + resumoDetalhes(a.acao, a.detalhes)}
                 </p>
-                <p className="text-xs text-[#5B6B73]">
+                <p className="text-xs text-ink-muted">
                   {dataHora(a.criado_em)}
                   {a.autorizado_por_nome && ' · autorizado por ' + a.autorizado_por_nome}
                   {a.operador_email && ' · login ' + a.operador_email}
@@ -319,9 +319,9 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
 
       {/* ---------------- FORMULÁRIO DO OPERADOR ---------------- */}
       {form && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <form onSubmit={salvarForm} className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4">
-            <h2 className="text-lg font-bold text-[#16252B]">{form.id ? 'Editar operador' : 'Novo operador'}</h2>
+        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
+          <form onSubmit={salvarForm} className="ui-modal-panel p-6 w-full max-w-md space-y-4">
+            <h2 className="text-lg font-bold text-ink">{form.id ? 'Editar operador' : 'Novo operador'}</h2>
             <div>
               <label className={LABEL}>Nome</label>
               <input
@@ -386,7 +386,7 @@ export default function ConfigConta({ supabase, unidadeId }: Props) {
               </div>
             )}
             {erroForm && (
-              <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+              <div role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
                 {erroForm}
               </div>
             )}

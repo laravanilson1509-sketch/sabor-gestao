@@ -31,7 +31,7 @@ const COLUNAS: {
   {
     status: 'novo',
     titulo: 'Novo',
-    cor: 'bg-[#FFF0C7] text-[#7A5A0A]',
+    cor: 'bg-warning-soft text-warning',
     proximo: 'preparando',
     rotuloProximo: 'Iniciar preparo',
     anterior: null,
@@ -39,7 +39,7 @@ const COLUNAS: {
   {
     status: 'preparando',
     titulo: 'Preparando',
-    cor: 'bg-[#DCEEF2] text-[#0B4F5E]',
+    cor: 'bg-accent-soft text-accent-ink',
     proximo: 'pronto',
     rotuloProximo: 'Marcar como pronto',
     anterior: 'novo',
@@ -47,7 +47,7 @@ const COLUNAS: {
   {
     status: 'pronto',
     titulo: 'Pronto',
-    cor: 'bg-[#D9F0E3] text-[#1E6B3F]',
+    cor: 'bg-success-soft text-success',
     proximo: null,
     rotuloProximo: '',
     anterior: 'preparando',
@@ -83,10 +83,10 @@ const dataHora = (iso: string) =>
 
 // pedido esperando há muito tempo fica amarelo e depois vermelho
 function corTempo(minutos: number, status: StatusCozinha) {
-  if (status === 'pronto') return 'text-[#1E6B3F]';
-  if (minutos >= 20) return 'text-[#B3261E] font-semibold';
-  if (minutos >= 10) return 'text-[#8A5F00] font-semibold';
-  return 'text-[#5B6B73]';
+  if (status === 'pronto') return 'text-success';
+  if (minutos >= 20) return 'text-danger font-semibold';
+  if (minutos >= 10) return 'text-warning font-semibold';
+  return 'text-ink-muted';
 }
 
 export default function CozinhaPage() {
@@ -143,8 +143,8 @@ export default function CozinhaPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-[#16252B]">Cozinha</h1>
-            <p className="text-sm text-[#5B6B73]">
+            <h1 className="text-2xl font-bold text-ink">Cozinha</h1>
+            <p className="text-sm text-ink-muted">
               Pedidos do PDV e do delivery · atualizado às {hora(new Date(atualizadoEm).toISOString())}
             </p>
           </div>
@@ -154,21 +154,21 @@ export default function CozinhaPage() {
         </div>
 
         {erro && (
-          <div role="alert" className="mb-4 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+          <div role="alert" className="mb-4 text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
             {erro}
           </div>
         )}
 
         {loading ? (
-          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
+          <p className="text-center py-12 text-ink-muted">Carregando...</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             {COLUNAS.map((col) => {
               const daColuna = cartoes.filter((c) => c.status === col.status);
               return (
-                <section key={col.status} className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-xl p-3">
+                <section key={col.status} className="bg-surface-hover border border-line rounded-xl p-3">
                   <div className="flex items-center justify-between mb-3 px-1">
-                    <h2 className="text-sm font-semibold uppercase tracking-wide text-[#5B6B73]">
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">
                       {col.titulo}
                     </h2>
                     <span className={'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + col.cor}>
@@ -177,7 +177,7 @@ export default function CozinhaPage() {
                   </div>
 
                   {daColuna.length === 0 ? (
-                    <p className="text-sm text-[#8FA0A8] py-8 text-center">
+                    <p className="text-sm text-ink-subtle py-8 text-center">
                       {col.status === 'pronto' ? 'Nada pronto agora' : 'Nenhum pedido'}
                     </p>
                   ) : (
@@ -185,11 +185,11 @@ export default function CozinhaPage() {
                       {daColuna.map((c) => {
                         const minutos = minutosDesde(c.status === 'pronto' ? c.desde : c.chegouEm, atualizadoEm);
                         return (
-                          <article key={c.chave} className="bg-white border border-[#DCE3E7] rounded-xl p-4">
+                          <article key={c.chave} className="bg-surface border border-line rounded-xl p-4">
                             <div className="flex items-start justify-between gap-2 mb-3">
                               <div className="min-w-0">
-                                <p className="text-lg font-bold text-[#16252B]">{c.titulo}</p>
-                                <p className="text-xs text-[#5B6B73] truncate">
+                                <p className="text-lg font-bold text-ink">{c.titulo}</p>
+                                <p className="text-xs text-ink-muted truncate">
                                   {ROTULO_ORIGEM[c.origem]}
                                   {c.subtitulo ? ' · ' + c.subtitulo : ''}
                                 </p>
@@ -200,7 +200,7 @@ export default function CozinhaPage() {
                                     {c.status === 'pronto' ? 'pronto há ' : 'há '}
                                     {formatarTempo(minutos)}
                                   </p>
-                                  <p className="text-xs text-[#8FA0A8]">
+                                  <p className="text-xs text-ink-subtle">
                                     chegou {minutos >= 1440 ? dataHora(c.chegouEm) : hora(c.chegouEm)}
                                   </p>
                                 </div>
@@ -214,19 +214,19 @@ export default function CozinhaPage() {
                               </div>
                             </div>
 
-                            <ul className="divide-y divide-[#E6ECEF] border-t border-[#E6ECEF] mb-3">
+                            <ul className="divide-y divide-line-soft border-t border-line-soft mb-3">
                               {c.itens.map((i, idx) => (
                                 <li key={idx} className="py-2">
-                                  <p className="text-base text-[#16252B]">
+                                  <p className="text-base text-ink">
                                     <span className="font-bold">{i.quantidade}×</span> {i.nome}
                                   </p>
                                   {i.semEstoque && (
-                                    <span className="inline-block mt-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-[#FADBD6] text-[#B3261E]">
+                                    <span className="inline-block mt-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-danger-soft text-danger">
                                       Conferir estoque
                                     </span>
                                   )}
                                   {i.observacao && (
-                                    <p className="text-sm text-[#7A5A0A] bg-[#FFF0C7] rounded px-2 py-0.5 mt-1">
+                                    <p className="text-sm text-warning bg-warning-soft rounded px-2 py-0.5 mt-1">
                                       {i.observacao}
                                     </p>
                                   )}
@@ -248,7 +248,7 @@ export default function CozinhaPage() {
                                 <button
                                   onClick={() => mudarStatus(c, col.anterior!)}
                                   disabled={ocupado !== null}
-                                  className="text-xs font-medium text-[#5B6B73] hover:text-[#16252B] px-2 disabled:opacity-50"
+                                  className="text-xs font-medium text-ink-muted hover:text-ink px-2 disabled:opacity-50"
                                 >
                                   Voltar
                                 </button>
@@ -287,53 +287,53 @@ export default function CozinhaPage() {
       )}
 
       {detalhes && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={() => setDetalhes(null)}>
+        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-[60] p-4" onClick={() => setDetalhes(null)}>
           <div
             role="dialog"
             aria-label={'Detalhes do pedido ' + detalhes.titulo}
-            className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4"
+            className="ui-modal-panel p-6 w-full max-w-md space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-xl font-bold text-[#16252B]">{detalhes.titulo}</h2>
-                <p className="text-sm text-[#5B6B73]">
+                <h2 className="text-xl font-bold text-ink">{detalhes.titulo}</h2>
+                <p className="text-sm text-ink-muted">
                   {ROTULO_ORIGEM[detalhes.origem]}
                   {detalhes.subtitulo ? ' · ' + detalhes.subtitulo : ''}
                 </p>
               </div>
-              <button onClick={() => setDetalhes(null)} className="text-xl text-[#8FA0A8] hover:text-[#16252B] h-9 w-9" aria-label="Fechar">
+              <button onClick={() => setDetalhes(null)} className="text-xl text-ink-subtle hover:text-ink h-9 w-9" aria-label="Fechar">
                 ✕
               </button>
             </div>
             <dl className="grid grid-cols-2 gap-3 text-sm">
-              <div className="bg-[#F4F7F8] rounded-lg p-3">
-                <dt className="text-xs text-[#5B6B73]">Situação</dt>
-                <dd className="font-semibold text-[#16252B]">{COLUNAS.find((x) => x.status === detalhes.status)?.titulo}</dd>
+              <div className="bg-surface-hover rounded-lg p-3">
+                <dt className="text-xs text-ink-muted">Situação</dt>
+                <dd className="font-semibold text-ink">{COLUNAS.find((x) => x.status === detalhes.status)?.titulo}</dd>
               </div>
-              <div className="bg-[#F4F7F8] rounded-lg p-3">
-                <dt className="text-xs text-[#5B6B73]">Tempo desde que chegou</dt>
-                <dd className="font-semibold text-[#16252B]">{formatarTempo(minutosDesde(detalhes.chegouEm, atualizadoEm))}</dd>
+              <div className="bg-surface-hover rounded-lg p-3">
+                <dt className="text-xs text-ink-muted">Tempo desde que chegou</dt>
+                <dd className="font-semibold text-ink">{formatarTempo(minutosDesde(detalhes.chegouEm, atualizadoEm))}</dd>
               </div>
-              <div className="bg-[#F4F7F8] rounded-lg p-3">
-                <dt className="text-xs text-[#5B6B73]">Chegou na cozinha</dt>
-                <dd className="font-semibold text-[#16252B]">{dataHora(detalhes.chegouEm)}</dd>
+              <div className="bg-surface-hover rounded-lg p-3">
+                <dt className="text-xs text-ink-muted">Chegou na cozinha</dt>
+                <dd className="font-semibold text-ink">{dataHora(detalhes.chegouEm)}</dd>
               </div>
-              <div className="bg-[#F4F7F8] rounded-lg p-3">
-                <dt className="text-xs text-[#5B6B73]">Na situação atual desde</dt>
-                <dd className="font-semibold text-[#16252B]">{dataHora(detalhes.desde)}</dd>
+              <div className="bg-surface-hover rounded-lg p-3">
+                <dt className="text-xs text-ink-muted">Na situação atual desde</dt>
+                <dd className="font-semibold text-ink">{dataHora(detalhes.desde)}</dd>
               </div>
             </dl>
-            <ul className="divide-y divide-[#E6ECEF] border border-[#E6ECEF] rounded-lg">
+            <ul className="divide-y divide-line-soft border border-line-soft rounded-lg">
               {detalhes.itens.map((i, k) => (
                 <li key={k} className="px-3 py-2 text-sm">
                   <span className="font-bold">{i.quantidade}×</span> {i.nome}
-                  {i.observacao && <p className="text-xs text-[#7A5A0A] mt-0.5">{i.observacao}</p>}
+                  {i.observacao && <p className="text-xs text-warning mt-0.5">{i.observacao}</p>}
                 </li>
               ))}
             </ul>
             {minutosDesde(detalhes.chegouEm, atualizadoEm) >= 1440 && (
-              <p className="text-sm text-[#7A5A0A] bg-[#FFF0C7] rounded-lg px-3 py-2">
+              <p className="text-sm text-warning bg-warning-soft rounded-lg px-3 py-2">
                 Este pedido está parado há mais de um dia. Confira se ele ainda é necessário e, se já foi entregue, marque como pronto para sair da fila.
               </p>
             )}

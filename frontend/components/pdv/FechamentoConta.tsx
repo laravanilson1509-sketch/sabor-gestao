@@ -279,17 +279,17 @@ export default function FechamentoConta({
 
   if (fechada) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md text-center space-y-4">
+      <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
+        <div className="ui-modal-panel p-8 w-full max-w-md text-center space-y-4">
           <p className="text-4xl">✓</p>
-          <h2 className="text-xl font-bold text-[#16252B]">Conta fechada · {titulo}</h2>
+          <h2 className="text-xl font-bold text-ink">Conta fechada · {titulo}</h2>
           {fechada.troco > 0 && (
-            <div className="bg-[#FFF0C7] rounded-xl py-4">
-              <p className="text-sm font-medium text-[#7A5A0A]">Troco</p>
-              <p className="text-3xl font-bold text-[#16252B]">{moeda(fechada.troco)}</p>
+            <div className="bg-warning-soft rounded-xl py-4">
+              <p className="text-sm font-medium text-warning">Troco</p>
+              <p className="text-3xl font-bold text-ink">{moeda(fechada.troco)}</p>
             </div>
           )}
-          <p className="text-sm text-[#5B6B73]">
+          <p className="text-sm text-ink-muted">
             {config?.imprimir_comprovante_auto === false
               ? 'O comprovante não é impresso automaticamente (veja em Impressão > Conta e equipe).'
               : 'O comprovante foi para a fila de impressão.'}{' '}
@@ -311,7 +311,7 @@ export default function FechamentoConta({
       : 0;
 
   return (
-    <div className="fixed inset-0 bg-[#EEF2F4] z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-app z-50 overflow-y-auto">
       <div className="max-w-6xl mx-auto p-4 md:p-8">
         <div className="flex items-center gap-3 mb-6">
           <button
@@ -322,8 +322,8 @@ export default function FechamentoConta({
             <ConteudoVoltar />
           </button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-[#16252B]">Fechar conta · {titulo}</h1>
-            <p className="text-sm text-[#5B6B73]">Confira os itens, divida e receba</p>
+            <h1 className="text-2xl font-bold text-ink">Fechar conta · {titulo}</h1>
+            <p className="text-sm text-ink-muted">Confira os itens, divida e receba</p>
           </div>
           <button onClick={preConta} disabled={ocupado} className={BTN_SECONDARY}>
             Imprimir pré-conta
@@ -331,17 +331,17 @@ export default function FechamentoConta({
         </div>
 
         {erro && (
-          <div role="alert" className="mb-4 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+          <div role="alert" className="mb-4 text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
             {erro}
           </div>
         )}
-        {aviso && <div className="mb-4 text-sm text-[#1E6B3F] bg-[#D9F0E3] rounded-lg px-3 py-2">{aviso}</div>}
+        {aviso && <div className="mb-4 text-sm text-success bg-success-soft rounded-lg px-3 py-2">{aviso}</div>}
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6">
           {/* ---------------- CONFERÊNCIA ---------------- */}
           <div className={CARTAO + ' p-4 h-fit'}>
-            <h2 className="text-base font-semibold text-[#16252B] mb-3">Conferência</h2>
-            <ul className="divide-y divide-[#E6ECEF]">
+            <h2 className="text-base font-semibold text-ink mb-3">Conferência</h2>
+            <ul className="divide-y divide-line-soft">
               {validos.map((i) => (
                 <li key={i.id} className="py-2.5 flex items-start gap-3">
                   {modo === 'item' && (
@@ -359,16 +359,16 @@ export default function FechamentoConta({
                     />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#16252B]">
+                    <p className="text-sm font-medium text-ink">
                       {qtd(i.quantidade)}× {i.nome}
                       {itensPagos.has(i.id) && (
-                        <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-semibold bg-[#D9F0E3] text-[#1E6B3F]">
+                        <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-semibold bg-success-soft text-success">
                           pago
                         </span>
                       )}
                     </p>
                     {(i.adicionais || []).map((a, k) => (
-                      <p key={k} className="text-xs text-[#5B6B73]">
+                      <p key={k} className="text-xs text-ink-muted">
                         + {a.nome} {a.valor > 0 && '(' + moeda(a.valor) + ')'}
                       </p>
                     ))}
@@ -388,7 +388,7 @@ export default function FechamentoConta({
                     )}
                   </div>
                   <div className="text-right">
-                    <p className={'text-sm font-semibold ' + (i.cortesia ? 'text-[#1E6B3F]' : 'text-[#16252B]')}>
+                    <p className={'text-sm font-semibold ' + (i.cortesia ? 'text-success' : 'text-ink')}>
                       {i.cortesia ? 'Cortesia' : moeda(valorItem(i))}
                     </p>
                     {!temPagamento && (
@@ -402,10 +402,10 @@ export default function FechamentoConta({
             </ul>
 
             {cancelados.length > 0 && (
-              <div className="mt-3 border-t border-dashed border-[#DCE3E7] pt-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#8FA0A8] mb-1">Cancelados</p>
+              <div className="mt-3 border-t border-dashed border-line pt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-subtle mb-1">Cancelados</p>
                 {cancelados.map((i) => (
-                  <p key={i.id} className="text-xs text-[#8FA0A8]">
+                  <p key={i.id} className="text-xs text-ink-subtle">
                     <span className="line-through">
                       {qtd(i.quantidade)}× {i.nome}
                     </span>{' '}
@@ -415,16 +415,16 @@ export default function FechamentoConta({
               </div>
             )}
 
-            <div className="border-t border-[#DCE3E7] mt-3 pt-3 space-y-1.5 text-sm">
-              <div className="flex justify-between text-[#2B3C44]">
+            <div className="border-t border-line mt-3 pt-3 space-y-1.5 text-sm">
+              <div className="flex justify-between text-ink-soft">
                 <span>Subtotal</span>
                 <span>{moeda(subtotal)}</span>
               </div>
-              <div className="flex justify-between items-center text-[#2B3C44]">
+              <div className="flex justify-between items-center text-ink-soft">
                 <span>
                   Desconto
                   {pedido.desconto_pct ? ' ' + qtd(pedido.desconto_pct) + '%' : ''}
-                  {pedido.desconto_motivo && <span className="text-xs text-[#8FA0A8]"> · {pedido.desconto_motivo}</span>}
+                  {pedido.desconto_motivo && <span className="text-xs text-ink-subtle"> · {pedido.desconto_motivo}</span>}
                   {!temPagamento && (
                     <button onClick={() => setModal({ tipo: 'desconto' })} className={BTN_LINK + ' ml-2'}>
                       {Number(pedido.desconto) > 0 ? 'Mudar' : 'Dar desconto'}
@@ -433,10 +433,10 @@ export default function FechamentoConta({
                 </span>
                 <span>{Number(pedido.desconto) > 0 ? '- ' + moeda(pedido.desconto) : moeda(0)}</span>
               </div>
-              <div className="flex justify-between items-center text-[#2B3C44]">
+              <div className="flex justify-between items-center text-ink-soft">
                 <span>
                   Taxa de serviço {qtd(pedido.taxa_servico_pct)}%{' '}
-                  <span className="text-xs text-[#8FA0A8]">(opcional para o cliente)</span>
+                  <span className="text-xs text-ink-subtle">(opcional para o cliente)</span>
                   {!temPagamento && (
                     <button
                       onClick={() =>
@@ -461,12 +461,12 @@ export default function FechamentoConta({
                 </span>
                 <span>{moeda(pedido.taxa_servico)}</span>
               </div>
-              <div className="flex justify-between text-lg font-bold text-[#16252B] pt-1">
+              <div className="flex justify-between text-lg font-bold text-ink pt-1">
                 <span>Total</span>
                 <span>{moeda(total)}</span>
               </div>
               {temPagamento && (
-                <p className="text-xs text-[#8FA0A8]">
+                <p className="text-xs text-ink-subtle">
                   Com pagamento lançado, desconto, cortesia e taxa ficam travados. Estorne o pagamento para mudar.
                 </p>
               )}
@@ -478,31 +478,31 @@ export default function FechamentoConta({
             <div className={CARTAO + ' p-4'}>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
-                  <p className="text-xs text-[#5B6B73]">Total</p>
-                  <p className="text-base font-bold text-[#16252B]">{moeda(total)}</p>
+                  <p className="text-xs text-ink-muted">Total</p>
+                  <p className="text-base font-bold text-ink">{moeda(total)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#5B6B73]">Pago</p>
-                  <p className="text-base font-bold text-[#1E6B3F]">{moeda(pago)}</p>
+                  <p className="text-xs text-ink-muted">Pago</p>
+                  <p className="text-base font-bold text-success">{moeda(pago)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#5B6B73]">Falta</p>
-                  <p className={'text-base font-bold ' + (restante > 0 ? 'text-[#B3261E]' : 'text-[#1E6B3F]')}>
+                  <p className="text-xs text-ink-muted">Falta</p>
+                  <p className={'text-base font-bold ' + (restante > 0 ? 'text-danger' : 'text-success')}>
                     {moeda(restante)}
                   </p>
                 </div>
               </div>
               {ultimoTroco > 0 && (
-                <div className="mt-3 bg-[#FFF0C7] rounded-lg py-2 text-center">
-                  <span className="text-sm text-[#7A5A0A]">Troco a devolver: </span>
-                  <span className="text-xl font-bold text-[#16252B]">{moeda(ultimoTroco)}</span>
+                <div className="mt-3 bg-warning-soft rounded-lg py-2 text-center">
+                  <span className="text-sm text-warning">Troco a devolver: </span>
+                  <span className="text-xl font-bold text-ink">{moeda(ultimoTroco)}</span>
                 </div>
               )}
             </div>
 
             {restante > 0 && (
               <div className={CARTAO + ' p-4'}>
-                <p className="text-sm font-semibold text-[#16252B] mb-2">Dividir a conta</p>
+                <p className="text-sm font-semibold text-ink mb-2">Dividir a conta</p>
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {MODOS.map((m) => (
                     <button
@@ -514,8 +514,8 @@ export default function FechamentoConta({
                       className={
                         'text-xs px-3 py-1.5 rounded-lg font-medium border transition ' +
                         (modo === m.valor
-                          ? 'bg-[#0E6B7E] text-white border-[#0E6B7E]'
-                          : 'bg-white text-[#2B3C44] border-[#DCE3E7] hover:bg-[#F1F5F7]')
+                          ? 'bg-accent text-accent-contrast border-accent'
+                          : 'bg-surface text-ink-soft border-line hover:bg-surface-hover')
                       }
                     >
                       {m.rotulo}
@@ -526,25 +526,25 @@ export default function FechamentoConta({
                 {(modo === 'igual' || modo === 'pessoa') && (
                   <>
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-sm text-[#2B3C44]">Pessoas</span>
+                      <span className="text-sm text-ink-soft">Pessoas</span>
                       <button
                         onClick={() => setPessoas((n) => Math.max(2, n - 1))}
-                        className="h-8 w-8 rounded-lg border border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]"
+                        className="h-8 w-8 rounded-lg border border-line text-ink-soft hover:bg-surface-hover"
                         aria-label="Menos pessoas"
                       >
                         −
                       </button>
-                      <span className="w-6 text-center font-semibold text-[#16252B]">{pessoas}</span>
+                      <span className="w-6 text-center font-semibold text-ink">{pessoas}</span>
                       <button
                         onClick={() => setPessoas((n) => Math.min(30, n + 1))}
-                        className="h-8 w-8 rounded-lg border border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]"
+                        className="h-8 w-8 rounded-lg border border-line text-ink-soft hover:bg-surface-hover"
                         aria-label="Mais pessoas"
                       >
                         +
                       </button>
                     </div>
                     {modo === 'pessoa' && (
-                      <p className="text-xs text-[#8FA0A8] mb-2">
+                      <p className="text-xs text-ink-subtle mb-2">
                         Escolha de quem é cada item na lista ao lado. Itens sem dono são divididos entre todos.
                       </p>
                     )}
@@ -560,14 +560,14 @@ export default function FechamentoConta({
                             className={
                               'text-left rounded-lg border px-3 py-2 transition ' +
                               (falta <= 0
-                                ? 'border-[#B9E0C8] bg-[#D9F0E3]'
+                                ? 'border-success-line bg-success-soft'
                                 : pagador === quem
-                                ? 'border-[#0E6B7E] bg-[#F1F8FA]'
-                                : 'border-[#DCE3E7] hover:border-[#0E6B7E]')
+                                ? 'border-accent bg-accent-faint'
+                                : 'border-line hover:border-accent')
                             }
                           >
-                            <span className="block text-xs text-[#5B6B73]">{quem}</span>
-                            <span className="block text-sm font-semibold text-[#16252B]">
+                            <span className="block text-xs text-ink-muted">{quem}</span>
+                            <span className="block text-sm font-semibold text-ink">
                               {falta <= 0 ? 'Pago ✓' : moeda(falta)}
                             </span>
                           </button>
@@ -579,9 +579,9 @@ export default function FechamentoConta({
 
                 {modo === 'item' && (
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm text-[#2B3C44]">
+                    <p className="text-sm text-ink-soft">
                       Marque os itens na lista. Selecionado: <b>{moeda(valorSelecionado)}</b>
-                      <span className="block text-xs text-[#8FA0A8]">já com desconto e taxa proporcionais</span>
+                      <span className="block text-xs text-ink-subtle">já com desconto e taxa proporcionais</span>
                     </p>
                     <button
                       disabled={selecionados.size === 0}
@@ -594,14 +594,14 @@ export default function FechamentoConta({
                 )}
 
                 {modo === 'valor' && (
-                  <p className="text-sm text-[#5B6B73]">Digite o valor que o cliente quer pagar agora.</p>
+                  <p className="text-sm text-ink-muted">Digite o valor que o cliente quer pagar agora.</p>
                 )}
               </div>
             )}
 
             {restante > 0 && (
               <form onSubmit={registrar} className={CARTAO + ' p-4 space-y-3'}>
-                <p className="text-sm font-semibold text-[#16252B]">Receber</p>
+                <p className="text-sm font-semibold text-ink">Receber</p>
                 <div className="grid grid-cols-3 gap-2">
                   {FORMAS.map((f) => (
                     <button
@@ -611,8 +611,8 @@ export default function FechamentoConta({
                       className={
                         'text-sm px-2 py-2 rounded-lg font-medium border transition ' +
                         (forma === f.valor
-                          ? 'bg-[#0E6B7E] text-white border-[#0E6B7E]'
-                          : 'bg-white text-[#2B3C44] border-[#DCE3E7] hover:bg-[#F1F5F7]')
+                          ? 'bg-accent text-accent-contrast border-accent'
+                          : 'bg-surface text-ink-soft border-line hover:bg-surface-hover')
                       }
                     >
                       {f.rotulo}
@@ -659,7 +659,7 @@ export default function FechamentoConta({
                 </div>
 
                 {forma === 'dinheiro' && trocoPrevisto > 0 && (
-                  <p className="text-sm text-[#7A5A0A] bg-[#FFF0C7] rounded-lg px-3 py-2">
+                  <p className="text-sm text-warning bg-warning-soft rounded-lg px-3 py-2">
                     Troco: <b>{moeda(trocoPrevisto)}</b>
                   </p>
                 )}
@@ -679,7 +679,7 @@ export default function FechamentoConta({
                   {ocupado ? 'Registrando...' : 'Registrar pagamento'}
                 </button>
                 {forma !== 'dinheiro' && (
-                  <p className="text-xs text-[#8FA0A8]">
+                  <p className="text-xs text-ink-subtle">
                     Registre só depois que a maquininha ou o Pix confirmar o pagamento.
                   </p>
                 )}
@@ -688,21 +688,21 @@ export default function FechamentoConta({
 
             {pagamentos.length > 0 && (
               <div className={CARTAO + ' p-4'}>
-                <p className="text-sm font-semibold text-[#16252B] mb-2">Pagamentos</p>
-                <ul className="divide-y divide-[#E6ECEF]">
+                <p className="text-sm font-semibold text-ink mb-2">Pagamentos</p>
+                <ul className="divide-y divide-line-soft">
                   {pagamentos.map((g) => (
                     <li key={g.id} className="py-2 flex items-start gap-3">
                       <div className="flex-1 min-w-0">
                         <p
                           className={
                             'text-sm font-medium ' +
-                            (g.status === 'estornado' ? 'line-through text-[#8FA0A8]' : 'text-[#16252B]')
+                            (g.status === 'estornado' ? 'line-through text-ink-subtle' : 'text-ink')
                           }
                         >
                           {rotuloForma(g.forma)}
-                          {g.pagador && <span className="text-[#5B6B73] font-normal"> · {g.pagador}</span>}
+                          {g.pagador && <span className="text-ink-muted font-normal"> · {g.pagador}</span>}
                         </p>
-                        <p className="text-xs text-[#5B6B73]">
+                        <p className="text-xs text-ink-muted">
                           {g.valor_recebido && Number(g.troco) > 0
                             ? 'Recebido ' + moeda(g.valor_recebido) + ' · troco ' + moeda(g.troco)
                             : g.transacao_id
@@ -710,13 +710,13 @@ export default function FechamentoConta({
                             : g.operador_email}
                         </p>
                         {g.status === 'estornado' && (
-                          <p className="text-xs text-[#B3261E]">
+                          <p className="text-xs text-danger">
                             Estornado por {g.estornado_por}: {g.estorno_motivo}
                           </p>
                         )}
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-[#16252B]">{moeda(g.valor)}</p>
+                        <p className="text-sm font-semibold text-ink">{moeda(g.valor)}</p>
                         {g.status === 'confirmado' && (
                           <button onClick={() => setModal({ tipo: 'estorno', pagamento: g })} className={BTN_LINK}>
                             Estornar

@@ -107,17 +107,17 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
   }, []);
 
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] md:min-h-screen bg-white overflow-hidden">
+    <div className="relative min-h-[calc(100vh-var(--navbar-h,56px))] bg-surface overflow-hidden">
       {/* Formas decorativas dos cantos */}
       <svg aria-hidden className="absolute -top-10 -right-10 w-[26rem] max-w-[70%] pointer-events-none" viewBox="0 0 400 300">
-        <path d="M400 0 V230 C330 250 250 190 240 120 C232 60 180 30 120 0 Z" fill="#DCEEF2" />
-        <path d="M400 0 V160 C350 170 300 130 292 90 C286 55 250 25 215 0 Z" fill="#0E6B7E" opacity="0.9" />
-        <path d="M120 0 C180 30 232 60 240 120 C250 190 330 250 400 230" fill="none" stroke="#E3B341" strokeWidth="3" />
+        <path d="M400 0 V230 C330 250 250 190 240 120 C232 60 180 30 120 0 Z" className="fill-accent-soft" />
+        <path d="M400 0 V160 C350 170 300 130 292 90 C286 55 250 25 215 0 Z" className="fill-accent" opacity="0.9" />
+        <path d="M120 0 C180 30 232 60 240 120 C250 190 330 250 400 230" fill="none" className="stroke-gold" strokeWidth="3" />
       </svg>
       <svg aria-hidden className="absolute -bottom-12 -right-12 w-[24rem] max-w-[60%] pointer-events-none" viewBox="0 0 400 260">
-        <path d="M400 260 V60 C330 40 260 90 230 150 C210 195 150 240 100 260 Z" fill="#DCEEF2" />
-        <path d="M400 260 V130 C360 120 320 150 300 190 C285 220 250 245 225 260 Z" fill="#0E6B7E" opacity="0.9" />
-        <path d="M400 60 C330 40 260 90 230 150 C210 195 150 240 100 260" fill="none" stroke="#E3B341" strokeWidth="3" />
+        <path d="M400 260 V60 C330 40 260 90 230 150 C210 195 150 240 100 260 Z" className="fill-accent-soft" />
+        <path d="M400 260 V130 C360 120 320 150 300 190 C285 220 250 245 225 260 Z" className="fill-accent" opacity="0.9" />
+        <path d="M400 60 C330 40 260 90 230 150 C210 195 150 240 100 260" fill="none" className="stroke-gold" strokeWidth="3" />
       </svg>
 
       {/* Faixa da campanha do mês (laço + frase) */}
@@ -138,8 +138,8 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
         <div className="flex items-start justify-between gap-4">
           <Logo tamanho={52} tagline />
           {(empresa || nome) && (
-            <p className="hidden md:block text-xs text-right text-[#5B6B73] relative z-10">
-              {empresa && <span className="block font-semibold text-[#16252B]">{empresa}</span>}
+            <p className="hidden md:block text-xs text-right text-ink-muted relative z-10">
+              {empresa && <span className="block font-semibold text-ink">{empresa}</span>}
               {nome && <span>Olá, {nome}</span>}
             </p>
           )}
@@ -148,44 +148,44 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
         <div className="mt-10 md:mt-14 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
           <div>
             <h1
-              className="font-normal leading-[1.1] text-[#0A4E5C]"
+              className="font-normal leading-[1.1] text-accent-ink"
               style={{ fontFamily: "'Great Vibes', 'Brush Script MT', cursive" }}
             >
               <span className="block text-5xl md:text-7xl">Olá{nome ? ', ' + nome : ''}</span>
               <span className="block text-5xl md:text-7xl mt-1">
                 Seja{' '}
-                <span className="relative inline-block text-[#C99A1E]">
+                <span className="relative inline-block text-gold">
                   bem-vindo!
                   {/* traço fino de assinatura */}
                   <svg viewBox="0 0 320 24" preserveAspectRatio="none" className="absolute left-0 -bottom-3 w-full h-5" aria-hidden>
                     <path
                       d="M4 16 C50 6 110 4 170 10 C215 15 262 12 316 4"
                       fill="none"
-                      stroke="#E3B341"
+                      className="stroke-gold"
                       strokeWidth="1.4"
                       strokeLinecap="round"
                     />
-                    <path d="M40 20 C110 14 200 14 270 18" fill="none" stroke="#E3B341" strokeWidth="0.8" strokeLinecap="round" opacity="0.7" />
+                    <path d="M40 20 C110 14 200 14 270 18" fill="none" className="stroke-gold" strokeWidth="0.8" strokeLinecap="round" opacity="0.7" />
                   </svg>
                 </span>
               </span>
             </h1>
-            <p className="mt-10 text-lg md:text-xl font-light text-[#2B3C44] max-w-lg">
+            <p className="mt-10 text-lg md:text-xl font-light text-ink-soft max-w-lg">
               Sua operação no restaurante ou bar mais organizada, prática e lucrativa.
             </p>
-            <p className="mt-3 text-base font-light text-[#5B6B73] max-w-lg">
+            <p className="mt-3 text-base font-light text-ink-muted max-w-lg">
               Vamos juntos transformar o seu negócio em grandes resultados!
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/pdv"
-                className="inline-flex items-center gap-2 bg-[#0E6B7E] hover:bg-[#0B5A6A] !text-white px-7 py-3 rounded-full text-sm font-medium transition"
+                className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover !text-accent-contrast px-7 py-3 rounded-full text-sm font-medium transition"
               >
                 Acessar o sistema <span aria-hidden>→</span>
               </Link>
               <a
                 href="#como-funciona"
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-[#0E6B7E]/40 text-[#0A4E5C] text-sm font-medium hover:bg-[#F1F8FA] transition"
+                className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-accent text-accent-ink text-sm font-medium hover:bg-accent-faint transition"
               >
                 <span aria-hidden>▷</span> Ver como funciona
               </a>
@@ -194,18 +194,18 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
 
           <ul className="relative z-10 space-y-0 lg:pl-6">
             {RECURSOS.map((r) => (
-              <li key={r.titulo} className="border-b border-[#DCE3E7] last:border-0">
+              <li key={r.titulo} className="border-b border-line last:border-0">
                 <Link href={r.href} className="flex items-center gap-4 py-4 group">
-                  <span className="text-[#0E6B7E]">
+                  <span className="text-accent">
                     <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden>
                       {r.icone}
                     </svg>
                   </span>
                   <span>
-                    <span className="block text-base font-bold text-[#16252B] group-hover:text-[#0E6B7E] transition">
+                    <span className="block text-base font-bold text-ink group-hover:text-accent transition">
                       {r.titulo}
                     </span>
-                    <span className="block text-sm text-[#5B6B73]">{r.texto}</span>
+                    <span className="block text-sm text-ink-muted">{r.texto}</span>
                   </span>
                 </Link>
               </li>
@@ -214,12 +214,12 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
         </div>
 
         {aniversariantes.length > 0 && (
-          <div className="relative z-10 mt-12 rounded-2xl border border-[#F0DFA8] bg-[#FFFAEB] p-5">
-            <p className="text-sm font-semibold text-[#7A5A0A] mb-3">
+          <div className="relative z-10 mt-12 rounded-2xl border border-warning-line bg-warning-faint p-5">
+            <p className="text-sm font-semibold text-warning mb-3">
               🎂 Aniversariantes{' '}
               {aniversariantes.some((a) => a.faltam === 0) ? 'de hoje e dos próximos dias' : 'dos próximos dias'}
             </p>
-            <ul className="divide-y divide-[#F0DFA8]">
+            <ul className="divide-y divide-warning-line">
               {aniversariantes.map((a) => {
                 const zap = linkParabens(a);
                 return (
@@ -227,14 +227,14 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
                     <span
                       className={
                         'rounded-full px-2.5 py-0.5 text-xs font-semibold ' +
-                        (a.faltam === 0 ? 'bg-[#E3B341] text-[#16252B]' : 'bg-white text-[#7A5A0A] border border-[#F0DFA8]')
+                        (a.faltam === 0 ? 'bg-gold text-ink' : 'bg-surface text-warning border border-warning-line')
                       }
                     >
                       {textoFaltam(a.faltam)}
                     </span>
-                    <span className="flex-1 min-w-[10rem] text-sm text-[#16252B]">
+                    <span className="flex-1 min-w-[10rem] text-sm text-ink">
                       <b>{a.nome}</b>
-                      <span className="text-[#5B6B73]">
+                      <span className="text-ink-muted">
                         {' '}
                         · {diaMes(`2000-${String(a.mes).padStart(2, '0')}-${String(a.dia).padStart(2, '0')}`)} · faz {a.idade} anos
                       </span>
@@ -244,12 +244,12 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
                         href={zap}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm font-medium text-[#1E6B3F] hover:underline"
+                        className="text-sm font-medium text-success hover:underline"
                       >
                         Mandar parabéns no WhatsApp
                       </a>
                     ) : (
-                      <span className="text-xs text-[#8FA0A8]">sem telefone</span>
+                      <span className="text-xs text-ink-subtle">sem telefone</span>
                     )}
                   </li>
                 );
@@ -258,19 +258,19 @@ export default function TelaInicio({ supabase }: { supabase: SupabaseClient }) {
           </div>
         )}
 
-        <div id="como-funciona" className="relative z-10 mt-14 border-t border-[#E6ECEF] pt-6 scroll-mt-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#5B6B73] mb-4">Dicas para você começar</p>
+        <div id="como-funciona" className="relative z-10 mt-14 border-t border-line-soft pt-6 scroll-mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted mb-4">Dicas para você começar</p>
           <div className="flex gap-4 overflow-x-auto pb-3 snap-x">
             {DICAS.map((d, k) => (
-              <div key={d.titulo} className="snap-start shrink-0 w-64 border-l-2 border-[#0E6B7E]/30 pl-4 pr-2 py-1 bg-white/80">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#0E6B7E] text-xs font-bold text-[#0E6B7E]">
+              <div key={d.titulo} className="snap-start shrink-0 w-64 border-l-2 border-accent pl-4 pr-2 py-1">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-accent text-xs font-bold text-accent">
                   {k + 1}
                 </span>
-                <p className="mt-3 text-base font-semibold text-[#16252B]">{d.titulo}</p>
-                <p className="mt-1 text-sm text-[#5B6B73] min-h-[3.5rem]">{d.texto}</p>
+                <p className="mt-3 text-base font-semibold text-ink">{d.titulo}</p>
+                <p className="mt-1 text-sm text-ink-muted min-h-[3.5rem]">{d.texto}</p>
                 <Link
                   href={d.href}
-                  className="mt-3 block text-center text-sm font-medium text-[#2B3C44] bg-[#F1F5F7] hover:bg-[#DCEEF2] rounded-lg py-2 transition"
+                  className="mt-3 block text-center text-sm font-medium text-ink-soft bg-surface-hover hover:bg-accent-soft rounded-lg py-2 transition"
                 >
                   {d.botao}
                 </Link>

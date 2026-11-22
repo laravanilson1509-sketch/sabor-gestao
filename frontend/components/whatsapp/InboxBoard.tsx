@@ -205,7 +205,7 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
               onClick={limparTudo}
               disabled={limpando}
               className="font-body text-xs font-medium px-2.5 py-1 rounded-full disabled:opacity-50"
-              style={{ backgroundColor: c.faint + "20", color: c.muted }}
+              style={{ backgroundColor: c.panelAlt, color: c.muted }}
             >
               {limpando ? "Limpando..." : "Limpar tudo"}
             </button>
@@ -328,7 +328,7 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
                     className="flex items-center justify-between rounded-lg p-3 text-left"
                     style={{
                       backgroundColor: marcado ? c.accentSoft : c.panelAlt,
-                      border: `1px solid ${marcado ? c.accent + "55" : c.border}`,
+                      border: `1px solid ${marcado ? c.accent : c.border}`,
                     }}
                   >
                     <span className="font-body text-sm" style={{ color: c.text }}>{p.nome}</span>
@@ -354,7 +354,7 @@ export default function InboxBoard({ unidadeId }: { unidadeId: string }) {
                 onClick={confirmarConversao}
                 disabled={itensSelecionados.length === 0 || convertendo}
                 className="flex-1 font-body text-sm font-medium rounded-lg py-2.5 disabled:opacity-40 flex items-center justify-center gap-1"
-                style={{ backgroundColor: c.accent, color: "#1A1305" }}
+                style={{ backgroundColor: c.accent, color: "var(--accent-contrast)" }}
               >
                 {convertendo && <Loader2 size={13} className="animate-spin" />}
                 Criar pedido

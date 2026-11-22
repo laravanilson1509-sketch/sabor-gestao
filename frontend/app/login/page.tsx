@@ -4,15 +4,16 @@ import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Logo from '@/components/Logo'
+import { temaDoDia } from '@/lib/temasDatas'
 
-function LacoRosa() {
+function LacoCampanha({ cor }: { cor: string }) {
   return (
     <svg
       viewBox="0 0 120 140"
-      width="120"
-      height="140"
+      width="96"
+      height="112"
       fill="none"
-      stroke="#D6457F"
+      stroke={cor}
       strokeWidth="13"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -26,6 +27,7 @@ function LacoRosa() {
 }
 
 function LoginForm() {
+  const campanha = temaDoDia()
   const router = useRouter()
   const params = useSearchParams()
   const [email, setEmail] = useState('')
@@ -51,36 +53,31 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen md:flex bg-[#EEF2F4]">
+    <div className="min-h-screen md:flex bg-app">
       {/* Painel da esquerda (só em telas médias ou maiores) */}
-      <section className="hidden md:flex md:flex-1 flex-col justify-between bg-white border-r border-[#DCE3E7] p-12">
+      <section className="hidden md:flex md:flex-1 flex-col justify-between bg-surface border-r border-line p-12">
         <Logo tamanho={44} tagline />
 
         <div>
-          <h2 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-[#16252B]">
+          <h2 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-ink">
             A cozinha sob controle,
             <br />
             do estoque ao pedido.
           </h2>
-          <p className="mt-4 max-w-sm text-[#5B6B73]">
+          <p className="mt-4 max-w-sm text-ink-muted">
             Estoque, fichas técnicas, financeiro e delivery em um só lugar.
           </p>
         </div>
 
-        <div className="flex items-center gap-6 rounded-2xl bg-[#FDEAF2] border border-[#F6C9DC] p-6">
+        {/* campanha do mês (muda sozinha: Novembro Azul, Dezembro Vermelho...) */}
+        <div className="flex items-center gap-6 rounded-card border border-line bg-surface-hover p-6">
           <div className="shrink-0">
-            <LacoRosa />
+            <LacoCampanha cor={campanha.cor2} />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#B03468]">
-              Outubro Rosa
-            </p>
-            <p className="mt-1 text-xl font-bold leading-snug text-[#16252B]">
-              Cuidar de você também é prioridade.
-            </p>
-            <p className="mt-2 text-sm text-[#5B6B73]">
-              A detecção precoce do câncer de mama salva vidas. Faça seus exames em dia.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-accent-ink">{campanha.nome}</p>
+            <p className="mt-1 text-xl font-bold leading-snug text-ink">Cuidar de você também é prioridade.</p>
+            <p className="mt-2 text-sm text-ink-muted">{campanha.frase}</p>
           </div>
         </div>
       </section>
@@ -92,12 +89,12 @@ function LoginForm() {
             <div className="md:hidden mb-6">
               <Logo tamanho={40} />
             </div>
-            <h1 className="text-2xl font-bold text-[#16252B]">Entrar</h1>
-            <p className="mt-1 text-sm text-[#5B6B73]">Use o e-mail e a senha criados para você.</p>
+            <h1 className="text-2xl font-bold text-ink">Entrar</h1>
+            <p className="mt-1 text-sm text-ink-muted">Use o e-mail e a senha criados para você.</p>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-medium text-[#2B3C44]">
+            <label htmlFor="email" className="block text-sm font-medium text-ink-soft">
               E-mail
             </label>
             <input
@@ -108,12 +105,12 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="voce@restaurante.com"
-              className="w-full h-12 rounded-xl border border-[#C9D3D8] bg-white px-4 text-[#16252B] placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+              className="w-full h-12 rounded-xl border border-line-strong bg-surface px-4 text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="senha" className="block text-sm font-medium text-[#2B3C44]">
+            <label htmlFor="senha" className="block text-sm font-medium text-ink-soft">
               Senha
             </label>
             <div className="relative">
@@ -125,13 +122,13 @@ function LoginForm() {
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="Sua senha"
-                className="w-full h-12 rounded-xl border border-[#C9D3D8] bg-white pl-4 pr-12 text-[#16252B] placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+                className="w-full h-12 rounded-xl border border-line-strong bg-surface pl-4 pr-12 text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
               />
               <button
                 type="button"
                 onClick={() => setMostrar((v) => !v)}
                 aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
-                className="absolute right-1 top-1 h-10 w-10 flex items-center justify-center rounded-lg text-[#5B6B73] hover:text-[#0E6B7E]"
+                className="absolute right-1 top-1 h-10 w-10 flex items-center justify-center rounded-lg text-ink-muted hover:text-accent"
               >
                 {mostrar ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -149,7 +146,7 @@ function LoginForm() {
           </div>
 
           {erro && (
-            <p role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+            <p role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
               {erro}
             </p>
           )}

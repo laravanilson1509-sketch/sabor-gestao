@@ -12,7 +12,7 @@ import {
 
 type Totais = { vendas: number; recebidas: number; pagas: number; saldo: number };
 
-const corSaldo = (v: number) => (v < 0 ? 'text-[#B3261E]' : v > 0 ? 'text-[#1E6B3A]' : 'text-[#8FA0A8]');
+const corSaldo = (v: number) => (v < 0 ? 'text-danger' : v > 0 ? 'text-success' : 'text-ink-subtle');
 
 export default function FluxoCaixa() {
   const supabase = createBrowserClient(
@@ -52,61 +52,61 @@ export default function FluxoCaixa() {
     : linhas;
 
   return (
-    <div className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-4">
+    <div className="bg-surface border border-line rounded-xl p-6 space-y-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-lg font-bold text-[#16252B]">Fluxo de caixa</h2>
-          <p className="text-sm text-[#5B6B73]">O que entrou e saiu em cada dia do mês</p>
+          <h2 className="text-lg font-bold text-ink">Fluxo de caixa</h2>
+          <p className="text-sm text-ink-muted">O que entrou e saiu em cada dia do mês</p>
         </div>
         <input
           type="month"
           value={mes}
           onChange={(e) => setMes(e.target.value)}
-          className="border border-[#C9D3D8] rounded-lg px-3 py-2 text-sm text-[#16252B] bg-white focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+          className="border border-line-strong rounded-lg px-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
 
-      {erro && <p className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">{erro}</p>}
+      {erro && <p className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">{erro}</p>}
 
       {loading || !totais ? (
-        !erro && <p className="text-sm text-[#5B6B73]">Carregando...</p>
+        !erro && <p className="text-sm text-ink-muted">Carregando...</p>
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-            <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
-              <p className="text-xs text-[#5B6B73]">Vendas</p>
-              <p className="font-bold text-[#16252B]">{formatarReais(totais.vendas)}</p>
+            <div className="bg-surface-hover border border-line rounded-lg p-3">
+              <p className="text-xs text-ink-muted">Vendas</p>
+              <p className="font-bold text-ink">{formatarReais(totais.vendas)}</p>
             </div>
-            <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
-              <p className="text-xs text-[#5B6B73]">Contas recebidas</p>
-              <p className="font-bold text-[#16252B]">{formatarReais(totais.recebidas)}</p>
+            <div className="bg-surface-hover border border-line rounded-lg p-3">
+              <p className="text-xs text-ink-muted">Contas recebidas</p>
+              <p className="font-bold text-ink">{formatarReais(totais.recebidas)}</p>
             </div>
-            <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
-              <p className="text-xs text-[#5B6B73]">Contas pagas</p>
-              <p className="font-bold text-[#B3261E]">− {formatarReais(totais.pagas)}</p>
+            <div className="bg-surface-hover border border-line rounded-lg p-3">
+              <p className="text-xs text-ink-muted">Contas pagas</p>
+              <p className="font-bold text-danger">− {formatarReais(totais.pagas)}</p>
             </div>
-            <div className="bg-[#E3F1F4] border border-[#B9DCE3] rounded-lg p-3">
-              <p className="text-xs text-[#5B6B73]">Saldo do mês</p>
+            <div className="bg-accent-soft border border-line rounded-lg p-3">
+              <p className="text-xs text-ink-muted">Saldo do mês</p>
               <p className={'font-bold ' + corSaldo(totais.saldo)}>{formatarReais(totais.saldo)}</p>
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-[#2B3C44]">
+          <label className="flex items-center gap-2 text-sm text-ink-soft">
             <input
               type="checkbox"
               checked={soComMovimento}
               onChange={(e) => setSoComMovimento(e.target.checked)}
-              className="accent-[#0E6B7E]"
+              className="accent-accent"
             />
             Mostrar só os dias com movimento
           </label>
 
           {visiveis.length === 0 ? (
-            <p className="text-sm text-[#5B6B73]">Nenhum movimento neste mês</p>
+            <p className="text-sm text-ink-muted">Nenhum movimento neste mês</p>
           ) : (
-            <div className="border border-[#DCE3E7] rounded-lg overflow-x-auto">
+            <div className="border border-line rounded-lg overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-[#F4F7F8] text-xs text-[#5B6B73]">
+                <thead className="bg-surface-hover text-xs text-ink-muted">
                   <tr>
                     <th className="text-left font-medium p-2">Dia</th>
                     <th className="text-right font-medium p-2">Entradas</th>
@@ -115,14 +115,14 @@ export default function FluxoCaixa() {
                     <th className="text-right font-medium p-2">Acumulado</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E6ECEF]">
+                <tbody className="divide-y divide-line-soft">
                   {visiveis.map((d) => (
                     <tr key={d.data}>
-                      <td className="p-2 text-[#16252B] whitespace-nowrap">{formatarData(d.data).slice(0, 5)}</td>
-                      <td className="p-2 text-right text-[#16252B] whitespace-nowrap">
+                      <td className="p-2 text-ink whitespace-nowrap">{formatarData(d.data).slice(0, 5)}</td>
+                      <td className="p-2 text-right text-ink whitespace-nowrap">
                         {formatarReais(d.vendas + d.recebidas)}
                       </td>
-                      <td className="p-2 text-right text-[#B3261E] whitespace-nowrap">
+                      <td className="p-2 text-right text-danger whitespace-nowrap">
                         {d.pagas ? '− ' + formatarReais(d.pagas) : formatarReais(0)}
                       </td>
                       <td className={'p-2 text-right font-medium whitespace-nowrap ' + corSaldo(d.saldo)}>
@@ -138,7 +138,7 @@ export default function FluxoCaixa() {
             </div>
           )}
 
-          <p className="text-xs text-[#5B6B73]">
+          <p className="text-xs text-ink-muted">
             Entradas = vendas do PDV e delivery entregue + contas recebidas. Saídas = contas pagas. Sangria e
             suprimento não entram aqui, porque só mudam o dinheiro de lugar (gaveta ↔ cofre).
           </p>

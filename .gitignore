@@ -33,3 +33,6 @@ Thumbs.db
 
 # backups locais (têm dados reais de clientes: nunca commitar)
 backups/
+
+# cache do TypeScript
+*.tsbuildinfo

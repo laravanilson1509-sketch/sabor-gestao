@@ -52,8 +52,8 @@ export default function ImpressaoPage() {
     <div className="p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#16252B]">Impressão</h1>
-          <p className="text-sm text-[#5B6B73]">Comandas por setor, pré-conta, comprovantes e regras da conta</p>
+          <h1 className="text-2xl font-bold text-ink">Impressão</h1>
+          <p className="text-sm text-ink-muted">Comandas por setor, pré-conta, comprovantes e regras da conta</p>
         </div>
 
         <div className="flex flex-wrap gap-2 mb-6">
@@ -64,8 +64,8 @@ export default function ImpressaoPage() {
               className={
                 'text-sm px-4 py-2 rounded-lg font-medium transition border ' +
                 (aba === a.valor
-                  ? 'bg-[#0E6B7E] text-white border-[#0E6B7E]'
-                  : 'bg-white text-[#2B3C44] border-[#DCE3E7] hover:bg-[#F1F5F7]')
+                  ? 'bg-accent text-accent-contrast border-accent'
+                  : 'bg-surface text-ink-soft border-line hover:bg-surface-hover')
               }
             >
               {a.rotulo}
@@ -74,7 +74,7 @@ export default function ImpressaoPage() {
         </div>
 
         {erro && (
-          <div role="alert" className="mb-4 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+          <div role="alert" className="mb-4 text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
             {erro}
           </div>
         )}

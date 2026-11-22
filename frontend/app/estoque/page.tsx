@@ -32,13 +32,13 @@ type Ordem = 'critico' | 'nome' | 'valor';
 
 const chip = (ativo: boolean) =>
   'text-sm px-3.5 py-1.5 rounded-full font-medium transition border ' +
-  (ativo ? 'bg-[#0E6B7E] text-white border-[#0E6B7E]' : 'bg-white text-[#5B6B73] border-[#DCE3E7] hover:bg-[#F1F5F7]');
+  (ativo ? 'bg-accent text-accent-contrast border-accent' : 'bg-surface text-ink-muted border-line hover:bg-surface-hover');
 
 // situação de cada item (cores e textos da etiqueta e da barra de nível)
 const SITUACAO = {
-  ok: { rotulo: 'Normal', etiqueta: 'bg-[#D9F0E3] text-[#1E6B3F]', barra: '#2E9D5F' },
-  alerta: { rotulo: 'Abaixo do mínimo', etiqueta: 'bg-[#FFF0C7] text-[#7A5A0A]', barra: '#E3B341' },
-  critico: { rotulo: 'Sem estoque', etiqueta: 'bg-[#FADBD6] text-[#B3261E]', barra: '#B3261E' },
+  ok: { rotulo: 'Normal', etiqueta: 'bg-success-soft text-success', barra: 'var(--success)' },
+  alerta: { rotulo: 'Abaixo do mínimo', etiqueta: 'bg-warning-soft text-warning', barra: 'var(--gold)' },
+  critico: { rotulo: 'Sem estoque', etiqueta: 'bg-danger-soft text-danger', barra: 'var(--danger)' },
 } as const;
 
 const brl = (v: number) => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -108,7 +108,7 @@ function IconTrash() {
 }
 
 const BTN_ACAO =
-  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#DCE3E7] bg-white text-[#5B6B73] hover:bg-[#F1F5F7] hover:text-[#0E6B7E] transition';
+  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-surface text-ink-muted hover:bg-surface-hover hover:text-accent transition';
 
 export default function EstoquePage() {
   const supabase = createBrowserClient(
@@ -269,8 +269,8 @@ export default function EstoquePage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-[#16252B]">Estoque</h1>
-            <p className="text-sm text-[#5B6B73] mt-1">Ingredientes, produtos acabados e bebidas</p>
+            <h1 className="text-3xl font-bold text-ink">Estoque</h1>
+            <p className="text-sm text-ink-muted mt-1">Ingredientes, produtos acabados e bebidas</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link href="/compras" className="btn btn-secundario">
@@ -285,12 +285,12 @@ export default function EstoquePage() {
         <ConferenciasPendentes unidadeId={unidadeId} onAlterado={carregar} />
 
         {(resumo.baixos > 0 || resumo.zerados > 0) && (
-          <div className="mb-5 rounded-xl border border-[#F0DFA8] bg-[#FFFAEB] p-4 flex flex-wrap items-center gap-4">
+          <div className="mb-5 rounded-xl border border-warning-line bg-warning-faint p-4 flex flex-wrap items-center gap-4">
             <div className="flex-1 min-w-[14rem]">
-              <p className="text-sm font-semibold text-[#7A5A0A]">
+              <p className="text-sm font-semibold text-warning">
                 {resumo.baixos + resumo.zerados} {resumo.baixos + resumo.zerados === 1 ? 'item precisa' : 'itens precisam'} de reposição
               </p>
-              <p className="text-sm text-[#5B6B73] mt-0.5">
+              <p className="text-sm text-ink-muted mt-0.5">
                 {resumo.zerados > 0 && resumo.zerados + (resumo.zerados === 1 ? ' sem estoque' : ' sem estoque')}
                 {resumo.zerados > 0 && resumo.baixos > 0 && ' · '}
                 {resumo.baixos > 0 && resumo.baixos + ' abaixo do mínimo'}
@@ -309,41 +309,41 @@ export default function EstoquePage() {
               setSituacao('todas');
               setMostrarTodos(true);
             }}
-            className={'text-left rounded-xl border p-4 transition bg-white hover:border-[#0E6B7E] ' + (situacao === 'todas' ? 'border-[#0E6B7E] ring-1 ring-[#0E6B7E]' : 'border-[#DCE3E7]')}
+            className={'text-left rounded-xl border p-4 transition bg-surface hover:border-accent ' + (situacao === 'todas' ? 'border-accent ring-1 ring-accent' : 'border-line')}
           >
-            <span className="block text-xs font-medium text-[#5B6B73]">Produtos</span>
-            <span className="block text-2xl font-bold text-[#16252B] mt-1">{resumo.total}</span>
+            <span className="block text-xs font-medium text-ink-muted">Produtos</span>
+            <span className="block text-2xl font-bold text-ink mt-1">{resumo.total}</span>
           </button>
           <button
             onClick={() => setSituacao(situacao === 'baixo' ? 'todas' : 'baixo')}
-            className={'text-left rounded-xl border p-4 transition hover:border-[#E3B341] ' + (situacao === 'baixo' ? 'border-[#E3B341] ring-1 ring-[#E3B341] bg-[#FFFAEB]' : 'border-[#DCE3E7] bg-white')}
+            className={'text-left rounded-xl border p-4 transition hover:border-gold ' + (situacao === 'baixo' ? 'border-gold ring-1 ring-gold bg-warning-faint' : 'border-line bg-surface')}
           >
-            <span className="block text-xs font-medium text-[#5B6B73]">Abaixo do mínimo</span>
-            <span className={'block text-2xl font-bold mt-1 ' + (resumo.baixos > 0 ? 'text-[#7A5A0A]' : 'text-[#16252B]')}>{resumo.baixos}</span>
+            <span className="block text-xs font-medium text-ink-muted">Abaixo do mínimo</span>
+            <span className={'block text-2xl font-bold mt-1 ' + (resumo.baixos > 0 ? 'text-warning' : 'text-ink')}>{resumo.baixos}</span>
           </button>
           <button
             onClick={() => setSituacao(situacao === 'zerado' ? 'todas' : 'zerado')}
-            className={'text-left rounded-xl border p-4 transition hover:border-[#B3261E] ' + (situacao === 'zerado' ? 'border-[#B3261E] ring-1 ring-[#B3261E] bg-[#FFF5F3]' : 'border-[#DCE3E7] bg-white')}
+            className={'text-left rounded-xl border p-4 transition hover:border-danger ' + (situacao === 'zerado' ? 'border-danger ring-1 ring-danger bg-danger-faint' : 'border-line bg-surface')}
           >
-            <span className="block text-xs font-medium text-[#5B6B73]">Sem estoque</span>
-            <span className={'block text-2xl font-bold mt-1 ' + (resumo.zerados > 0 ? 'text-[#B3261E]' : 'text-[#16252B]')}>{resumo.zerados}</span>
+            <span className="block text-xs font-medium text-ink-muted">Sem estoque</span>
+            <span className={'block text-2xl font-bold mt-1 ' + (resumo.zerados > 0 ? 'text-danger' : 'text-ink')}>{resumo.zerados}</span>
           </button>
-          <div className="rounded-xl border border-[#DCE3E7] bg-white p-4">
-            <span className="block text-xs font-medium text-[#5B6B73]">
+          <div className="rounded-xl border border-line bg-surface p-4">
+            <span className="block text-xs font-medium text-ink-muted">
               {marcados.length > 0
                 ? marcados.length === 1
                   ? 'Valor de ' + (marcados[0].ingredientes?.nome || 'produto selecionado')
                   : 'Valor dos ' + marcados.length + ' selecionados'
                 : 'Valor em estoque'}
             </span>
-            <span className="block text-2xl font-bold text-[#0E6B7E] mt-1">{brl(valorCard)}</span>
+            <span className="block text-2xl font-bold text-accent mt-1">{brl(valorCard)}</span>
             {marcados.length > 0 && (
               <button
                 onClick={() => {
                   setSelecionados(new Set());
                   setSoSelecionados(false);
                 }}
-                className="mt-1 text-xs font-medium text-[#0E6B7E] hover:underline"
+                className="mt-1 text-xs font-medium text-accent hover:underline"
               >
                 Limpar seleção
               </button>
@@ -352,11 +352,11 @@ export default function EstoquePage() {
         </div>
 
         {/* Filtros */}
-        <div className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-6 space-y-4">
+        <div className="bg-surface border border-line rounded-xl p-4 mb-6 space-y-4">
           <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar produto ou ingrediente..." />
           <div className="flex flex-wrap gap-x-8 gap-y-4">
             <div>
-              <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Tipo</label>
+              <label className="block text-xs font-medium text-ink-muted mb-1.5">Tipo</label>
               <div className="flex gap-1.5 flex-wrap">
                 {(['todos', 'ingrediente', 'acabado', 'bebida'] as FiltroTipo[]).map((t) => (
                   <button
@@ -375,7 +375,7 @@ export default function EstoquePage() {
 
             {filtroTipo === 'bebida' && (
               <div>
-                <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Tipo de bebida</label>
+                <label className="block text-xs font-medium text-ink-muted mb-1.5">Tipo de bebida</label>
                 <div className="flex gap-1.5 flex-wrap">
                   {([['todas', 'Todas'], ['nao_alcoolica', 'Não alcoólicas'], ['alcoolica', 'Alcoólicas']] as [FiltroBebida, string][]).map(
                     ([valor, rotulo]) => (
@@ -389,7 +389,7 @@ export default function EstoquePage() {
             )}
 
             <div>
-              <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Situação</label>
+              <label className="block text-xs font-medium text-ink-muted mb-1.5">Situação</label>
               <div className="flex gap-1.5 flex-wrap">
                 {([['todas', 'Todas'], ['baixo', 'Abaixo do mínimo'], ['zerado', 'Sem estoque'], ['ok', 'Normal']] as [FiltroSituacao, string][]).map(
                   ([valor, rotulo]) => (
@@ -409,7 +409,7 @@ export default function EstoquePage() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Cadastro</label>
+              <label className="block text-xs font-medium text-ink-muted mb-1.5">Cadastro</label>
               <div className="flex gap-1.5 flex-wrap">
                 {(['todos', 'ativo', 'inativo'] as FiltroAtivo[]).map((a) => (
                   <button key={a} onClick={() => setFiltroAtivo(a)} className={chip(filtroAtivo === a)}>
@@ -440,11 +440,11 @@ export default function EstoquePage() {
             )}
 
             <div>
-              <label className="block text-xs font-medium text-[#5B6B73] mb-1.5">Ordenar por</label>
+              <label className="block text-xs font-medium text-ink-muted mb-1.5">Ordenar por</label>
               <select
                 value={ordem}
                 onChange={(e) => setOrdem(e.target.value as Ordem)}
-                className="border border-[#C9D3D8] rounded-lg px-3 py-1.5 text-sm text-[#16252B] bg-white focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+                className="border border-line-strong rounded-lg px-3 py-1.5 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent"
               >
                 <option value="critico">Mais urgentes primeiro</option>
                 <option value="nome">Nome (A-Z)</option>
@@ -455,12 +455,12 @@ export default function EstoquePage() {
         </div>
 
         {loading ? (
-          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
+          <p className="text-center py-12 text-ink-muted">Carregando...</p>
         ) : !listaAparece ? (
-          <div className="bg-white border border-dashed border-[#C9D3D8] rounded-xl py-16 px-6 text-center">
-            <p className="text-[#16252B] font-medium">Escolha um filtro ou busque um produto</p>
-            <p className="text-sm text-[#5B6B73] mt-1">Os itens aparecem aqui conforme você filtra.</p>
-            <button onClick={() => setMostrarTodos(true)} className="mt-4 text-sm font-medium text-[#0E6B7E] hover:underline">
+          <div className="bg-surface border border-dashed border-line-strong rounded-xl py-16 px-6 text-center">
+            <p className="text-ink font-medium">Escolha um filtro ou busque um produto</p>
+            <p className="text-sm text-ink-muted mt-1">Os itens aparecem aqui conforme você filtra.</p>
+            <button onClick={() => setMostrarTodos(true)} className="mt-4 text-sm font-medium text-accent hover:underline">
               Mostrar todos os produtos
             </button>
           </div>
@@ -468,24 +468,24 @@ export default function EstoquePage() {
           busca ? (
             <NadaEncontrado busca={busca} />
           ) : (
-            <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
-              <p className="text-[#16252B]">Nenhum item nesta situação</p>
-              <button onClick={() => setSituacao('todas')} className="mt-3 text-sm font-medium text-[#0E6B7E] hover:underline">
+            <div className="bg-surface border border-line rounded-xl p-8 text-center">
+              <p className="text-ink">Nenhum item nesta situação</p>
+              <button onClick={() => setSituacao('todas')} className="mt-3 text-sm font-medium text-accent hover:underline">
                 Ver todos
               </button>
             </div>
           )
         ) : itens.length === 0 ? (
-          <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
-            <p className="text-[#16252B]">Nenhum item encontrado</p>
-            <p className="text-sm text-[#5B6B73] mt-2">
+          <div className="bg-surface border border-line rounded-xl p-8 text-center">
+            <p className="text-ink">Nenhum item encontrado</p>
+            <p className="text-sm text-ink-muted mt-2">
               Tente mudar os filtros ou cadastre um novo produto
             </p>
           </div>
         ) : (
-          <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
+          <div className="bg-surface border border-line rounded-xl overflow-x-auto">
             {marcados.length > 0 && (
-              <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-[#E4F1F4] border-b border-[#CFE3E8] text-sm text-[#0A4E5C]">
+              <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-accent-soft border-b border-line text-sm text-accent-ink">
                 <span>
                   {soSelecionados
                     ? 'Mostrando só ' + (marcados.length === 1 ? 'o produto selecionado' : 'os ' + marcados.length + ' produtos selecionados')
@@ -497,7 +497,7 @@ export default function EstoquePage() {
               </div>
             )}
             <table className="w-full min-w-[860px]">
-              <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
+              <thead className="bg-surface-hover border-b border-line">
                 <tr>
                   <th className="pl-4 pr-1 py-3 w-8">
                     <input
@@ -505,19 +505,19 @@ export default function EstoquePage() {
                       checked={todosMarcados}
                       onChange={alternarTodos}
                       aria-label="Selecionar todos os produtos da lista"
-                      className="h-4 w-4 accent-[#0E6B7E] cursor-pointer"
+                      className="h-4 w-4 accent-accent cursor-pointer"
                     />
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Produto</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Situação</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Quantidade</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Mínimo</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Custo</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Total</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Ações</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Produto</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Situação</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Quantidade</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-ink-muted">Mínimo</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-ink-muted">Custo</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-ink-muted">Total</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-ink-muted">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E6ECEF]">
+              <tbody className="divide-y divide-line-soft">
                 {mostrando.map((item) => {
                   const status = statusDe(item);
                   const info = SITUACAO[status];
@@ -541,7 +541,7 @@ export default function EstoquePage() {
                       aria-selected={selecionados.has(item.id)}
                       className={
                         'cursor-pointer transition ' +
-                        (selecionados.has(item.id) ? 'bg-[#E4F1F4] hover:bg-[#DCEBEF] ' : 'hover:bg-[#F8FAFB] ') +
+                        (selecionados.has(item.id) ? 'bg-accent-soft hover:bg-accent-soft ' : 'hover:bg-surface-hover ') +
                         (inativo ? 'opacity-50' : '')
                       }
                     >
@@ -551,32 +551,32 @@ export default function EstoquePage() {
                           checked={selecionados.has(item.id)}
                           onChange={() => alternarLinha(item.id)}
                           aria-label={'Selecionar ' + (item.ingredientes?.nome || 'produto')}
-                          className="h-4 w-4 accent-[#0E6B7E] cursor-pointer"
+                          className="h-4 w-4 accent-accent cursor-pointer"
                         />
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className="block text-sm font-medium text-[#16252B]">
+                        <span className="block text-sm font-medium text-ink">
                           {item.ingredientes ? item.ingredientes.nome : 'N/A'}
-                          {inativo && <span className="ml-1.5 text-xs font-normal text-[#8FA0A8]">(inativo)</span>}
+                          {inativo && <span className="ml-1.5 text-xs font-normal text-ink-subtle">(inativo)</span>}
                         </span>
-                        <span className="block text-xs text-[#8FA0A8] mt-0.5">{rotulo}</span>
+                        <span className="block text-xs text-ink-subtle mt-0.5">{rotulo}</span>
                       </td>
                       <td className="px-4 py-3.5">
                         <span className={'inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ' + info.etiqueta}>{info.rotulo}</span>
                       </td>
                       <td className="px-4 py-3.5 min-w-[9rem]">
-                        <span className="block text-sm font-semibold text-[#16252B]">
-                          {num(qtdAtual)} <span className="font-normal text-[#5B6B73]">{item.unidade}</span>
+                        <span className="block text-sm font-semibold text-ink">
+                          {num(qtdAtual)} <span className="font-normal text-ink-muted">{item.unidade}</span>
                         </span>
-                        <span className="mt-1.5 block h-1.5 w-full rounded-full bg-[#E6ECEF] overflow-hidden" aria-hidden>
+                        <span className="mt-1.5 block h-1.5 w-full rounded-full bg-line-soft overflow-hidden" aria-hidden>
                           <span className="block h-full rounded-full" style={{ width: nivel + '%', background: info.barra }} />
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-right text-sm text-[#5B6B73] whitespace-nowrap">
+                      <td className="px-4 py-3.5 text-right text-sm text-ink-muted whitespace-nowrap">
                         {num(minimo)} {item.unidade}
                       </td>
-                      <td className="px-4 py-3.5 text-right text-sm text-[#2B3C44] whitespace-nowrap">{brl(item.custo_unitario || 0)}</td>
-                      <td className="px-4 py-3.5 text-right text-sm font-semibold text-[#16252B] whitespace-nowrap">{brl(valorDe(item))}</td>
+                      <td className="px-4 py-3.5 text-right text-sm text-ink-soft whitespace-nowrap">{brl(item.custo_unitario || 0)}</td>
+                      <td className="px-4 py-3.5 text-right text-sm font-semibold text-ink whitespace-nowrap">{brl(valorDe(item))}</td>
                       <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-1.5 justify-center flex-nowrap">
                           <button
@@ -614,7 +614,7 @@ export default function EstoquePage() {
                           </Link>
                           <button
                             onClick={() => setItemParaDeletar(item)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#DCE3E7] bg-white text-[#5B6B73] hover:bg-[#FADBD6] hover:text-[#B3261E] transition"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-surface text-ink-muted hover:bg-danger-soft hover:text-danger transition"
                             title="Excluir"
                             aria-label="Excluir"
                           >
@@ -627,7 +627,7 @@ export default function EstoquePage() {
                 })}
               </tbody>
             </table>
-            <p className="px-4 py-2.5 text-xs text-[#8FA0A8] border-t border-[#E6ECEF] bg-[#F8FAFB]">
+            <p className="px-4 py-2.5 text-xs text-ink-subtle border-t border-line-soft bg-surface-hover">
               {mostrando.length} {mostrando.length === 1 ? 'produto' : 'produtos'}
               {marcados.length > 0 && ' · ' + marcados.length + (marcados.length === 1 ? ' selecionado' : ' selecionados') + ' (' + brl(valorCard) + ')'}
               {' · '}clique nas linhas para somar o valor · a barra mostra o saldo: cheia = 2× o mínimo
@@ -637,14 +637,14 @@ export default function EstoquePage() {
       </div>
 
       {itemMovimentacao && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <form onSubmit={handleMovimentacao} className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold text-[#16252B] mb-4">
+        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
+          <form onSubmit={handleMovimentacao} className="ui-modal-panel p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold text-ink mb-4">
               {tipoMovimentacao === 'entrada' ? 'Entrada' : 'Consumo'} —{' '}
               {itemMovimentacao.ingredientes ? itemMovimentacao.ingredientes.nome : ''}
             </h2>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[#2B3C44] mb-1">
+              <label className="block text-sm font-medium text-ink-soft mb-1">
                 Quantidade ({itemMovimentacao.unidade})
               </label>
               <input
@@ -652,20 +652,20 @@ export default function EstoquePage() {
                 step="0.01"
                 value={qtdMov}
                 onChange={(e) => setQtdMov(e.target.value)}
-                className="w-full border border-[#C9D3D8] rounded-lg px-3 py-2 text-sm text-[#16252B] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+                className="w-full border border-line-strong rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
                 placeholder="0.00"
                 autoFocus
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[#2B3C44] mb-1">
+              <label className="block text-sm font-medium text-ink-soft mb-1">
                 Observação (opcional)
               </label>
               <input
                 type="text"
                 value={obsMov}
                 onChange={(e) => setObsMov(e.target.value)}
-                className="w-full border border-[#C9D3D8] rounded-lg px-3 py-2 text-sm text-[#16252B] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+                className="w-full border border-line-strong rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent"
                 placeholder="Ex: Uso no almoço de segunda"
               />
             </div>
@@ -693,43 +693,43 @@ export default function EstoquePage() {
       )}
 
       {showHistorico && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
+          <div className="ui-modal-panel p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-[#16252B]">
+              <h2 className="text-lg font-bold text-ink">
                 Histórico — {showHistorico.ingredientes ? showHistorico.ingredientes.nome : ''}
               </h2>
               <button
                 onClick={() => setShowHistorico(null)}
-                className="text-[#5B6B73] hover:text-[#16252B] text-xl h-9 w-9"
+                className="text-ink-muted hover:text-ink text-xl h-9 w-9"
                 aria-label="Fechar"
               >
                 ✕
               </button>
             </div>
             {historico.length === 0 ? (
-              <p className="text-[#5B6B73] text-center py-8">Nenhuma movimentação ainda</p>
+              <p className="text-ink-muted text-center py-8">Nenhuma movimentação ainda</p>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-[#F4F7F8]">
+                <thead className="bg-surface-hover">
                   <tr>
-                    <th className="px-3 py-2 text-left text-[#5B6B73]">Tipo</th>
-                    <th className="px-3 py-2 text-right text-[#5B6B73]">Quantidade</th>
-                    <th className="px-3 py-2 text-left text-[#5B6B73]">Observação</th>
-                    <th className="px-3 py-2 text-left text-[#5B6B73]">Data</th>
+                    <th className="px-3 py-2 text-left text-ink-muted">Tipo</th>
+                    <th className="px-3 py-2 text-right text-ink-muted">Quantidade</th>
+                    <th className="px-3 py-2 text-left text-ink-muted">Observação</th>
+                    <th className="px-3 py-2 text-left text-ink-muted">Data</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E6ECEF]">
+                <tbody className="divide-y divide-line-soft">
                   {historico.map((mov) => (
                     <tr key={mov.id}>
                       <td className="px-3 py-2">
-                        <span className={'rounded-full px-2 py-0.5 text-xs font-semibold ' + (mov.tipo === 'entrada' ? 'bg-[#D9F0E3] text-[#1E6B3F]' : 'bg-[#F1F5F7] text-[#2B3C44]')}>
+                        <span className={'rounded-full px-2 py-0.5 text-xs font-semibold ' + (mov.tipo === 'entrada' ? 'bg-success-soft text-success' : 'bg-surface-hover text-ink-soft')}>
                           {ROTULO_MOV[mov.tipo] || mov.tipo}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-right text-[#16252B]">{mov.quantidade}</td>
-                      <td className="px-3 py-2 text-[#5B6B73]">{mov.observacao || '-'}</td>
-                      <td className="px-3 py-2 text-[#5B6B73]">
+                      <td className="px-3 py-2 text-right text-ink">{mov.quantidade}</td>
+                      <td className="px-3 py-2 text-ink-muted">{mov.observacao || '-'}</td>
+                      <td className="px-3 py-2 text-ink-muted">
                         {new Date(mov.criado_em).toLocaleString('pt-BR')}
                       </td>
                     </tr>
@@ -742,12 +742,12 @@ export default function EstoquePage() {
       )}
 
       {itemParaDeletar && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-2 text-[#B3261E]">Excluir produto?</h2>
-            <p className="text-sm text-[#5B6B73] mb-6">
+        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
+          <div className="ui-modal-panel p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold mb-2 text-danger">Excluir produto?</h2>
+            <p className="text-sm text-ink-muted mb-6">
               Tem certeza que quer excluir{' '}
-              <strong className="text-[#16252B]">
+              <strong className="text-ink">
                 {itemParaDeletar.ingredientes ? itemParaDeletar.ingredientes.nome : ''}
               </strong>
               ? Isso apaga o produto, o estoque e todo o histórico de movimentações. Essa ação não

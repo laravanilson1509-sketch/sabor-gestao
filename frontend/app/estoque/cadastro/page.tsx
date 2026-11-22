@@ -13,8 +13,8 @@ import {
 } from '@/lib/queries/estoque';
 
 const INPUT =
-  'w-full border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
-const LABEL = 'block text-sm font-medium text-[#2B3C44] mb-1';
+  'w-full border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent';
+const LABEL = 'block text-sm font-medium text-ink-soft mb-1';
 
 function CadastroEstoquePageInner() {
   const router = useRouter();
@@ -155,7 +155,7 @@ function CadastroEstoquePageInner() {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <p className="text-[#5B6B73]">Carregando...</p>
+        <p className="text-ink-muted">Carregando...</p>
       </div>
     );
   }
@@ -172,19 +172,19 @@ function CadastroEstoquePageInner() {
           >
             <ConteudoVoltar />
           </button>
-          <h1 className="text-2xl font-bold text-[#16252B]">
+          <h1 className="text-2xl font-bold text-ink">
             {editando ? 'Editar produto' : 'Novo produto'}
           </h1>
         </div>
 
         <form
           onSubmit={handleSalvar}
-          className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-5"
+          className="bg-surface border border-line rounded-xl p-6 space-y-5"
         >
           {/* Nome */}
           <div>
             <label className={LABEL}>
-              Nome do produto <span className="text-[#B3261E]">*</span>
+              Nome do produto <span className="text-danger">*</span>
             </label>
             <input
               type="text"
@@ -197,7 +197,7 @@ function CadastroEstoquePageInner() {
 
           {/* Tipo de produto */}
           <div>
-            <label className="block text-sm font-medium text-[#2B3C44] mb-2">
+            <label className="block text-sm font-medium text-ink-soft mb-2">
               Tipo de produto
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -206,8 +206,8 @@ function CadastroEstoquePageInner() {
                 onClick={() => setTipoProduto('ingrediente')}
                 className={`py-3 px-4 rounded-lg border-2 text-left transition ${
                   tipoProduto === 'ingrediente'
-                    ? 'border-[#0E6B7E] bg-[#DCEEF2] text-[#0B4F5E]'
-                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
+                    ? 'border-accent bg-accent-soft text-accent-ink'
+                    : 'border-line text-ink-muted hover:border-line-strong'
                 }`}
               >
                 <span className="block text-sm font-semibold">Ingrediente</span>
@@ -220,8 +220,8 @@ function CadastroEstoquePageInner() {
                 onClick={() => setTipoProduto('acabado')}
                 className={`py-3 px-4 rounded-lg border-2 text-left transition ${
                   tipoProduto === 'acabado'
-                    ? 'border-[#0E6B7E] bg-[#DCEEF2] text-[#0B4F5E]'
-                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
+                    ? 'border-accent bg-accent-soft text-accent-ink'
+                    : 'border-line text-ink-muted hover:border-line-strong'
                 }`}
               >
                 <span className="block text-sm font-semibold">Acabado</span>
@@ -234,8 +234,8 @@ function CadastroEstoquePageInner() {
                 onClick={() => setTipoProduto('bebida')}
                 className={`py-3 px-4 rounded-lg border-2 text-left transition ${
                   tipoProduto === 'bebida'
-                    ? 'border-[#0E6B7E] bg-[#DCEEF2] text-[#0B4F5E]'
-                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
+                    ? 'border-accent bg-accent-soft text-accent-ink'
+                    : 'border-line text-ink-muted hover:border-line-strong'
                 }`}
               >
                 <span className="block text-sm font-semibold">Bebida</span>
@@ -247,9 +247,9 @@ function CadastroEstoquePageInner() {
           </div>
 
           {tipoProduto === 'bebida' && (
-            <div className="space-y-4 rounded-xl border border-[#DCE3E7] bg-[#F8FAFB] p-4">
+            <div className="space-y-4 rounded-xl border border-line bg-surface-hover p-4">
               <div>
-                <label className="block text-sm font-medium text-[#2B3C44] mb-2">Tipo de bebida</label>
+                <label className="block text-sm font-medium text-ink-soft mb-2">Tipo de bebida</label>
                 <div className="flex gap-2">
                   {(Object.entries(GRUPOS_BEBIDA) as [GrupoBebida, string][]).map(([valor, rotulo]) => (
                     <button
@@ -261,8 +261,8 @@ function CadastroEstoquePageInner() {
                       }}
                       className={`flex-1 py-2.5 rounded-lg border-2 text-sm font-semibold transition ${
                         grupoBebida === valor
-                          ? 'border-[#0E6B7E] bg-[#DCEEF2] text-[#0B4F5E]'
-                          : 'border-[#DCE3E7] bg-white text-[#5B6B73] hover:border-[#C9D3D8]'
+                          ? 'border-accent bg-accent-soft text-accent-ink'
+                          : 'border-line bg-surface text-ink-muted hover:border-line-strong'
                       }`}
                     >
                       {rotulo}
@@ -272,7 +272,7 @@ function CadastroEstoquePageInner() {
               </div>
               <div>
                 <label className={LABEL}>
-                  Categoria <span className="text-[#B3261E]">*</span>
+                  Categoria <span className="text-danger">*</span>
                 </label>
                 <select value={categoriaBebida} onChange={(e) => setCategoriaBebida(e.target.value)} className={INPUT}>
                   <option value="">Escolha...</option>
@@ -284,7 +284,7 @@ function CadastroEstoquePageInner() {
                 </select>
               </div>
               {grupoBebida === 'alcoolica' && (
-                <p className="text-xs text-[#7A5A0A] bg-[#FFF0C7] rounded-lg px-3 py-2">
+                <p className="text-xs text-warning bg-warning-soft rounded-lg px-3 py-2">
                   Lembrete: a venda de bebida alcoólica é proibida para menores de 18 anos.
                 </p>
               )}
@@ -295,7 +295,7 @@ function CadastroEstoquePageInner() {
             <div>
               <label className={LABEL}>
                 Preço de venda (R$)
-                <span className="ml-1 text-xs text-[#8FA0A8]">(aparece no PDV)</span>
+                <span className="ml-1 text-xs text-ink-subtle">(aparece no PDV)</span>
               </label>
               <CampoMoeda
                 value={precoVenda}
@@ -343,7 +343,7 @@ function CadastroEstoquePageInner() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={LABEL}>
-                Custo unitário (R$) <span className="text-[#B3261E]">*</span>
+                Custo unitário (R$) <span className="text-danger">*</span>
               </label>
               <CampoMoeda
                 value={custo}
@@ -355,7 +355,7 @@ function CadastroEstoquePageInner() {
             <div>
               <label className={LABEL}>
                 Estoque mínimo
-                <span className="ml-1 text-xs text-[#8FA0A8]">(dispara o alerta)</span>
+                <span className="ml-1 text-xs text-ink-subtle">(dispara o alerta)</span>
               </label>
               <input
                 type="number"
@@ -371,15 +371,15 @@ function CadastroEstoquePageInner() {
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-[#2B3C44] mb-2">Status</label>
+            <label className="block text-sm font-medium text-ink-soft mb-2">Status</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setAtivo(true)}
                 className={`py-2.5 rounded-lg border-2 font-medium text-sm transition ${
                   ativo
-                    ? 'border-[#0E6B7E] bg-[#DCEEF2] text-[#0B4F5E]'
-                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
+                    ? 'border-accent bg-accent-soft text-accent-ink'
+                    : 'border-line text-ink-muted hover:border-line-strong'
                 }`}
               >
                 Ativo
@@ -389,8 +389,8 @@ function CadastroEstoquePageInner() {
                 onClick={() => setAtivo(false)}
                 className={`py-2.5 rounded-lg border-2 font-medium text-sm transition ${
                   !ativo
-                    ? 'border-[#B58300] bg-[#FFF0C7] text-[#7A5A0A]'
-                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
+                    ? 'border-warning bg-warning-soft text-warning'
+                    : 'border-line text-ink-muted hover:border-line-strong'
                 }`}
               >
                 Inativo
@@ -402,7 +402,7 @@ function CadastroEstoquePageInner() {
           {erro && (
             <div
               role="alert"
-              className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2"
+              className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2"
             >
               {erro}
             </div>
@@ -436,7 +436,7 @@ export default function CadastroEstoquePage() {
     <Suspense
       fallback={
         <div className="min-h-[60vh] flex items-center justify-center">
-          <p className="text-[#5B6B73]">Carregando...</p>
+          <p className="text-ink-muted">Carregando...</p>
         </div>
       }
     >

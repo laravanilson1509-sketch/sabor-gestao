@@ -60,16 +60,16 @@ export default function ModalPin({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+    <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-[60] p-4">
       <form
         onSubmit={confirmar}
         role="dialog"
         aria-label={titulo}
-        className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto"
+        className="ui-modal-panel p-6 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto"
       >
         <div>
-          <h2 className="text-lg font-bold text-[#16252B]">{titulo}</h2>
-          {descricao && <p className="text-sm text-[#5B6B73] mt-1">{descricao}</p>}
+          <h2 className="text-lg font-bold text-ink">{titulo}</h2>
+          {descricao && <p className="text-sm text-ink-muted mt-1">{descricao}</p>}
         </div>
 
         {children}
@@ -77,7 +77,7 @@ export default function ModalPin({
         {pedirMotivo && (
           <div>
             <label className={LABEL}>
-              Motivo {motivoObrigatorio && <span className="text-[#B3261E]">*</span>}
+              Motivo {motivoObrigatorio && <span className="text-danger">*</span>}
             </label>
             <input
               type="text"
@@ -93,7 +93,7 @@ export default function ModalPin({
                     key={s}
                     type="button"
                     onClick={() => setMotivo(s)}
-                    className="text-xs px-2.5 py-1 rounded-full border border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]"
+                    className="text-xs px-2.5 py-1 rounded-full border border-line text-ink-soft hover:bg-surface-hover"
                   >
                     {s}
                   </button>
@@ -116,12 +116,12 @@ export default function ModalPin({
               className={INPUT + ' w-full tracking-[0.5em] text-center text-lg'}
               autoFocus={!pedirMotivo}
             />
-            <p className="text-xs text-[#8FA0A8] mt-1">O nome de quem autorizou fica registrado.</p>
+            <p className="text-xs text-ink-subtle mt-1">O nome de quem autorizou fica registrado.</p>
           </div>
         )}
 
         {erro && (
-          <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+          <div role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
             {erro}
           </div>
         )}
@@ -132,7 +132,7 @@ export default function ModalPin({
             disabled={enviando}
             className={
               perigo
-                ? 'flex-1 bg-[#B3261E] hover:bg-[#931F18] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition'
+                ? 'flex-1 bg-danger-solid hover:bg-danger-solid-hover disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition'
                 : BTN_PRIMARY + ' flex-1'
             }
           >

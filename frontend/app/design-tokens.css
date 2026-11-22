@@ -4,9 +4,9 @@
    tailwind.config.js ou var(--token)). Para trocar a cor de destaque do sistema,
    altere apenas --accent, --accent-hover e --accent-soft.
 
-   O tema claro é o padrão (e o único em uso). O tema escuro já está definido em
-   [data-theme='dark'], mas o botão de trocar tema só entra quando as telas antigas
-   (que ainda têm cores fixas no código) forem migradas.
+   O tema escuro é o padrão. O claro (as cores originais do sistema) fica em
+   [data-theme='light'] e é ligado pelo botão de tema na barra do topo; a escolha
+   fica salva no navegador (localStorage 'theme').
    ============================================================================= */
 
 :root {
@@ -26,8 +26,52 @@
   --z-dropdown: 50; --z-modal: 60; --z-toast: 70;
 }
 
-/* ===== Claro (padrão): mesma paleta azul-petróleo que o sistema já usa ===== */
+/* ===== Escuro (padrão do sistema) ===== */
 :root,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0a1013;
+  --surface: #111a1f;
+  --surface-elevated: #17232a;
+  --surface-hover: #1d2b33;
+  --border: #263640;
+  --border-soft: #1c2a32;
+  --border-strong: #36505c;
+
+  --text: #eef3f5;
+  --text-soft: #d0dade;
+  --text-muted: #9fb0b8;
+  --text-subtle: #84969f;
+
+  --accent: #4fb3c8;
+  --accent-hover: #72c6d8;
+  --accent-soft: rgba(79, 179, 200, 0.16);
+  --accent-soft-hover: rgba(79, 179, 200, 0.26);
+  --accent-faint: rgba(79, 179, 200, 0.08);
+  --accent-ink: #8fd6e4;
+  --accent-contrast: #06161a;
+
+  --success: #3ecf8e;  --success-soft: rgba(62, 207, 142, 0.14);  --success-line: rgba(62, 207, 142, 0.35);
+  --warning: #f5b544;  --warning-soft: rgba(245, 181, 68, 0.14);  --warning-line: rgba(245, 181, 68, 0.35);  --warning-faint: rgba(245, 181, 68, 0.07);
+  --danger:  #ff7b72;  --danger-soft:  rgba(255, 123, 114, 0.14); --danger-line:  rgba(255, 123, 114, 0.35); --danger-faint:  rgba(255, 123, 114, 0.07);
+  --danger-solid: #c62f26; --danger-solid-hover: #a8261f;
+  --info:    #5cb8ff;  --info-soft:    rgba(92, 184, 255, 0.14);
+  --violet:  #b3a9ff;  --violet-soft:  rgba(144, 133, 233, 0.18);
+  --gold: #e3b341;
+
+  --glass-bg: rgba(23, 35, 42, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --overlay: rgba(0, 0, 0, 0.62);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+
+  --focus-ring: #72c6d8;
+}
+
+/* ===== Claro: exatamente as cores que o sistema usava antes ===== */
 [data-theme='light'] {
   color-scheme: light;
 
@@ -36,21 +80,29 @@
   --surface-elevated: #ffffff;
   --surface-hover: #f1f5f7;
   --border: #dce3e7;
+  --border-soft: #e6ecef;
   --border-strong: #c9d3d8;
 
   --text: #16252b;
+  --text-soft: #2b3c44;
   --text-muted: #5b6b73;
-  --text-subtle: #65757e;
+  --text-subtle: #5f6f78;
 
   --accent: #0e6b7e;
   --accent-hover: #0b5a6a;
   --accent-soft: #dceef2;
+  --accent-soft-hover: #c9e3ea;
+  --accent-faint: #f1f8fa;
+  --accent-ink: #0b4f5e;
   --accent-contrast: #ffffff;
 
-  --success: #1e6b3f;  --success-soft: #d9f0e3;
-  --warning: #7a5a0a;  --warning-soft: #fff0c7;
-  --danger:  #b3261e;  --danger-soft:  #fadbd6;
+  --success: #1e6b3f;  --success-soft: #d9f0e3;  --success-line: #b7dfc4;
+  --warning: #7a5a0a;  --warning-soft: #fff0c7;  --warning-line: #e8d28a;  --warning-faint: #fffaeb;
+  --danger:  #b3261e;  --danger-soft:  #fadbd6;  --danger-line:  #f2c2bb;  --danger-faint:  #fff5f3;
+  --danger-solid: #b3261e; --danger-solid-hover: #931f18;
   --info:    #0b4f5e;  --info-soft:    #dceef2;
+  --violet:  #3f3a8c;  --violet-soft:  #e6e4f7;
+  --gold: #e3b341;
 
   --glass-bg: rgba(255, 255, 255, 0.78);
   --glass-border: rgba(15, 20, 30, 0.08);
@@ -63,40 +115,12 @@
   --focus-ring: #0e6b7e;
 }
 
-/* ===== Escuro (pronto, ainda não ligado no sistema) ===== */
-[data-theme='dark'] {
-  color-scheme: dark;
-
-  --bg: #0b1114;
-  --surface: #121a1e;
-  --surface-elevated: #19232a;
-  --surface-hover: #202c34;
-  --border: #25323a;
-  --border-strong: #34454f;
-
-  --text: #f0f4f5;
-  --text-muted: #a5b3ba;
-  --text-subtle: #8a9aa2;
-
-  --accent: #4fb3c8;
-  --accent-hover: #72c6d8;
-  --accent-soft: rgba(79, 179, 200, 0.16);
-  --accent-contrast: #08161a;
-
-  --success: #3ecf8e;  --success-soft: rgba(62, 207, 142, 0.14);
-  --warning: #f5b544;  --warning-soft: rgba(245, 181, 68, 0.14);
-  --danger:  #ff7b72;  --danger-soft:  rgba(255, 123, 114, 0.14);
-  --info:    #5cb8ff;  --info-soft:    rgba(92, 184, 255, 0.14);
-
-  --glass-bg: rgba(25, 35, 42, 0.74);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --overlay: rgba(0, 0, 0, 0.6);
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
-
-  --focus-ring: #72c6d8;
+/* base: fundo e texto seguem o tema */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
 }
 
 .tabular { font-variant-numeric: tabular-nums; }
@@ -132,10 +156,25 @@
 @keyframes ui-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ui-pop { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: none; } }
 
+/* ===== Vidro: só em elementos pequenos e fixos (barra do topo, menus flutuantes) ===== */
+.ui-glass {
+  background: var(--glass-bg);
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ui-glass { background: var(--surface-elevated); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .ui-glass { background: var(--surface-elevated); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
 /* esqueleto de carregamento (sem animação pesada: só opacidade) */
 .ui-skeleton { background: var(--surface-hover); border-radius: var(--radius-sm); animation: ui-pulse 1.4s ease-in-out infinite; }
 @keyframes ui-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
 
 @media (prefers-reduced-motion: reduce) {
   .ui-modal-overlay, .ui-modal-panel, .ui-skeleton { animation: none !important; }
+  * { scroll-behavior: auto !important; }
 }

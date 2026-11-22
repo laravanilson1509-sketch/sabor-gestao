@@ -146,15 +146,15 @@ export default function EstacaoImpressao({ supabase, unidadeId, impressoras }: P
       <div className={CARTAO + ' p-4 space-y-4'}>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1 min-w-[14rem]">
-            <h2 className="text-base font-semibold text-[#16252B]">Este computador imprime</h2>
-            <p className="text-sm text-[#5B6B73]">
+            <h2 className="text-base font-semibold text-ink">Este computador imprime</h2>
+            <p className="text-sm text-ink-muted">
               Deixe esta página aberta no computador ligado à impressora. Os tickets saem sozinhos.
             </p>
           </div>
           <span
             className={
               'rounded-full px-3 py-1 text-xs font-semibold ' +
-              (ligada ? 'bg-[#D9F0E3] text-[#1E6B3F]' : 'bg-[#F1F5F7] text-[#5B6B73]')
+              (ligada ? 'bg-success-soft text-success' : 'bg-surface-hover text-ink-muted')
             }
           >
             {ligada ? '● Ligada' : 'Desligada'}
@@ -169,30 +169,30 @@ export default function EstacaoImpressao({ supabase, unidadeId, impressoras }: P
         </div>
 
         {erro && (
-          <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+          <div role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
             {erro}
           </div>
         )}
 
         {daEstacao.length === 0 ? (
-          <p className="text-sm text-[#5B6B73]">
+          <p className="text-sm text-ink-muted">
             Cadastre uma impressora do tipo “Navegador” na aba Impressoras e setores.
           </p>
         ) : (
-          <ul className="divide-y divide-[#E6ECEF] border border-[#E6ECEF] rounded-lg">
+          <ul className="divide-y divide-line-soft border border-line-soft rounded-lg">
             {daEstacao.map((i) => (
               <li key={i.id} className="px-3 py-2.5 flex flex-wrap items-center gap-3">
-                <label className="flex items-center gap-2 flex-1 min-w-[12rem] text-sm text-[#16252B]">
+                <label className="flex items-center gap-2 flex-1 min-w-[12rem] text-sm text-ink">
                   <input type="checkbox" checked={escolhidas.includes(i.id)} onChange={() => alternar(i.id)} />
                   <span className="font-medium">{i.nome}</span>
-                  <span className="text-xs text-[#8FA0A8]">
+                  <span className="text-xs text-ink-subtle">
                     {i.largura_mm} mm · {i.copias} {i.copias === 1 ? 'via' : 'vias'}
                   </span>
                 </label>
-                <span className={'text-xs ' + (impressoraOnline(i) ? 'text-[#1E6B3F]' : 'text-[#8FA0A8]')}>
+                <span className={'text-xs ' + (impressoraOnline(i) ? 'text-success' : 'text-ink-subtle')}>
                   {impressoraOnline(i) ? 'atendida por uma estação' : 'sem estação'}
                 </span>
-                <button onClick={() => imprimirTeste(i)} className="text-xs font-medium text-[#0E6B7E] hover:underline">
+                <button onClick={() => imprimirTeste(i)} className="text-xs font-medium text-accent hover:underline">
                   Imprimir teste
                 </button>
               </li>
@@ -202,12 +202,12 @@ export default function EstacaoImpressao({ supabase, unidadeId, impressoras }: P
       </div>
 
       <div className={CARTAO + ' p-4'}>
-        <h3 className="text-sm font-semibold text-[#16252B] mb-2">Como deixar a impressão automática</h3>
-        <ol className="list-decimal pl-5 text-sm text-[#2B3C44] space-y-1.5">
+        <h3 className="text-sm font-semibold text-ink mb-2">Como deixar a impressão automática</h3>
+        <ol className="list-decimal pl-5 text-sm text-ink-soft space-y-1.5">
           <li>Instale a impressora térmica no Windows e defina-a como <b>impressora padrão</b> desse computador.</li>
           <li>
             Crie um atalho do Chrome com o final{' '}
-            <code className="bg-[#F1F5F7] rounded px-1 text-xs">--kiosk-printing</code> (clique direito no atalho →
+            <code className="bg-surface-hover rounded px-1 text-xs">--kiosk-printing</code> (clique direito no atalho →
             Propriedades → Destino). Assim o Chrome imprime direto, sem perguntar.
           </li>
           <li>Abra o sistema por esse atalho, entre nesta página, marque as impressoras e ligue a estação.</li>
@@ -220,14 +220,14 @@ export default function EstacaoImpressao({ supabase, unidadeId, impressoras }: P
       </div>
 
       <div className={CARTAO + ' p-4'}>
-        <h3 className="text-sm font-semibold text-[#16252B] mb-2">O que esta estação imprimiu</h3>
+        <h3 className="text-sm font-semibold text-ink mb-2">O que esta estação imprimiu</h3>
         {registros.length === 0 ? (
-          <p className="text-sm text-[#5B6B73]">Nada ainda nesta sessão.</p>
+          <p className="text-sm text-ink-muted">Nada ainda nesta sessão.</p>
         ) : (
           <ul className="text-sm space-y-1">
             {registros.map((r, k) => (
-              <li key={k} className={r.ok ? 'text-[#2B3C44]' : 'text-[#B3261E]'}>
-                <span className="text-[#8FA0A8]">{hora(r.quando)}</span> · {r.texto}
+              <li key={k} className={r.ok ? 'text-ink-soft' : 'text-danger'}>
+                <span className="text-ink-subtle">{hora(r.quando)}</span> · {r.texto}
               </li>
             ))}
           </ul>

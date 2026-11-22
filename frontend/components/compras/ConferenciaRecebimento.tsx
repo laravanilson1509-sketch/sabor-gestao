@@ -90,10 +90,10 @@ export default function ConferenciaRecebimento({ supabase, solicitacaoId, fornec
   }
 
   return (
-    <form onSubmit={confirmar} className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-4 space-y-4">
+    <form onSubmit={confirmar} className="bg-surface border border-line rounded-xl p-4 mb-4 space-y-4">
       <div>
-        <h2 className="text-base font-semibold text-[#16252B]">Conferir o recebimento</h2>
-        <p className="text-sm text-[#5B6B73]">
+        <h2 className="text-base font-semibold text-ink">Conferir o recebimento</h2>
+        <p className="text-sm text-ink-muted">
           Confira com a nota fiscal: o que chegou de verdade e o preço cobrado. O estoque recebe só o que chegou.
         </p>
       </div>
@@ -122,17 +122,17 @@ export default function ConferenciaRecebimento({ supabase, solicitacaoId, fornec
           const sobrou = Number.isFinite(q) && q > Number(i.quantidade);
           const mudouPreco = c !== undefined && Number.isFinite(p) && Math.abs(p - Number(c)) > 0.00005;
           return (
-            <div key={i.id} className="border border-[#E6ECEF] rounded-lg p-3 space-y-2">
+            <div key={i.id} className="border border-line-soft rounded-lg p-3 space-y-2">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="text-sm font-medium text-[#16252B]">{i.ingredientes?.nome}</p>
-                <p className="text-xs text-[#5B6B73]">
+                <p className="text-sm font-medium text-ink">{i.ingredientes?.nome}</p>
+                <p className="text-xs text-ink-muted">
                   pedido: {qtd(i.quantidade)} {i.unidade}
                   {c !== undefined && ' · cotado: ' + moeda(Number(c))}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs text-[#5B6B73] mb-1">Chegou ({i.unidade})</label>
+                  <label className="block text-xs text-ink-muted mb-1">Chegou ({i.unidade})</label>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -142,7 +142,7 @@ export default function ConferenciaRecebimento({ supabase, solicitacaoId, fornec
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-[#5B6B73] mb-1">Preço na nota (R$/{i.unidade})</label>
+                  <label className="block text-xs text-ink-muted mb-1">Preço na nota (R$/{i.unidade})</label>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -155,19 +155,19 @@ export default function ConferenciaRecebimento({ supabase, solicitacaoId, fornec
               {(faltou || sobrou || mudouPreco) && (
                 <div className="flex flex-wrap gap-2 text-xs font-medium">
                   {faltou && (
-                    <span className="rounded-full px-2.5 py-0.5 bg-[#FFF0C7] text-[#7A5A0A]">
+                    <span className="rounded-full px-2.5 py-0.5 bg-warning-soft text-warning">
                       faltaram {qtd(Number(i.quantidade) - q)} {i.unidade}
                     </span>
                   )}
                   {sobrou && (
-                    <span className="rounded-full px-2.5 py-0.5 bg-[#DCEEF2] text-[#0B4F5E]">
+                    <span className="rounded-full px-2.5 py-0.5 bg-accent-soft text-accent-ink">
                       vieram {qtd(q - Number(i.quantidade))} {i.unidade} a mais
                     </span>
                   )}
                   {mudouPreco && (
                     <span
                       className={
-                        'rounded-full px-2.5 py-0.5 ' + (p > Number(c) ? 'bg-[#FADBD6] text-[#B3261E]' : 'bg-[#D9F0E3] text-[#1E6B3F]')
+                        'rounded-full px-2.5 py-0.5 ' + (p > Number(c) ? 'bg-danger-soft text-danger' : 'bg-success-soft text-success')
                       }
                     >
                       preço {p > Number(c) ? 'acima' : 'abaixo'} do cotado ({p > Number(c) ? '+' : ''}
@@ -195,13 +195,13 @@ export default function ConferenciaRecebimento({ supabase, solicitacaoId, fornec
         <input type="text" value={observacao} onChange={(e) => setObservacao(e.target.value)} className={INPUT + ' w-full'} />
       </div>
 
-      <div className="flex items-center justify-between border-t border-[#DCE3E7] pt-3">
-        <span className="text-sm font-medium text-[#5B6B73]">Total da nota</span>
-        <span className="text-xl font-bold text-[#16252B]">{moeda(total)}</span>
+      <div className="flex items-center justify-between border-t border-line pt-3">
+        <span className="text-sm font-medium text-ink-muted">Total da nota</span>
+        <span className="text-xl font-bold text-ink">{moeda(total)}</span>
       </div>
 
       {erro && (
-        <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+        <div role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
           {erro}
         </div>
       )}

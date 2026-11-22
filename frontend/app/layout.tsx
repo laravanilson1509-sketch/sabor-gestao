@@ -1,58 +1,72 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { contarPendenciasAbertas, EVENTO_PENDENCIAS } from '@/lib/queries/pendenciasEstoque';
-import Logo from '@/components/Logo';
+import { tituloDaRota } from '@/lib/navegacao';
+import { SCRIPT_TEMA, ThemeProvider } from '@/components/ThemeProvider';
+import Sidebar from '@/components/Sidebar';
+import Navbar from '@/components/Navbar';
 import TelaAbertura from '@/components/TelaAbertura';
 import TelaInicio from '@/components/TelaInicio';
 import './design-tokens.css';
 import './globals.css';
 
-const LINKS = [
-  { href: '/whatsapp', label: 'WhatsApp' },
-  { href: '/estoque', label: 'Estoque' },
-  { href: '/pdv', label: 'PDV' },
-  { href: '/cozinha', label: 'Cozinha' },
-  { href: '/caixa', label: 'Caixa' },
-  { href: '/impressao', label: 'Impressão' },
-  { href: '/cadastros', label: 'Cadastros' },
-  { href: '/delivery', label: 'Delivery' },
-  { href: '/compras', label: 'Compras' },
-  { href: '/financeiro', label: 'Financeiro' },
-];
+const CHAVE_MENU = 'sidebar-recolhida';
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [aberto, setAberto] = useState(false);
+  const [gavetaAberta, setGavetaAberta] = useState(false); // menu no celular
+  const [recolhida, setRecolhida] = useState(false); // menu recolhido no computador
+  const [email, setEmail] = useState<string | null>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
+  const naLogin = pathname === '/login';
+  const naInicio = pathname === '/';
+
   async function handleSair() {
     await supabase.auth.signOut();
-    setAberto(false);
+    setGavetaAberta(false);
     router.push('/login');
     router.refresh();
   }
-
-  const naLogin = pathname === '/login';
-  const naInicio = pathname === '/';
-  const tituloTela = LINKS.find((l) => pathname.startsWith(l.href))?.label || '';
 
   // título da aba do navegador (o layout é de cliente, então não usa metadata)
   useEffect(() => {
     document.title = 'FoodFlow';
   }, [pathname]);
+
+  // lembra se o menu estava recolhido
+  useEffect(() => {
+    try {
+      setRecolhida(localStorage.getItem(CHAVE_MENU) === '1');
+    } catch {
+      // sem armazenamento: começa expandido
+    }
+  }, []);
+
+  function alternarMenu() {
+    setRecolhida((v) => {
+      try {
+        localStorage.setItem(CHAVE_MENU, v ? '0' : '1');
+      } catch {
+        // vale só nesta visita
+      }
+      return !v;
+    });
+  }
+
+  // quem está logado (aparece no menu do usuário)
+  useEffect(() => {
+    if (naLogin) return;
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+  }, [naLogin]);
 
   // contador de conferências de estoque pendentes, mostrado ao lado de "Estoque"
   const [pendencias, setPendencias] = useState(0);
@@ -67,118 +81,68 @@ export default function RootLayout({
     return () => window.removeEventListener(EVENTO_PENDENCIAS, atualizar);
   }, [pathname]);
 
-  function classeLink(href: string) {
-    const ativo = pathname.startsWith(href);
-    return (
-      'block rounded-lg px-3 py-2.5 text-[15px] transition ' +
-      (ativo
-        ? 'bg-[#DCEEF2] text-[#0B4F5E] font-semibold'
-        : 'text-[#5B6B73] hover:bg-[#F1F5F7] hover:text-[#16252B]')
-    );
-  }
-
-  if (naLogin) {
-    return (
-      <html lang="pt-BR">
-        <body className="bg-[#EEF2F4]">
-          <main>{children}</main>
-        </body>
-      </html>
-    );
-  }
+  // trocou de tela: fecha a gaveta do celular
+  useEffect(() => setGavetaAberta(false), [pathname]);
 
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        {/* aplica o tema salvo antes de a página aparecer (sem piscar) */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
         {/* letra manuscrita da tela inicial */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet" />
       </head>
-      <body className="bg-[#EEF2F4] text-[#16252B]">
-        <TelaAbertura ativa={!naLogin} />
-        <div className="min-h-screen md:flex">
-          {/* Barra superior (celular) */}
-          <header className="md:hidden sticky top-0 z-30 flex items-center justify-between bg-white border-b border-[#DCE3E7] px-4 h-14">
-            <Link href="/" aria-label="Início">
-              <Logo tamanho={30} />
-            </Link>
-            <button
-              onClick={() => setAberto((v) => !v)}
-              className="h-10 w-10 text-2xl text-[#16252B]"
-              aria-label={aberto ? 'Fechar menu' : 'Abrir menu'}
-            >
-              {aberto ? '✕' : '☰'}
-            </button>
-          </header>
-
-          {/* Menu lateral */}
-          <aside
-            className={
-              (aberto ? 'block ' : 'hidden ') +
-              'md:flex md:flex-col md:w-60 md:shrink-0 md:sticky md:top-0 md:h-screen ' +
-              'bg-white border-r border-[#DCE3E7] p-4'
-            }
-          >
-            <Link href="/" aria-label="Início" className="hidden md:block px-3 pt-2 pb-6">
-              <Logo tamanho={34} />
-            </Link>
-            <nav className="flex flex-col gap-1">
-              {LINKS.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  onClick={() => setAberto(false)}
-                  className={classeLink(l.href) + ' flex items-center justify-between'}
-                >
-                  {l.label}
-                  {l.href === '/estoque' && pendencias > 0 && (
-                    <span
-                      className="rounded-full px-2 py-0.5 text-xs font-semibold bg-[#FFF0C7] text-[#7A5A0A]"
-                      title="Conferências de estoque pendentes"
-                    >
-                      {pendencias}
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </nav>
-            <button
-              onClick={handleSair}
-              className="mt-4 md:mt-auto rounded-lg px-3 py-2.5 text-left text-[15px] text-[#5B6B73] hover:bg-[#FADBD6] hover:text-[#B3261E] transition"
-            >
-              Sair
-            </button>
-          </aside>
-
-          {/* Conteúdo */}
-          <main className="tema-claro flex-1 min-w-0">
-            {/* a tela inicial fica sempre aqui; as outras abrem por cima */}
-            <TelaInicio supabase={supabase} />
-            {!naInicio && (
+      <body>
+        <ThemeProvider>
+          {naLogin ? (
+            <main>{children}</main>
+          ) : (
+            <>
+              <TelaAbertura ativa />
               <div
-                className={
-                  (aberto ? 'hidden md:flex ' : 'flex ') +
-                  'fixed z-20 flex-col bg-[#EEF2F4] overflow-hidden shadow-2xl ' +
-                  'top-14 left-0 right-0 bottom-0 ' +
-                  'md:top-3 md:right-3 md:bottom-3 md:left-[16rem] md:rounded-2xl md:border md:border-[#DCE3E7]'
-                }
+                className="min-h-screen md:flex"
+                style={{ '--sidebar-w': recolhida ? '64px' : '240px', '--navbar-h': '56px' } as React.CSSProperties}
               >
-                <div className="flex items-center justify-between gap-3 bg-white border-b border-[#DCE3E7] px-4 h-11 shrink-0">
-                  <span className="text-sm font-semibold text-[#16252B]">{tituloTela}</span>
-                  <Link
-                    href="/"
-                    className="text-sm text-[#5B6B73] hover:text-[#16252B] rounded-lg px-2.5 py-1 hover:bg-[#F1F5F7] transition"
-                    aria-label="Fechar e voltar ao início"
-                  >
-                    ✕ Fechar
-                  </Link>
+                <Sidebar
+                  atual={pathname}
+                  recolhida={recolhida}
+                  onAlternar={alternarMenu}
+                  gavetaAberta={gavetaAberta}
+                  onFecharGaveta={() => setGavetaAberta(false)}
+                  pendencias={pendencias}
+                />
+
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <Navbar
+                    titulo={tituloDaRota(pathname)}
+                    painelAberto={!naInicio}
+                    onAbrirMenu={() => setGavetaAberta(true)}
+                    email={email}
+                    onSair={handleSair}
+                  />
+
+                  <main className="relative flex-1 min-w-0">
+                    {/* a tela inicial fica sempre aqui; as outras abrem por cima */}
+                    <TelaInicio supabase={supabase} />
+                    {!naInicio && (
+                      <div
+                        className={
+                          'fixed z-20 overflow-hidden border-line bg-app shadow-token-lg ' +
+                          'left-0 right-0 bottom-0 top-[var(--navbar-h)] ' +
+                          'md:left-[calc(var(--sidebar-w)+12px)] md:right-3 md:bottom-3 md:top-[calc(var(--navbar-h)+8px)] md:rounded-card md:border'
+                        }
+                      >
+                        <div className="h-full overflow-y-auto">{children}</div>
+                      </div>
+                    )}
+                  </main>
                 </div>
-                <div className="flex-1 overflow-y-auto">{children}</div>
               </div>
-            )}
-          </main>
-        </div>
+            </>
+          )}
+        </ThemeProvider>
       </body>
     </html>
   );

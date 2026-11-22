@@ -37,7 +37,7 @@ const ROTULO_TIPO: Record<string, string> = { ingrediente: 'Ingredientes', acaba
 
 const chip = (ativo: boolean) =>
   'text-sm px-3.5 py-1.5 rounded-full font-medium transition border ' +
-  (ativo ? 'bg-[#0E6B7E] text-white border-[#0E6B7E]' : 'bg-white text-[#5B6B73] border-[#DCE3E7] hover:bg-[#F1F5F7]');
+  (ativo ? 'bg-accent text-accent-contrast border-accent' : 'bg-surface text-ink-muted border-line hover:bg-surface-hover');
 
 // tipos de item de uma solicitação (para o filtro e para as etiquetas do cartão)
 const tiposDaSolicitacao = (s: Solicitacao) => [
@@ -92,13 +92,13 @@ export default function ComprasPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-[#16252B]">Compras</h1>
-            <p className="text-sm text-[#5B6B73]">Solicitações, cotações e pedidos</p>
+            <h1 className="text-2xl font-bold text-ink">Compras</h1>
+            <p className="text-sm text-ink-muted">Solicitações, cotações e pedidos</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
               href="/compras/precos"
-              className="px-4 py-2.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] text-sm font-medium hover:bg-[#F1F5F7] transition"
+              className="px-4 py-2.5 rounded-lg border border-line bg-surface text-ink-soft text-sm font-medium hover:bg-surface-hover transition"
             >
               Histórico de preços
             </Link>
@@ -115,12 +115,12 @@ export default function ComprasPage() {
           const novas = sugestoes.filter((s) => !s.jaSolicitado);
           if (novas.length === 0) return null;
           return (
-            <div className="mb-6 rounded-xl border border-[#F0DFA8] bg-[#FFFAEB] p-4 flex flex-wrap items-center gap-4">
+            <div className="mb-6 rounded-xl border border-warning-line bg-warning-faint p-4 flex flex-wrap items-center gap-4">
               <div className="flex-1 min-w-[14rem]">
-                <p className="text-sm font-semibold text-[#7A5A0A]">
+                <p className="text-sm font-semibold text-warning">
                   {novas.length === 1 ? '1 item' : novas.length + ' itens'} no estoque mínimo ou abaixo
                 </p>
-                <p className="text-sm text-[#5B6B73] mt-0.5">
+                <p className="text-sm text-ink-muted mt-0.5">
                   {novas.slice(0, 4).map((s) => s.nome).join(', ')}
                   {novas.length > 4 && ' e mais ' + (novas.length - 4)}
                 </p>
@@ -158,11 +158,11 @@ export default function ComprasPage() {
         )}
 
         {loading ? (
-          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
+          <p className="text-center py-12 text-ink-muted">Carregando...</p>
         ) : itens.length === 0 ? (
-          <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
-            <p className="text-[#2B3C44]">Nenhuma solicitação de compra ainda</p>
-            <p className="text-sm text-[#5B6B73] mt-2">Clica em "+ Nova solicitação" para começar</p>
+          <div className="bg-surface border border-line rounded-xl p-8 text-center">
+            <p className="text-ink-soft">Nenhuma solicitação de compra ainda</p>
+            <p className="text-sm text-ink-muted mt-2">Clica em "+ Nova solicitação" para começar</p>
           </div>
         ) : itensFiltrados.length === 0 ? (
           <NadaEncontrado busca={busca} />
@@ -175,26 +175,26 @@ export default function ComprasPage() {
                 <Link
                   key={s.id}
                   href={`/compras/${s.id}`}
-                  className="bg-white border border-[#DCE3E7] rounded-xl p-4 hover:border-[#0E6B7E] transition flex items-center justify-between"
+                  className="bg-surface border border-line rounded-xl p-4 hover:border-accent transition flex items-center justify-between"
                 >
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${statusInfo.cor}`}>
                         {statusInfo.label}
                       </span>
-                      <span className="text-xs text-[#8FA0A8]">{data}</span>
+                      <span className="text-xs text-ink-subtle">{data}</span>
                       {tiposDaSolicitacao(s).map((t) => (
-                        <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-[#F1F5F7] text-[#5B6B73]">
+                        <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-surface-hover text-ink-muted">
                           {ROTULO_TIPO[t] || t}
                         </span>
                       ))}
                     </div>
-                    <p className="text-sm font-medium text-[#16252B]">
+                    <p className="text-sm font-medium text-ink">
                       {s.fornecedores?.nome ? `Fornecedor: ${s.fornecedores.nome}` : 'Sem fornecedor definido'}
                     </p>
-                    {s.observacao && <p className="text-xs text-[#5B6B73] mt-1">{s.observacao}</p>}
+                    {s.observacao && <p className="text-xs text-ink-muted mt-1">{s.observacao}</p>}
                   </div>
-                  <span className="text-[#8FA0A8]">→</span>
+                  <span className="text-ink-subtle">→</span>
                 </Link>
               );
             })}

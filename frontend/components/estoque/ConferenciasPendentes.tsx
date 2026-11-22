@@ -11,16 +11,16 @@ import {
 } from '@/lib/queries/pendenciasEstoque';
 
 const INPUT =
-  'border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
+  'border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent';
 const BTN_PRIMARY =
   'btn btn-primario';
 const BTN_SECONDARY =
   'btn btn-secundario';
 
 const SELO: Record<PendenciaEstoque['tipo'], { rotulo: string; cor: string }> = {
-  estoque_insuficiente: { rotulo: 'Estoque insuficiente', cor: 'bg-[#FADBD6] text-[#B3261E]' },
-  sem_ficha: { rotulo: 'Sem ficha técnica', cor: 'bg-[#FFF0C7] text-[#7A5A0A]' },
-  unidade_diferente: { rotulo: 'Unidade diferente', cor: 'bg-[#E6E4F7] text-[#3F3A8C]' },
+  estoque_insuficiente: { rotulo: 'Estoque insuficiente', cor: 'bg-danger-soft text-danger' },
+  sem_ficha: { rotulo: 'Sem ficha técnica', cor: 'bg-warning-soft text-warning' },
+  unidade_diferente: { rotulo: 'Unidade diferente', cor: 'bg-violet-soft text-violet' },
 };
 
 const qtd = (v: number | null) => Number(v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
@@ -124,24 +124,24 @@ export default function ConferenciasPendentes({
   if (pendencias.length === 0) return null;
 
   return (
-    <div className="bg-white border border-[#E8D28A] rounded-xl p-4 mb-6">
+    <div className="bg-surface border border-warning-line rounded-xl p-4 mb-6">
       <div className="flex items-center gap-2 mb-1">
-        <h2 className="text-base font-semibold text-[#16252B]">Conferências pendentes</h2>
-        <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#FFF0C7] text-[#7A5A0A]">
+        <h2 className="text-base font-semibold text-ink">Conferências pendentes</h2>
+        <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-warning-soft text-warning">
           {pendencias.length}
         </span>
       </div>
-      <p className="text-sm text-[#5B6B73] mb-3">
+      <p className="text-sm text-ink-muted mb-3">
         Itens enviados sem estoque no sistema ou preparados sem baixa completa.
       </p>
 
       {erro && (
-        <div role="alert" className="mb-3 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+        <div role="alert" className="mb-3 text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
           {erro}
         </div>
       )}
 
-      <ul className="divide-y divide-[#E6ECEF] border-t border-[#E6ECEF]">
+      <ul className="divide-y divide-line-soft border-t border-line-soft">
         {pendencias.map((p) => (
           <li key={p.id} className="py-3">
             <div className="flex flex-wrap items-start gap-3">
@@ -150,9 +150,9 @@ export default function ConferenciasPendentes({
                   <span className={'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + SELO[p.tipo].cor}>
                     {SELO[p.tipo].rotulo}
                   </span>
-                  <span className="text-xs text-[#8FA0A8]">{dataHora(p.criado_em)}</span>
+                  <span className="text-xs text-ink-subtle">{dataHora(p.criado_em)}</span>
                 </div>
-                <p className="text-sm text-[#16252B]">{descricao(p)}</p>
+                <p className="text-sm text-ink">{descricao(p)}</p>
               </div>
               <button onClick={() => abrir(p)} className={BTN_SECONDARY}>
                 {aberta === p.id ? 'Cancelar' : 'Conferir'}
@@ -160,10 +160,10 @@ export default function ConferenciasPendentes({
             </div>
 
             {aberta === p.id && (
-              <div className="mt-3 bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3 space-y-3">
+              <div className="mt-3 bg-surface-hover border border-line rounded-lg p-3 space-y-3">
                 {p.tipo === 'estoque_insuficiente' ? (
                   <div>
-                    <label className="block text-sm font-medium text-[#2B3C44] mb-1">
+                    <label className="block text-sm font-medium text-ink-soft mb-1">
                       Quanto tem de {p.ingrediente_nome} agora? ({p.unidade})
                     </label>
                     <input
@@ -175,7 +175,7 @@ export default function ConferenciasPendentes({
                       placeholder="Conte e digite a quantidade"
                       className={INPUT + ' w-full sm:w-64'}
                     />
-                    <p className="text-xs text-[#8FA0A8] mt-1">
+                    <p className="text-xs text-ink-subtle mt-1">
                       O estoque será corrigido para esse valor. Deixe em branco para só confirmar.
                     </p>
                   </div>
@@ -183,7 +183,7 @@ export default function ConferenciasPendentes({
                   p.produto_id && (
                     <Link
                       href={'/cadastros/fichas-tecnicas/' + p.produto_id}
-                      className="inline-block text-sm font-medium text-[#0E6B7E] hover:underline"
+                      className="inline-block text-sm font-medium text-accent hover:underline"
                     >
                       {p.tipo === 'sem_ficha' ? 'Cadastrar ficha técnica de ' : 'Revisar ficha técnica de '}
                       {p.produto_nome} →
@@ -192,7 +192,7 @@ export default function ConferenciasPendentes({
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-[#2B3C44] mb-1">
+                  <label className="block text-sm font-medium text-ink-soft mb-1">
                     Observação {p.tipo === 'estoque_insuficiente' ? '(opcional)' : ''}
                   </label>
                   <input

@@ -289,12 +289,12 @@ export async function listarHistoricoPrecos(supabase: SupabaseClient, unidadeId:
 
 export function getStatusLabel(status: string) {
   const map: Record<string, { label: string; cor: string; emoji: string }> = {
-    aguardando_cotacao: { label: "Aguardando cotação", cor: "text-[#5B6B73] bg-[#E3E9EC]", emoji: "📝" },
-    cotado: { label: "Cotado", cor: "text-[#0B4F5E] bg-[#DCEEF2]", emoji: "💰" },
-    aprovado: { label: "Aprovado", cor: "text-[#3F3A8C] bg-[#E6E4F7]", emoji: "✅" },
-    pedido_enviado: { label: "Pedido enviado", cor: "text-[#7A5A0A] bg-[#FFF0C7]", emoji: "📤" },
-    recebido: { label: "Recebido", cor: "text-[#1E6B3F] bg-[#D9F0E3]", emoji: "📦" },
-    cancelado: { label: "Cancelado", cor: "text-[#B3261E] bg-[#FADBD6]", emoji: "❌" },
+    aguardando_cotacao: { label: "Aguardando cotação", cor: "text-ink-muted bg-line", emoji: "📝" },
+    cotado: { label: "Cotado", cor: "text-accent-ink bg-accent-soft", emoji: "💰" },
+    aprovado: { label: "Aprovado", cor: "text-violet bg-violet-soft", emoji: "✅" },
+    pedido_enviado: { label: "Pedido enviado", cor: "text-warning bg-warning-soft", emoji: "📤" },
+    recebido: { label: "Recebido", cor: "text-success bg-success-soft", emoji: "📦" },
+    cancelado: { label: "Cancelado", cor: "text-danger bg-danger-soft", emoji: "❌" },
   };
   return map[status] || map.aguardando_cotacao;
 }

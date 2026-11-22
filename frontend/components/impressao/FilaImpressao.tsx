@@ -81,7 +81,7 @@ export default function FilaImpressao({ supabase, unidadeId, impressoras, onMudo
   return (
     <div className="space-y-4">
       {semEstacao.length > 0 && (
-        <div className="text-sm text-[#7A5A0A] bg-[#FFF0C7] rounded-lg px-3 py-2">
+        <div className="text-sm text-warning bg-warning-soft rounded-lg px-3 py-2">
           Sem estação ligada agora: {semEstacao.map((i) => i.nome).join(', ')}. Os tickets ficam guardados na fila
           e saem assim que uma estação ligar.
         </div>
@@ -89,7 +89,7 @@ export default function FilaImpressao({ supabase, unidadeId, impressoras, onMudo
 
       <div className="flex flex-wrap items-center gap-3">
         <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar por mesa, documento ou quem pediu..." className="flex-1 min-w-[14rem]" />
-        <label className="flex items-center gap-2 text-sm text-[#2B3C44]">
+        <label className="flex items-center gap-2 text-sm text-ink-soft">
           <input type="checkbox" checked={apenasProblemas} onChange={(e) => setApenasProblemas(e.target.checked)} />
           Só os com problema
         </label>
@@ -99,44 +99,44 @@ export default function FilaImpressao({ supabase, unidadeId, impressoras, onMudo
       </div>
 
       {erro && (
-        <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+        <div role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
           {erro}
         </div>
       )}
 
       <div className={CARTAO + ' overflow-x-auto'}>
         {carregando ? (
-          <p className="text-center py-10 text-sm text-[#5B6B73]">Carregando...</p>
+          <p className="text-center py-10 text-sm text-ink-muted">Carregando...</p>
         ) : fila.length > 0 && filaFiltrada.length === 0 ? (
-          <p className="text-center py-10 text-sm text-[#5B6B73]">Nada encontrado para “{busca}”.</p>
+          <p className="text-center py-10 text-sm text-ink-muted">Nada encontrado para “{busca}”.</p>
         ) : fila.length === 0 ? (
-          <p className="text-center py-10 text-sm text-[#5B6B73]">
+          <p className="text-center py-10 text-sm text-ink-muted">
             {apenasProblemas ? 'Nenhum problema hoje.' : 'Nada impresso hoje ainda.'}
           </p>
         ) : (
           <table className="w-full">
-            <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
+            <thead className="bg-surface-hover border-b border-line">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Hora</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Documento</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Impressora</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Situação</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Ações</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Hora</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Documento</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Impressora</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Situação</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-ink-muted">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E6ECEF]">
+            <tbody className="divide-y divide-line-soft">
               {filaFiltrada.map((i) => (
-                <tr key={i.id} className="hover:bg-[#F8FAFB] align-top">
-                  <td className="px-4 py-3 text-sm text-[#2B3C44] whitespace-nowrap">{hora(i.criado_em)}</td>
+                <tr key={i.id} className="hover:bg-surface-hover align-top">
+                  <td className="px-4 py-3 text-sm text-ink-soft whitespace-nowrap">{hora(i.criado_em)}</td>
                   <td className="px-4 py-3 text-sm">
-                    <p className="font-medium text-[#16252B]">{i.titulo}</p>
-                    <p className="text-xs text-[#5B6B73]">
+                    <p className="font-medium text-ink">{i.titulo}</p>
+                    <p className="text-xs text-ink-muted">
                       {NOME_DOCUMENTO[i.documento]}
                       {i.via > 1 && ' · ' + i.via + 'ª via'}
                       {i.solicitado_por && ' · ' + i.solicitado_por}
                     </p>
                   </td>
-                  <td className="px-4 py-3 text-sm text-[#2B3C44]">{nomeImpressora(i.impressora_id)}</td>
+                  <td className="px-4 py-3 text-sm text-ink-soft">{nomeImpressora(i.impressora_id)}</td>
                   <td className="px-4 py-3 text-sm">
                     <span
                       className={
@@ -146,11 +146,11 @@ export default function FilaImpressao({ supabase, unidadeId, impressoras, onMudo
                     >
                       {parada(i) ? 'Parada na fila' : ROTULO_STATUS[i.status].rotulo}
                     </span>
-                    {i.erro && <p className="text-xs text-[#B3261E] mt-1">{i.erro}</p>}
+                    {i.erro && <p className="text-xs text-danger mt-1">{i.erro}</p>}
                     {i.status === 'sem_impressora' && (
-                      <p className="text-xs text-[#B3261E] mt-1">Nenhuma impressora para este setor/terminal.</p>
+                      <p className="text-xs text-danger mt-1">Nenhuma impressora para este setor/terminal.</p>
                     )}
-                    {i.tentativas > 1 && <p className="text-xs text-[#8FA0A8] mt-1">{i.tentativas} tentativas</p>}
+                    {i.tentativas > 1 && <p className="text-xs text-ink-subtle mt-1">{i.tentativas} tentativas</p>}
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap space-x-3">
                     <button onClick={() => setPrevia(i)} className={BTN_LINK}>
@@ -173,17 +173,17 @@ export default function FilaImpressao({ supabase, unidadeId, impressoras, onMudo
       </div>
 
       {previa && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setPrevia(null)}>
-          <div className="bg-white rounded-xl shadow-xl p-4 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4" onClick={() => setPrevia(null)}>
+          <div className="ui-modal-panel p-4 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-bold text-[#16252B]">{previa.titulo}</h2>
-              <button onClick={() => setPrevia(null)} className="text-xl text-[#8FA0A8] hover:text-[#16252B]" aria-label="Fechar">
+              <h2 className="text-base font-bold text-ink">{previa.titulo}</h2>
+              <button onClick={() => setPrevia(null)} className="text-xl text-ink-subtle hover:text-ink" aria-label="Fechar">
                 ✕
               </button>
             </div>
             <iframe
               title="Prévia do ticket"
-              className="w-full h-[60vh] border border-[#DCE3E7] rounded-lg bg-white"
+              className="w-full h-[60vh] border border-line rounded-lg bg-surface"
               srcDoc={htmlDoTicket(previa.documento, previa.conteudo, {
                 largura_mm: impressoraPrevia?.largura_mm || 80,
                 copias: 1,

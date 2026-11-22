@@ -160,8 +160,8 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
     return (
       <li key={documento + (setorId || '')} className="px-3 py-2.5 flex flex-wrap items-center gap-3">
         <div className="flex-1 min-w-[10rem]">
-          <p className="text-sm font-medium text-[#16252B]">{rotulo}</p>
-          {ajuda && <p className="text-xs text-[#8FA0A8]">{ajuda}</p>}
+          <p className="text-sm font-medium text-ink">{rotulo}</p>
+          {ajuda && <p className="text-xs text-ink-subtle">{ajuda}</p>}
         </div>
         <select
           value={valor}
@@ -209,17 +209,17 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
   return (
     <div className="space-y-8">
       {erro && (
-        <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+        <div role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
           {erro}
         </div>
       )}
-      {aviso && <div className="text-sm text-[#1E6B3F] bg-[#D9F0E3] rounded-lg px-3 py-2">{aviso}</div>}
+      {aviso && <div className="text-sm text-success bg-success-soft rounded-lg px-3 py-2">{aviso}</div>}
 
       {/* ---------------- ESTE COMPUTADOR ---------------- */}
       <section>
         <h2 className={TITULO_SECAO}>Este computador (terminal)</h2>
         <div className={CARTAO + ' p-4 space-y-3'}>
-          <p className="text-sm text-[#2B3C44]">
+          <p className="text-sm text-ink-soft">
             {esteTerminal ? (
               <>
                 Este computador é o terminal <b>{esteTerminal.nome}</b>. O nome sai nos tickets e permite ter impressora
@@ -261,14 +261,14 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
           {terminais.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-1">
               {terminais.map((t) => (
-                <span key={t.id} className="inline-flex items-center gap-2 text-xs rounded-full border border-[#DCE3E7] px-3 py-1">
+                <span key={t.id} className="inline-flex items-center gap-2 text-xs rounded-full border border-line px-3 py-1">
                   {t.nome}
                   <button
                     onClick={() => {
                       const novo = window.prompt('Novo nome do terminal:', t.nome);
                       if (novo && novo.trim()) acao(() => renomearTerminal(supabase, t.id, novo.trim()));
                     }}
-                    className="text-[#0E6B7E] hover:underline"
+                    className="text-accent hover:underline"
                   >
                     renomear
                   </button>
@@ -277,7 +277,7 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
                       window.confirm('Excluir o terminal ' + t.nome + '? As rotas dele também somem.') &&
                       acao(() => excluirTerminal(supabase, t.id))
                     }
-                    className="text-[#8FA0A8] hover:text-[#B3261E]"
+                    className="text-ink-subtle hover:text-danger"
                     aria-label={'Excluir ' + t.nome}
                   >
                     ✕
@@ -298,29 +298,29 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
           </button>
         </div>
         {impressoras.length === 0 ? (
-          <div className={CARTAO + ' p-6 text-center text-sm text-[#5B6B73]'}>
+          <div className={CARTAO + ' p-6 text-center text-sm text-ink-muted'}>
             Nenhuma impressora. Cadastre uma para cada local (ex: Cozinha, Bar, Caixa).
           </div>
         ) : (
-          <ul className={CARTAO + ' divide-y divide-[#E6ECEF]'}>
+          <ul className={CARTAO + ' divide-y divide-line-soft'}>
             {impressoras.map((i) => (
               <li key={i.id} className="px-4 py-3 flex flex-wrap items-center gap-3">
                 <div className="flex-1 min-w-[12rem]">
-                  <p className={'text-sm font-medium ' + (i.ativo ? 'text-[#16252B]' : 'text-[#8FA0A8] line-through')}>
+                  <p className={'text-sm font-medium ' + (i.ativo ? 'text-ink' : 'text-ink-subtle line-through')}>
                     {i.nome}
                   </p>
-                  <p className="text-xs text-[#5B6B73]">
+                  <p className="text-xs text-ink-muted">
                     {i.largura_mm} mm · {CONEXOES[i.conexao]}
                     {i.endereco && ' · ' + i.endereco} · {i.copias} {i.copias === 1 ? 'via' : 'vias'} · fonte {i.fonte}
                   </p>
                 </div>
-                <span className={'text-xs font-medium ' + (impressoraOnline(i) ? 'text-[#1E6B3F]' : 'text-[#8FA0A8]')}>
+                <span className={'text-xs font-medium ' + (impressoraOnline(i) ? 'text-success' : 'text-ink-subtle')}>
                   {impressoraOnline(i) ? '● online' : '○ sem estação'}
                 </span>
                 <button onClick={() => setForm({ ...i })} className={BTN_LINK}>
                   Editar
                 </button>
-                <button onClick={() => apagarImpressora(i)} className="text-xs text-[#8FA0A8] hover:text-[#B3261E]">
+                <button onClick={() => apagarImpressora(i)} className="text-xs text-ink-subtle hover:text-danger">
                   Excluir
                 </button>
               </li>
@@ -333,13 +333,13 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
       <section>
         <h2 className={TITULO_SECAO}>Setores de produção</h2>
         <div className={CARTAO + ' p-4 space-y-3'}>
-          <ul className="divide-y divide-[#E6ECEF] border border-[#E6ECEF] rounded-lg">
+          <ul className="divide-y divide-line-soft border border-line-soft rounded-lg">
             {setores.map((s) => (
               <li key={s.id} className="px-3 py-2.5 flex flex-wrap items-center gap-3">
-                <span className={'flex-1 text-sm font-medium ' + (s.ativo ? 'text-[#16252B]' : 'text-[#8FA0A8] line-through')}>
+                <span className={'flex-1 text-sm font-medium ' + (s.ativo ? 'text-ink' : 'text-ink-subtle line-through')}>
                   {s.nome}
                   {s.padrao && (
-                    <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-semibold bg-[#DCEEF2] text-[#0B4F5E]">
+                    <span className="ml-2 rounded-full px-2 py-0.5 text-xs font-semibold bg-accent-soft text-accent-ink">
                       padrão
                     </span>
                   )}
@@ -352,7 +352,7 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
                 {!s.padrao && (
                   <button
                     onClick={() => acao(() => atualizarSetor(supabase, s.id, { ativo: !s.ativo }))}
-                    className="text-xs text-[#8FA0A8] hover:text-[#16252B]"
+                    className="text-xs text-ink-subtle hover:text-ink"
                   >
                     {s.ativo ? 'Desativar' : 'Ativar'}
                   </button>
@@ -360,7 +360,7 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
               </li>
             ))}
           </ul>
-          <p className="text-xs text-[#8FA0A8]">
+          <p className="text-xs text-ink-subtle">
             Produto sem setor vai para o setor padrão. Setor desativado manda os itens para o padrão.
           </p>
           <form
@@ -393,7 +393,7 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
         <h2 className={TITULO_SECAO}>Qual impressora imprime o quê</h2>
         <div className={CARTAO + ' p-4 space-y-3'}>
           <div className="flex flex-wrap items-center gap-2">
-            <label className="text-sm text-[#2B3C44]">Regras para</label>
+            <label className="text-sm text-ink-soft">Regras para</label>
             <select value={escopo} onChange={(e) => setEscopo(e.target.value)} className={INPUT + ' py-1.5'}>
               <option value="">Todos os terminais</option>
               {terminais.map((t) => (
@@ -404,11 +404,11 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
             </select>
           </div>
           {escopo && (
-            <p className="text-xs text-[#8FA0A8]">
+            <p className="text-xs text-ink-subtle">
               Exceção para este terminal: o que não for escolhido aqui segue a regra de todos os terminais.
             </p>
           )}
-          <ul className="divide-y divide-[#E6ECEF] border border-[#E6ECEF] rounded-lg">
+          <ul className="divide-y divide-line-soft border border-line-soft rounded-lg">
             {setores
               .filter((s) => s.ativo)
               .map((s) => linhaRota('producao', s.id, 'Produção · ' + s.nome, 'Tickets, acréscimos, alterações e cancelamentos'))}
@@ -429,14 +429,14 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
             className={INPUT + ' w-full'}
           />
           {produtosFiltrados.length === 0 ? (
-            <p className="text-sm text-[#5B6B73] text-center py-4">Nenhum produto.</p>
+            <p className="text-sm text-ink-muted text-center py-4">Nenhum produto.</p>
           ) : (
-            <ul className="divide-y divide-[#E6ECEF] border border-[#E6ECEF] rounded-lg max-h-[28rem] overflow-y-auto">
+            <ul className="divide-y divide-line-soft border border-line-soft rounded-lg max-h-[28rem] overflow-y-auto">
               {produtosFiltrados.map((p) => (
                 <li key={p.id} className="px-3 py-2 flex flex-wrap items-center gap-3">
-                  <span className="flex-1 min-w-[10rem] text-sm text-[#16252B]">
+                  <span className="flex-1 min-w-[10rem] text-sm text-ink">
                     {p.nome}
-                    <span className="text-xs text-[#8FA0A8]"> · {p.tipo_produto === 'acabado' ? 'Produto acabado' : p.tipo_produto === 'bebida' ? 'Bebida' : 'Prato'}</span>
+                    <span className="text-xs text-ink-subtle"> · {p.tipo_produto === 'acabado' ? 'Produto acabado' : p.tipo_produto === 'bebida' ? 'Bebida' : 'Prato'}</span>
                   </span>
                   <select
                     value={p.setor_id || ''}
@@ -461,9 +461,9 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
 
       {/* ---------------- FORMULÁRIO DA IMPRESSORA ---------------- */}
       {form && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <form onSubmit={salvarForm} className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-bold text-[#16252B]">{form.id ? 'Editar impressora' : 'Nova impressora'}</h2>
+        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
+          <form onSubmit={salvarForm} className="ui-modal-panel p-6 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-bold text-ink">{form.id ? 'Editar impressora' : 'Nova impressora'}</h2>
             <div>
               <label className={LABEL}>Nome</label>
               <input
@@ -548,13 +548,13 @@ export default function ConfigImpressoras({ supabase, unidadeId, impressoras, on
                   placeholder={form.conexao === 'escpos_rede' ? '192.168.0.50:9100' : 'USB001'}
                   className={INPUT + ' w-full'}
                 />
-                <p className="text-xs text-[#8FA0A8] mt-1">
+                <p className="text-xs text-ink-subtle mt-1">
                   Fica guardado para o agente ESC/POS. Enquanto ele não estiver instalado, os tickets desta impressora
                   esperam na fila.
                 </p>
               </div>
             )}
-            <label className="flex items-center gap-2 text-sm text-[#2B3C44]">
+            <label className="flex items-center gap-2 text-sm text-ink-soft">
               <input
                 type="checkbox"
                 checked={form.cortar_papel}

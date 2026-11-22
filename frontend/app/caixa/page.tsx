@@ -25,7 +25,7 @@ import { listarItens, type ItemPdv } from '@/lib/queries/salao';
 import { contarPendenciasAbertas } from '@/lib/queries/pendenciasEstoque';
 
 const INPUT =
-  'border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
+  'border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent';
 const BTN_PRIMARY =
   'btn btn-primario';
 const BTN_SECONDARY =
@@ -59,17 +59,17 @@ const ROTULO_ORIGEM: Record<Venda['origem'], string> = {
 };
 
 const COR_ORIGEM: Record<Venda['origem'], string> = {
-  mesa: 'bg-[#DCEEF2] text-[#0B4F5E]',
-  balcao: 'bg-[#E3E9EC] text-[#2B3C44]',
-  delivery: 'bg-[#E6E4F7] text-[#3F3A8C]',
+  mesa: 'bg-accent-soft text-accent-ink',
+  balcao: 'bg-line text-ink-soft',
+  delivery: 'bg-violet-soft text-violet',
 };
 
 function Indicador({ rotulo, valor, detalhe }: { rotulo: string; valor: string; detalhe?: string }) {
   return (
-    <div className="bg-white border border-[#DCE3E7] rounded-xl p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">{rotulo}</p>
-      <p className="text-2xl font-bold text-[#16252B] mt-1">{valor}</p>
-      {detalhe && <p className="text-xs text-[#8FA0A8] mt-0.5">{detalhe}</p>}
+    <div className="bg-surface border border-line rounded-xl p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{rotulo}</p>
+      <p className="text-2xl font-bold text-ink mt-1">{valor}</p>
+      {detalhe && <p className="text-xs text-ink-subtle mt-0.5">{detalhe}</p>}
     </div>
   );
 }
@@ -262,19 +262,19 @@ export default function CaixaPage() {
   const ehHoje = data === hojeLocal();
 
   if (loading) {
-    return <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>;
+    return <p className="text-center py-12 text-ink-muted">Carregando...</p>;
   }
 
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#16252B]">Caixa</h1>
-          <p className="text-sm text-[#5B6B73]">Abertura, fechamento e vendas do dia</p>
+          <h1 className="text-2xl font-bold text-ink">Caixa</h1>
+          <p className="text-sm text-ink-muted">Abertura, fechamento e vendas do dia</p>
         </div>
 
         {erro && (
-          <div role="alert" className="mb-4 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+          <div role="alert" className="mb-4 text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
             {erro}
           </div>
         )}
@@ -283,22 +283,22 @@ export default function CaixaPage() {
           {/* ---------------- CAIXA ---------------- */}
           <div className="space-y-4 lg:sticky lg:top-6">
             {!caixa ? (
-              <form onSubmit={handleAbrir} className="bg-white border border-[#DCE3E7] rounded-xl p-4 space-y-3">
+              <form onSubmit={handleAbrir} className="bg-surface border border-line rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-[#16252B]">Caixa</h2>
-                  <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#E3E9EC] text-[#5B6B73]">
+                  <h2 className="text-base font-semibold text-ink">Caixa</h2>
+                  <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-line text-ink-muted">
                     Fechado
                   </span>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#2B3C44] mb-1">Troco inicial (R$)</label>
+                  <label className="block text-sm font-medium text-ink-soft mb-1">Troco inicial (R$)</label>
                   <CampoMoeda
                     value={trocoInicial}
                     onChange={setTrocoInicial}
                     placeholder="0,00"
                     className={INPUT + ' w-full'}
                   />
-                  <p className="text-xs text-[#8FA0A8] mt-1">Dinheiro que já está na gaveta ao abrir</p>
+                  <p className="text-xs text-ink-subtle mt-1">Dinheiro que já está na gaveta ao abrir</p>
                 </div>
                 <button type="submit" disabled={ocupado} className={BTN_PRIMARY + ' w-full'}>
                   Abrir caixa
@@ -306,49 +306,49 @@ export default function CaixaPage() {
               </form>
             ) : (
               <>
-                <div className="bg-white border border-[#DCE3E7] rounded-xl p-4">
+                <div className="bg-surface border border-line rounded-xl p-4">
                   <div className="flex items-center justify-between mb-1">
-                    <h2 className="text-base font-semibold text-[#16252B]">Caixa</h2>
-                    <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#D9F0E3] text-[#1E6B3F]">
+                    <h2 className="text-base font-semibold text-ink">Caixa</h2>
+                    <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-success-soft text-success">
                       Aberto
                     </span>
                   </div>
-                  <p className="text-sm text-[#5B6B73] mb-4">Aberto em {dataHora(caixa.aberto_em)}</p>
+                  <p className="text-sm text-ink-muted mb-4">Aberto em {dataHora(caixa.aberto_em)}</p>
 
                   <dl className="text-sm space-y-1.5">
                     <div className="flex justify-between">
-                      <dt className="text-[#5B6B73]">Vendido no caixa</dt>
-                      <dd className="font-semibold text-[#16252B]">{moeda(resumoCaixa.total)}</dd>
+                      <dt className="text-ink-muted">Vendido no caixa</dt>
+                      <dd className="font-semibold text-ink">{moeda(resumoCaixa.total)}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[#5B6B73]">Pedidos</dt>
-                      <dd className="text-[#16252B]">{resumoCaixa.quantidade}</dd>
+                      <dt className="text-ink-muted">Pedidos</dt>
+                      <dd className="text-ink">{resumoCaixa.quantidade}</dd>
                     </div>
                   </dl>
 
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-[#5B6B73] mt-5 mb-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted mt-5 mb-2">
                     Dinheiro na gaveta
                   </h3>
                   <dl className="text-sm space-y-1.5">
                     <div className="flex justify-between">
-                      <dt className="text-[#5B6B73]">Troco inicial</dt>
-                      <dd className="text-[#16252B]">{moeda(caixa.saldo_inicial)}</dd>
+                      <dt className="text-ink-muted">Troco inicial</dt>
+                      <dd className="text-ink">{moeda(caixa.saldo_inicial)}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[#5B6B73]">+ Vendas em dinheiro</dt>
-                      <dd className="text-[#16252B]">{moeda(dinheiro!.vendasDinheiro)}</dd>
+                      <dt className="text-ink-muted">+ Vendas em dinheiro</dt>
+                      <dd className="text-ink">{moeda(dinheiro!.vendasDinheiro)}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[#5B6B73]">+ Suprimentos</dt>
-                      <dd className="text-[#16252B]">{moeda(dinheiro!.suprimentos)}</dd>
+                      <dt className="text-ink-muted">+ Suprimentos</dt>
+                      <dd className="text-ink">{moeda(dinheiro!.suprimentos)}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-[#5B6B73]">− Sangrias</dt>
-                      <dd className="text-[#16252B]">{moeda(dinheiro!.sangrias)}</dd>
+                      <dt className="text-ink-muted">− Sangrias</dt>
+                      <dd className="text-ink">{moeda(dinheiro!.sangrias)}</dd>
                     </div>
-                    <div className="flex justify-between border-t border-[#DCE3E7] pt-2 mt-2">
-                      <dt className="font-medium text-[#16252B]">Deve ter na gaveta</dt>
-                      <dd className="text-lg font-bold text-[#0E6B7E]">{moeda(dinheiro!.esperado)}</dd>
+                    <div className="flex justify-between border-t border-line pt-2 mt-2">
+                      <dt className="font-medium text-ink">Deve ter na gaveta</dt>
+                      <dd className="text-lg font-bold text-accent">{moeda(dinheiro!.esperado)}</dd>
                     </div>
                   </dl>
 
@@ -357,8 +357,8 @@ export default function CaixaPage() {
                   </button>
                 </div>
 
-                <form onSubmit={handleMovimentacao} className="bg-white border border-[#DCE3E7] rounded-xl p-4 space-y-3">
-                  <h2 className="text-base font-semibold text-[#16252B]">Sangria e suprimento</h2>
+                <form onSubmit={handleMovimentacao} className="bg-surface border border-line rounded-xl p-4 space-y-3">
+                  <h2 className="text-base font-semibold text-ink">Sangria e suprimento</h2>
                   <div className="flex gap-2">
                     {(['sangria', 'suprimento'] as const).map((t) => (
                       <button
@@ -368,8 +368,8 @@ export default function CaixaPage() {
                         className={
                           'flex-1 text-sm px-3 py-2 rounded-lg border font-medium transition ' +
                           (movTipo === t
-                            ? 'bg-[#0E6B7E] text-white border-[#0E6B7E]'
-                            : 'bg-white text-[#2B3C44] border-[#DCE3E7] hover:bg-[#F1F5F7]')
+                            ? 'bg-accent text-accent-contrast border-accent'
+                            : 'bg-surface text-ink-soft border-line hover:bg-surface-hover')
                         }
                       >
                         {t === 'sangria' ? 'Sangria (retirada)' : 'Suprimento (entrada)'}
@@ -396,19 +396,19 @@ export default function CaixaPage() {
                   </button>
 
                   {movs.length > 0 && (
-                    <ul className="divide-y divide-[#E6ECEF] border-t border-[#E6ECEF]">
+                    <ul className="divide-y divide-line-soft border-t border-line-soft">
                       {movs.map((m) => (
                         <li key={m.id} className="py-2 flex items-center justify-between gap-3 text-sm">
                           <div className="min-w-0">
-                            <p className="text-[#16252B]">
+                            <p className="text-ink">
                               {m.tipo === 'sangria' ? 'Sangria' : 'Suprimento'}
                               {m.descricao ? ' · ' + m.descricao : ''}
                             </p>
-                            <p className="text-xs text-[#8FA0A8]">{hora(m.criado_em)}</p>
+                            <p className="text-xs text-ink-subtle">{hora(m.criado_em)}</p>
                           </div>
                           <span
                             className={
-                              'font-semibold shrink-0 ' + (m.tipo === 'sangria' ? 'text-[#B3261E]' : 'text-[#1E6B3F]')
+                              'font-semibold shrink-0 ' + (m.tipo === 'sangria' ? 'text-danger' : 'text-success')
                             }
                           >
                             {m.tipo === 'sangria' ? '− ' : '+ '}
@@ -423,26 +423,26 @@ export default function CaixaPage() {
             )}
 
             {fechados.length > 0 && (
-              <div className="bg-white border border-[#DCE3E7] rounded-xl p-4">
-                <h2 className="text-base font-semibold text-[#16252B] mb-2">Últimos fechamentos</h2>
-                <ul className="divide-y divide-[#E6ECEF]">
+              <div className="bg-surface border border-line rounded-xl p-4">
+                <h2 className="text-base font-semibold text-ink mb-2">Últimos fechamentos</h2>
+                <ul className="divide-y divide-line-soft">
                   {fechados.map((f) => {
                     const dif = Number(f.valor_contado ?? 0) - Number(f.valor_esperado ?? 0);
                     return (
                       <li key={f.id} className="py-2 text-sm">
                         <div className="flex justify-between gap-3">
-                          <span className="text-[#16252B]">{dataHora(f.fechado_em!)}</span>
-                          <span className="font-semibold text-[#16252B]">{moeda(Number(f.valor_contado ?? 0))}</span>
+                          <span className="text-ink">{dataHora(f.fechado_em!)}</span>
+                          <span className="font-semibold text-ink">{moeda(Number(f.valor_contado ?? 0))}</span>
                         </div>
                         <div className="flex justify-between gap-3 text-xs">
-                          <span className="text-[#8FA0A8]">Aberto {dataHora(f.aberto_em)}</span>
+                          <span className="text-ink-subtle">Aberto {dataHora(f.aberto_em)}</span>
                           <span
                             className={
                               Math.abs(dif) < 0.005
-                                ? 'text-[#1E6B3F]'
+                                ? 'text-success'
                                 : dif > 0
-                                ? 'text-[#8A5F00]'
-                                : 'text-[#B3261E]'
+                                ? 'text-warning'
+                                : 'text-danger'
                             }
                           >
                             {Math.abs(dif) < 0.005
@@ -462,8 +462,8 @@ export default function CaixaPage() {
           <div className="space-y-4">
             <div className="flex flex-wrap items-end gap-3">
               <div className="flex-1 min-w-40">
-                <h2 className="text-lg font-bold text-[#16252B]">Vendas {ehHoje ? 'de hoje' : 'do dia'}</h2>
-                <p className="text-xs text-[#5B6B73]">Pedidos do PDV fechados e delivery entregue</p>
+                <h2 className="text-lg font-bold text-ink">Vendas {ehHoje ? 'de hoje' : 'do dia'}</h2>
+                <p className="text-xs text-ink-muted">Pedidos do PDV fechados e delivery entregue</p>
               </div>
               <input
                 type="date"
@@ -495,34 +495,34 @@ export default function CaixaPage() {
               <Indicador rotulo="Ticket médio" valor={moeda(resumoDia.ticketMedio)} detalhe="Valor médio por pedido" />
             </div>
 
-            <div className="bg-white border border-[#DCE3E7] rounded-xl p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-[#5B6B73] mb-3">
+            <div className="bg-surface border border-line rounded-xl p-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">
                 Por forma de pagamento
               </h3>
               {resumoDia.porForma.length === 0 ? (
-                <p className="text-sm text-[#5B6B73] py-4 text-center">Nenhuma venda neste dia.</p>
+                <p className="text-sm text-ink-muted py-4 text-center">Nenhuma venda neste dia.</p>
               ) : (
                 <ul className="space-y-3">
                   {resumoDia.porForma.map((f) => (
                     <li key={f.forma || 'nao_informado'}>
                       <div className="flex justify-between gap-3 text-sm mb-1">
-                        <span className="text-[#16252B]">
+                        <span className="text-ink">
                           {rotuloForma(f.forma)}
-                          <span className="text-[#8FA0A8]">
+                          <span className="text-ink-subtle">
                             {' · '}
                             {f.quantidade} {f.quantidade === 1 ? 'pedido' : 'pedidos'}
                           </span>
                         </span>
-                        <span className="font-semibold text-[#16252B]">
+                        <span className="font-semibold text-ink">
                           {moeda(f.valor)}
-                          <span className="font-normal text-[#5B6B73]">
+                          <span className="font-normal text-ink-muted">
                             {' '}({resumoDia.total > 0 ? Math.round((f.valor / resumoDia.total) * 100) : 0}%)
                           </span>
                         </span>
                       </div>
-                      <div className="h-2 rounded-full bg-[#E6ECEF] overflow-hidden">
+                      <div className="h-2 rounded-full bg-line-soft overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-[#0E6B7E]"
+                          className="h-full rounded-full bg-accent"
                           style={{ width: (f.valor / maiorForma) * 100 + '%' }}
                         />
                       </div>
@@ -532,8 +532,8 @@ export default function CaixaPage() {
               )}
             </div>
 
-            <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-[#5B6B73] px-4 pt-4 pb-3">
+            <div className="bg-surface border border-line rounded-xl overflow-x-auto">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-muted px-4 pt-4 pb-3">
                 Histórico de pedidos
               </h3>
               {vendasDia.length > 0 && (
@@ -542,23 +542,23 @@ export default function CaixaPage() {
                 </div>
               )}
               {carregandoDia ? (
-                <p className="text-sm text-[#5B6B73] py-8 text-center">Carregando...</p>
+                <p className="text-sm text-ink-muted py-8 text-center">Carregando...</p>
               ) : vendasDia.length === 0 ? (
-                <p className="text-sm text-[#5B6B73] py-8 text-center">Nenhum pedido fechado neste dia.</p>
+                <p className="text-sm text-ink-muted py-8 text-center">Nenhum pedido fechado neste dia.</p>
               ) : (
                 <table className="w-full min-w-[520px]">
-                  <thead className="bg-[#F4F7F8] border-y border-[#DCE3E7]">
+                  <thead className="bg-surface-hover border-y border-line">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Hora</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Pedido</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Pagamento</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Valor</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Hora</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Pedido</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Pagamento</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-ink-muted">Valor</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E6ECEF]">
+                  <tbody className="divide-y divide-line-soft">
                     {vendasFiltradas.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center text-sm text-[#5B6B73]">
+                        <td colSpan={4} className="px-4 py-6 text-center text-sm text-ink-muted">
                           Nada encontrado para “{buscaVenda}”.
                         </td>
                       </tr>
@@ -567,34 +567,34 @@ export default function CaixaPage() {
                       <Fragment key={v.id}>
                         <tr
                           onClick={() => alternarVenda(v)}
-                          className="hover:bg-[#F8FAFB] cursor-pointer"
+                          className="hover:bg-surface-hover cursor-pointer"
                         >
-                          <td className="px-4 py-3 text-sm text-[#2B3C44]">{hora(v.quando)}</td>
+                          <td className="px-4 py-3 text-sm text-ink-soft">{hora(v.quando)}</td>
                           <td className="px-4 py-3 text-sm">
                             <span className={'rounded-full px-2 py-0.5 text-xs font-semibold mr-2 ' + COR_ORIGEM[v.origem]}>
                               {ROTULO_ORIGEM[v.origem]}
                             </span>
-                            <span className="font-medium text-[#16252B]">{v.titulo}</span>
+                            <span className="font-medium text-ink">{v.titulo}</span>
                           </td>
-                          <td className="px-4 py-3 text-sm text-[#2B3C44]">{rotuloForma(v.forma)}</td>
-                          <td className="px-4 py-3 text-sm text-right font-semibold text-[#16252B]">
+                          <td className="px-4 py-3 text-sm text-ink-soft">{rotuloForma(v.forma)}</td>
+                          <td className="px-4 py-3 text-sm text-right font-semibold text-ink">
                             {moeda(v.valor)}
-                            <span className="ml-2 text-[#8FA0A8]">{aberta === v.id ? '▴' : '▾'}</span>
+                            <span className="ml-2 text-ink-subtle">{aberta === v.id ? '▴' : '▾'}</span>
                           </td>
                         </tr>
                         {aberta === v.id && (
-                          <tr className="bg-[#F8FAFB]">
+                          <tr className="bg-surface-hover">
                             <td colSpan={4} className="px-4 py-3">
                               {(v.itensDelivery || itensAbertos).length === 0 ? (
-                                <p className="text-sm text-[#5B6B73]">Carregando itens...</p>
+                                <p className="text-sm text-ink-muted">Carregando itens...</p>
                               ) : (
                                 <ul className="text-sm space-y-1">
                                   {(v.itensDelivery || itensAbertos).map((i, idx) => (
                                     <li key={idx} className="flex justify-between gap-3">
-                                      <span className="text-[#2B3C44]">
+                                      <span className="text-ink-soft">
                                         {i.quantidade}× {i.nome}
                                       </span>
-                                      <span className="text-[#5B6B73]">
+                                      <span className="text-ink-muted">
                                         {moeda(i.quantidade * Number(i.preco_unitario))}
                                       </span>
                                     </li>
@@ -615,14 +615,14 @@ export default function CaixaPage() {
       </div>
 
       {mostrarFechamento && caixa && dinheiro && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <form onSubmit={handleFechar} className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4">
+        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
+          <form onSubmit={handleFechar} className="ui-modal-panel p-6 w-full max-w-md space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[#16252B]">Fechar caixa</h2>
+              <h2 className="text-lg font-bold text-ink">Fechar caixa</h2>
               <button
                 type="button"
                 onClick={() => setMostrarFechamento(false)}
-                className="text-xl text-[#8FA0A8] hover:text-[#16252B]"
+                className="text-xl text-ink-subtle hover:text-ink"
                 aria-label="Fechar"
               >
                 ×
@@ -630,7 +630,7 @@ export default function CaixaPage() {
             </div>
 
             {pendenciasEstoque > 0 && (
-              <div className="text-sm text-[#7A5A0A] bg-[#FFF0C7] border border-[#E8D28A] rounded-lg px-3 py-2">
+              <div className="text-sm text-warning bg-warning-soft border border-warning-line rounded-lg px-3 py-2">
                 {pendenciasEstoque === 1
                   ? 'Existe 1 conferência de estoque pendente desde a abertura do caixa.'
                   : 'Existem ' + pendenciasEstoque + ' conferências de estoque pendentes desde a abertura do caixa.'}{' '}
@@ -640,19 +640,19 @@ export default function CaixaPage() {
               </div>
             )}
 
-            <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3 text-sm space-y-1">
+            <div className="bg-surface-hover border border-line rounded-lg p-3 text-sm space-y-1">
               <div className="flex justify-between">
-                <span className="text-[#5B6B73]">Vendido no caixa</span>
-                <span className="text-[#16252B]">{moeda(resumoCaixa.total)}</span>
+                <span className="text-ink-muted">Vendido no caixa</span>
+                <span className="text-ink">{moeda(resumoCaixa.total)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#5B6B73]">Deve ter na gaveta</span>
-                <span className="font-bold text-[#0E6B7E]">{moeda(dinheiro.esperado)}</span>
+                <span className="text-ink-muted">Deve ter na gaveta</span>
+                <span className="font-bold text-accent">{moeda(dinheiro.esperado)}</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#2B3C44] mb-1">
+              <label className="block text-sm font-medium text-ink-soft mb-1">
                 Quanto dinheiro tem na gaveta? (R$)
               </label>
               <CampoMoeda
@@ -667,10 +667,10 @@ export default function CaixaPage() {
                   className={
                     'text-sm font-medium mt-2 rounded-lg px-3 py-2 ' +
                     (Math.abs(diferenca) < 0.005
-                      ? 'bg-[#D9F0E3] text-[#1E6B3F]'
+                      ? 'bg-success-soft text-success'
                       : diferenca > 0
-                      ? 'bg-[#FFF0C7] text-[#7A5A0A]'
-                      : 'bg-[#FADBD6] text-[#B3261E]')
+                      ? 'bg-warning-soft text-warning'
+                      : 'bg-danger-soft text-danger')
                   }
                 >
                   {Math.abs(diferenca) < 0.005
@@ -683,7 +683,7 @@ export default function CaixaPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#2B3C44] mb-1">Observação (opcional)</label>
+              <label className="block text-sm font-medium text-ink-soft mb-1">Observação (opcional)</label>
               <input
                 type="text"
                 value={obsFechamento}

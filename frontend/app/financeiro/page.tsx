@@ -27,8 +27,8 @@ export default function FinanceiroPage() {
     <div className="p-4 md:p-8">
       <div className={(aba === 'painel' ? 'max-w-6xl' : 'max-w-4xl') + ' mx-auto space-y-6'}>
         <div>
-          <h1 className="text-2xl font-bold text-[#16252B]">Financeiro</h1>
-          <p className="text-sm text-[#5B6B73]">Painel, contas, fluxo de caixa, resultado do mês e parâmetros de preço</p>
+          <h1 className="text-2xl font-bold text-ink">Financeiro</h1>
+          <p className="text-sm text-ink-muted">Painel, contas, fluxo de caixa, resultado do mês e parâmetros de preço</p>
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1">
@@ -39,8 +39,8 @@ export default function FinanceiroPage() {
               className={
                 'whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium border transition ' +
                 (aba === a.id
-                  ? 'bg-[#0E6B7E] border-[#0E6B7E] text-white'
-                  : 'bg-white border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]')
+                  ? 'bg-accent border-accent text-accent-contrast'
+                  : 'bg-surface border-line text-ink-soft hover:bg-surface-hover')
               }
             >
               {a.rotulo}

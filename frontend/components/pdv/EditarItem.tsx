@@ -69,17 +69,17 @@ export default function EditarItem({ supabase, item, onSalvo, onFechar }: Props)
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
       <form
         onSubmit={salvar}
-        className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto"
+        className="ui-modal-panel p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto"
       >
         <div>
-          <h2 className="text-lg font-bold text-[#16252B]">
+          <h2 className="text-lg font-bold text-ink">
             {item.quantidade}× {item.nome}
           </h2>
           {enviado && (
-            <p className="text-sm text-[#7A5A0A] bg-[#FFF0C7] rounded-lg px-3 py-2 mt-2">
+            <p className="text-sm text-warning bg-warning-soft rounded-lg px-3 py-2 mt-2">
               Este item já foi para a produção. A mudança sai como ALTERAÇÃO na impressora do setor.
             </p>
           )}
@@ -92,7 +92,7 @@ export default function EditarItem({ supabase, item, onSalvo, onFechar }: Props)
             value={restricao}
             onChange={(e) => setRestricao(e.target.value)}
             placeholder="Sai em destaque no ticket"
-            className={INPUT + ' w-full border-[#F2C2BB]'}
+            className={INPUT + ' w-full border-danger-line'}
           />
           <div className="flex flex-wrap gap-1.5 mt-2">
             {SUGESTOES_RESTRICAO.map((s) => (
@@ -100,7 +100,7 @@ export default function EditarItem({ supabase, item, onSalvo, onFechar }: Props)
                 key={s}
                 type="button"
                 onClick={() => setRestricao((r) => juntar(r, s))}
-                className="text-xs px-2.5 py-1 rounded-full border border-[#F2C2BB] text-[#B3261E] hover:bg-[#FADBD6]"
+                className="text-xs px-2.5 py-1 rounded-full border border-danger-line text-danger hover:bg-danger-soft"
               >
                 {s}
               </button>
@@ -123,7 +123,7 @@ export default function EditarItem({ supabase, item, onSalvo, onFechar }: Props)
                 key={s}
                 type="button"
                 onClick={() => setObservacao((o) => juntar(o, s))}
-                className="text-xs px-2.5 py-1 rounded-full border border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]"
+                className="text-xs px-2.5 py-1 rounded-full border border-line text-ink-soft hover:bg-surface-hover"
               >
                 {s}
               </button>
@@ -134,17 +134,17 @@ export default function EditarItem({ supabase, item, onSalvo, onFechar }: Props)
         <div>
           <label className={LABEL}>Adicionais</label>
           {adicionais.length > 0 && (
-            <ul className="mb-2 divide-y divide-[#E6ECEF] border border-[#E6ECEF] rounded-lg">
+            <ul className="mb-2 divide-y divide-line-soft border border-line-soft rounded-lg">
               {adicionais.map((a, idx) => (
                 <li key={idx} className="flex items-center justify-between px-3 py-2 text-sm">
-                  <span className="text-[#16252B]">+ {a.nome}</span>
+                  <span className="text-ink">+ {a.nome}</span>
                   <span className="flex items-center gap-3">
-                    <span className="text-[#5B6B73]">{a.valor > 0 ? moeda(a.valor) : 'grátis'}</span>
+                    <span className="text-ink-muted">{a.valor > 0 ? moeda(a.valor) : 'grátis'}</span>
                     {!enviado && (
                       <button
                         type="button"
                         onClick={() => setAdicionais((l) => l.filter((_, i) => i !== idx))}
-                        className="text-[#8FA0A8] hover:text-[#B3261E]"
+                        className="text-ink-subtle hover:text-danger"
                         aria-label={'Tirar ' + a.nome}
                       >
                         ✕
@@ -156,7 +156,7 @@ export default function EditarItem({ supabase, item, onSalvo, onFechar }: Props)
             </ul>
           )}
           {enviado ? (
-            <p className="text-xs text-[#8FA0A8]">
+            <p className="text-xs text-ink-subtle">
               Adicionais com preço não mudam depois do envio: cancele o item e lance de novo.
             </p>
           ) : (
@@ -184,7 +184,7 @@ export default function EditarItem({ supabase, item, onSalvo, onFechar }: Props)
         </div>
 
         {!enviado && item.quantidade > 1 && (
-          <label className="flex items-start gap-2 text-sm text-[#2B3C44]">
+          <label className="flex items-start gap-2 text-sm text-ink-soft">
             <input
               type="checkbox"
               checked={separarUm}
@@ -198,7 +198,7 @@ export default function EditarItem({ supabase, item, onSalvo, onFechar }: Props)
         )}
 
         {erro && (
-          <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+          <div role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
             {erro}
           </div>
         )}

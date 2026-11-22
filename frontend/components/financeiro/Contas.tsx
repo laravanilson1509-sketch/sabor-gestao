@@ -46,19 +46,19 @@ const TEXTOS = {
 };
 
 const ESTILO_SITUACAO: Record<string, { texto: string; classe: string }> = {
-  vencida: { texto: 'Vencida', classe: 'bg-[#FADBD6] text-[#B3261E] border-[#F2C2BB]' },
-  vence_logo: { texto: 'Vence em breve', classe: 'bg-[#FFF0C7] text-[#7A5A0A] border-[#E8D28A]' },
-  aberta: { texto: 'Em aberto', classe: 'bg-[#F4F7F8] text-[#2B3C44] border-[#DCE3E7]' },
-  quitada: { texto: '', classe: 'bg-[#DDF1E4] text-[#1E6B3A] border-[#B7DFC4]' },
-  cancelada: { texto: 'Cancelada', classe: 'bg-[#F4F7F8] text-[#8FA0A8] border-[#DCE3E7]' },
+  vencida: { texto: 'Vencida', classe: 'bg-danger-soft text-danger border-danger-line' },
+  vence_logo: { texto: 'Vence em breve', classe: 'bg-warning-soft text-warning border-warning-line' },
+  aberta: { texto: 'Em aberto', classe: 'bg-surface-hover text-ink-soft border-line' },
+  quitada: { texto: '', classe: 'bg-success-soft text-success border-success-line' },
+  cancelada: { texto: 'Cancelada', classe: 'bg-surface-hover text-ink-subtle border-line' },
 };
 
 type Filtro = 'abertas' | 'quitadas' | 'canceladas' | 'todas';
 
 const classeInput =
-  'border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
+  'border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent';
 const classeBotao =
-  'text-xs px-3 py-1.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] font-medium hover:bg-[#F1F5F7] transition';
+  'text-xs px-3 py-1.5 rounded-lg border border-line bg-surface text-ink-soft font-medium hover:bg-surface-hover transition';
 
 export default function Contas({ tipo }: { tipo: TipoConta }) {
   const supabase = createBrowserClient(
@@ -194,40 +194,40 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
   if (filtro === 'quitadas') visiveis.sort((a, b) => (b.quitado_em || '').localeCompare(a.quitado_em || ''));
 
   if (loading) {
-    return <div className="bg-white border border-[#DCE3E7] rounded-xl p-6 text-sm text-[#5B6B73]">Carregando...</div>;
+    return <div className="bg-surface border border-line rounded-xl p-6 text-sm text-ink-muted">Carregando...</div>;
   }
 
   return (
-    <div className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-4">
+    <div className="bg-surface border border-line rounded-xl p-6 space-y-4">
       <div>
-        <h2 className="text-lg font-bold text-[#16252B]">{textos.titulo}</h2>
-        <p className="text-sm text-[#5B6B73]">{textos.subtitulo}</p>
+        <h2 className="text-lg font-bold text-ink">{textos.titulo}</h2>
+        <p className="text-sm text-ink-muted">{textos.subtitulo}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-        <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
-          <p className="text-xs text-[#5B6B73]">Em aberto ({abertas.length})</p>
-          <p className="font-bold text-[#16252B]">{formatarReais(totalAberto)}</p>
+        <div className="bg-surface-hover border border-line rounded-lg p-3">
+          <p className="text-xs text-ink-muted">Em aberto ({abertas.length})</p>
+          <p className="font-bold text-ink">{formatarReais(totalAberto)}</p>
         </div>
         <div
           className={
             'border rounded-lg p-3 ' +
-            (vencidas.length > 0 ? 'bg-[#FADBD6] border-[#F2C2BB]' : 'bg-[#F4F7F8] border-[#DCE3E7]')
+            (vencidas.length > 0 ? 'bg-danger-soft border-danger-line' : 'bg-surface-hover border-line')
           }
         >
-          <p className="text-xs text-[#5B6B73]">Vencidas ({vencidas.length})</p>
-          <p className={'font-bold ' + (vencidas.length > 0 ? 'text-[#B3261E]' : 'text-[#16252B]')}>
+          <p className="text-xs text-ink-muted">Vencidas ({vencidas.length})</p>
+          <p className={'font-bold ' + (vencidas.length > 0 ? 'text-danger' : 'text-ink')}>
             {formatarReais(totalVencido)}
           </p>
         </div>
-        <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
-          <p className="text-xs text-[#5B6B73]">{textos.quitadasMes}</p>
-          <p className="font-bold text-[#0E6B7E]">{formatarReais(totalQuitadoMes)}</p>
+        <div className="bg-surface-hover border border-line rounded-lg p-3">
+          <p className="text-xs text-ink-muted">{textos.quitadasMes}</p>
+          <p className="font-bold text-accent">{formatarReais(totalQuitadoMes)}</p>
         </div>
       </div>
 
-      <form onSubmit={handleAdicionar} className="border border-[#DCE3E7] rounded-lg p-4 space-y-3 bg-[#FAFCFC]">
-        <p className="text-sm font-semibold text-[#16252B]">Nova conta</p>
+      <form onSubmit={handleAdicionar} className="border border-line rounded-lg p-4 space-y-3 bg-surface-hover">
+        <p className="text-sm font-semibold text-ink">Nova conta</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input
             type="text"
@@ -251,7 +251,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
             className={classeInput}
           />
           <CampoMoeda value={valor} onChange={setValor} placeholder="Valor (R$)" className={classeInput} />
-          <label className="text-xs text-[#5B6B73] space-y-1">
+          <label className="text-xs text-ink-muted space-y-1">
             <span>Vencimento</span>
             <input
               type="date"
@@ -260,7 +260,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
               className={classeInput + ' w-full'}
             />
           </label>
-          <label className="text-xs text-[#5B6B73] space-y-1">
+          <label className="text-xs text-ink-muted space-y-1">
             <span>Repetir por quantos meses (1 = só esta)</span>
             <input
               type="number"
@@ -281,7 +281,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
         </button>
       </form>
 
-      {erro && <p className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">{erro}</p>}
+      {erro && <p className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">{erro}</p>}
 
       <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar por descrição, nome ou valor..." />
 
@@ -300,8 +300,8 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
             className={
               'text-xs px-3 py-1.5 rounded-full border font-medium transition ' +
               (filtro === valorFiltro
-                ? 'bg-[#0E6B7E] border-[#0E6B7E] text-white'
-                : 'bg-white border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]')
+                ? 'bg-accent border-accent text-accent-contrast'
+                : 'bg-surface border-line text-ink-soft hover:bg-surface-hover')
             }
           >
             {rotulo}
@@ -310,9 +310,9 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
       </div>
 
       {visiveis.length === 0 ? (
-        <p className="text-sm text-[#5B6B73]">{busca ? 'Nenhuma conta encontrada para “' + busca + '”' : 'Nenhuma conta aqui'}</p>
+        <p className="text-sm text-ink-muted">{busca ? 'Nenhuma conta encontrada para “' + busca + '”' : 'Nenhuma conta aqui'}</p>
       ) : (
-        <div className="divide-y divide-[#E6ECEF] border border-[#DCE3E7] rounded-lg">
+        <div className="divide-y divide-line-soft border border-line rounded-lg">
           {visiveis.map((c) => {
             const situacao = situacaoConta(c, hoje);
             const estilo = ESTILO_SITUACAO[situacao];
@@ -320,20 +320,20 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
               <div key={c.id} className={'p-3 space-y-2 ' + (c.status === 'cancelada' ? 'opacity-60' : '')}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-[#16252B]">{c.descricao}</p>
-                    <p className="text-xs text-[#5B6B73]">
+                    <p className="text-sm font-medium text-ink">{c.descricao}</p>
+                    <p className="text-xs text-ink-muted">
                       {categorias[c.categoria] || c.categoria}
                       {c.pessoa ? ' · ' + c.pessoa : ''}
                       {' · vence ' + formatarData(c.vencimento)}
                     </p>
                     {c.status === 'quitada' && c.quitado_em && (
-                      <p className="text-xs text-[#1E6B3A]">
+                      <p className="text-xs text-success">
                         {textos.quitada} em {formatarData(c.quitado_em)} · {rotuloForma(c.forma_pagamento)}
                       </p>
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-[#16252B]">{formatarReais(c.valor)}</p>
+                    <p className="font-bold text-ink">{formatarReais(c.valor)}</p>
                     <span className={'inline-block text-[11px] px-2 py-0.5 rounded-full border ' + estilo.classe}>
                       {situacao === 'quitada' ? textos.quitada : estilo.texto}
                     </span>
@@ -341,7 +341,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
                 </div>
 
                 {quitandoId === c.id ? (
-                  <div className="flex gap-2 flex-wrap items-center bg-[#F4F7F8] rounded-lg p-2">
+                  <div className="flex gap-2 flex-wrap items-center bg-surface-hover rounded-lg p-2">
                     <input
                       type="date"
                       value={dataQuitacao}
@@ -399,7 +399,7 @@ export default function Contas({ tipo }: { tipo: TipoConta }) {
                       onClick={() =>
                         executar(() => excluirConta(supabase, tipo, c.id), 'Excluir a conta "' + c.descricao + '"?')
                       }
-                      className="text-xs px-3 py-1.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] font-medium hover:bg-[#FADBD6] transition"
+                      className="text-xs px-3 py-1.5 rounded-lg border border-danger-line bg-surface text-danger font-medium hover:bg-danger-soft transition"
                     >
                       Excluir
                     </button>

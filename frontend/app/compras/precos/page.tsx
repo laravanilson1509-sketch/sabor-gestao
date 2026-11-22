@@ -12,7 +12,8 @@ import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import { combina } from '@/lib/busca';
 import { CARTAO, moeda } from '@/components/pdv/estilos';
 
-const CORES = ['#0E6B7E', '#E3B341', '#B3261E', '#6F5BD6', '#1E6B3F', '#D55181'];
+// cores das séries: seguem o tema (claro/escuro)
+const CORES = ['var(--accent)', 'var(--gold)', 'var(--danger)', 'var(--violet)', 'var(--success)', 'var(--info)'];
 
 const dataCurta = (iso: string) =>
   new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
@@ -35,15 +36,15 @@ function Grafico({ pontos, fornecedores }: { pontos: PontoPreco[]; fornecedores:
     <svg viewBox={`0 0 ${L} ${A}`} className="w-full h-auto" role="img" aria-label="Gráfico do histórico de preços">
       {marcas.map((m) => (
         <g key={m}>
-          <line x1={M.e} x2={L - M.d} y1={y(m)} y2={y(m)} stroke="#E6ECEF" />
-          <text x={M.e - 6} y={y(m) + 4} textAnchor="end" fontSize="11" fill="#8FA0A8">
+          <line x1={M.e} x2={L - M.d} y1={y(m)} y2={y(m)} stroke="var(--border-soft)" />
+          <text x={M.e - 6} y={y(m) + 4} textAnchor="end" fontSize="11" fill="var(--text-subtle)">
             {m.toFixed(2).replace('.', ',')}
           </text>
         </g>
       ))}
-      <text x={M.e} y={A - 6} fontSize="11" fill="#8FA0A8">{dataCurta(new Date(t0).toISOString())}</text>
+      <text x={M.e} y={A - 6} fontSize="11" fill="var(--text-subtle)">{dataCurta(new Date(t0).toISOString())}</text>
       {t1 !== t0 && (
-        <text x={L - M.d} y={A - 6} textAnchor="end" fontSize="11" fill="#8FA0A8">{dataCurta(new Date(t1).toISOString())}</text>
+        <text x={L - M.d} y={A - 6} textAnchor="end" fontSize="11" fill="var(--text-subtle)">{dataCurta(new Date(t1).toISOString())}</text>
       )}
       {fornecedores.map((f, k) => {
         const serie = pontos.filter((p) => (p.fornecedor || 'Sem fornecedor') === f);
@@ -64,7 +65,7 @@ function Grafico({ pontos, fornecedores }: { pontos: PontoPreco[]; fornecedores:
                 cx={x(new Date(p.data).getTime())}
                 cy={y(p.preco_unitario)}
                 r="4"
-                fill={p.origem === 'nota' ? cor : '#fff'}
+                fill={p.origem === 'nota' ? cor : 'var(--surface)'}
                 stroke={cor}
                 strokeWidth="2"
               >
@@ -153,21 +154,21 @@ export default function HistoricoPrecosPage() {
             <ConteudoVoltar />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-[#16252B]">Histórico de preços</h1>
-            <p className="text-sm text-[#5B6B73]">Como o preço de cada item variou por fornecedor</p>
+            <h1 className="text-2xl font-bold text-ink">Histórico de preços</h1>
+            <p className="text-sm text-ink-muted">Como o preço de cada item variou por fornecedor</p>
           </div>
         </div>
 
         {erro && (
-          <div role="alert" className="mb-4 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">{erro}</div>
+          <div role="alert" className="mb-4 text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">{erro}</div>
         )}
 
         {loading ? (
-          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
+          <p className="text-center py-12 text-ink-muted">Carregando...</p>
         ) : resumo.length === 0 && !erro ? (
           <div className={CARTAO + ' p-8 text-center'}>
-            <p className="text-[#16252B]">Ainda não há preços registrados</p>
-            <p className="text-sm text-[#5B6B73] mt-2">Eles aparecem conforme você cota e recebe compras.</p>
+            <p className="text-ink">Ainda não há preços registrados</p>
+            <p className="text-sm text-ink-muted mt-2">Eles aparecem conforme você cota e recebe compras.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
@@ -176,24 +177,24 @@ export default function HistoricoPrecosPage() {
               {filtrados.length === 0 ? (
                 <NadaEncontrado busca={busca} />
               ) : (
-                <ul className={CARTAO + ' divide-y divide-[#E6ECEF] overflow-hidden'}>
+                <ul className={CARTAO + ' divide-y divide-line-soft overflow-hidden'}>
                   {filtrados.map((r) => (
                     <li key={r.id}>
                       <button
                         onClick={() => setEscolhido(r.id)}
-                        className={'w-full text-left px-4 py-3 transition ' + (escolhido === r.id ? 'bg-[#DCEEF2]' : 'hover:bg-[#F8FAFB]')}
+                        className={'w-full text-left px-4 py-3 transition ' + (escolhido === r.id ? 'bg-accent-soft' : 'hover:bg-surface-hover')}
                       >
                         <span className="flex items-center justify-between gap-2">
-                          <span className="text-sm font-medium text-[#16252B]">{r.nome}</span>
-                          <span className="text-sm font-semibold text-[#16252B]">
+                          <span className="text-sm font-medium text-ink">{r.nome}</span>
+                          <span className="text-sm font-semibold text-ink">
                             {moeda(r.ultimo)}
-                            <span className="text-xs font-normal text-[#8FA0A8]">/{r.unidade}</span>
+                            <span className="text-xs font-normal text-ink-subtle">/{r.unidade}</span>
                           </span>
                         </span>
-                        <span className="flex items-center justify-between text-xs text-[#8FA0A8] mt-0.5">
+                        <span className="flex items-center justify-between text-xs text-ink-subtle mt-0.5">
                           <span>{r.quantos} {r.quantos === 1 ? 'registro' : 'registros'}</span>
                           {r.variacao !== null && (
-                            <span className={r.variacao > 0 ? 'text-[#B3261E]' : r.variacao < 0 ? 'text-[#1E6B3F]' : ''}>
+                            <span className={r.variacao > 0 ? 'text-danger' : r.variacao < 0 ? 'text-success' : ''}>
                               {pct(r.variacao)}
                             </span>
                           )}
@@ -207,29 +208,29 @@ export default function HistoricoPrecosPage() {
 
             <div>
               {!atual ? (
-                <div className={CARTAO + ' p-10 text-center text-sm text-[#5B6B73]'}>Escolha um item na lista para ver o histórico.</div>
+                <div className={CARTAO + ' p-10 text-center text-sm text-ink-muted'}>Escolha um item na lista para ver o histórico.</div>
               ) : (
                 <div className="space-y-4">
                   <div className={CARTAO + ' p-4'}>
-                    <h2 className="text-base font-semibold text-[#16252B]">{atual.nome}</h2>
+                    <h2 className="text-base font-semibold text-ink">{atual.nome}</h2>
                     <div className="grid grid-cols-3 gap-3 mt-3">
                       <div>
-                        <p className="text-xs text-[#5B6B73]">Último preço</p>
-                        <p className="text-base font-bold text-[#16252B]">{moeda(atual.ultimo)}</p>
+                        <p className="text-xs text-ink-muted">Último preço</p>
+                        <p className="text-base font-bold text-ink">{moeda(atual.ultimo)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-[#5B6B73]">Menor já visto</p>
-                        <p className="text-base font-bold text-[#1E6B3F]">{moeda(Math.min(...precosSerie))}</p>
-                        {menor && <p className="text-xs text-[#8FA0A8]">{menor.fornecedor || 'Sem fornecedor'}</p>}
+                        <p className="text-xs text-ink-muted">Menor já visto</p>
+                        <p className="text-base font-bold text-success">{moeda(Math.min(...precosSerie))}</p>
+                        {menor && <p className="text-xs text-ink-subtle">{menor.fornecedor || 'Sem fornecedor'}</p>}
                       </div>
                       <div>
-                        <p className="text-xs text-[#5B6B73]">Maior já visto</p>
-                        <p className="text-base font-bold text-[#B3261E]">{moeda(Math.max(...precosSerie))}</p>
+                        <p className="text-xs text-ink-muted">Maior já visto</p>
+                        <p className="text-base font-bold text-danger">{moeda(Math.max(...precosSerie))}</p>
                       </div>
                     </div>
                     <div className="mt-4">
                       <Grafico pontos={serie} fornecedores={fornecedores} />
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-[#5B6B73]">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-ink-muted">
                         {fornecedores.map((f, k) => (
                           <span key={f} className="inline-flex items-center gap-1.5">
                             <span className="h-2.5 w-2.5 rounded-full" style={{ background: CORES[k % CORES.length] }} />
@@ -243,24 +244,24 @@ export default function HistoricoPrecosPage() {
 
                   <div className={CARTAO + ' overflow-x-auto'}>
                     <table className="w-full min-w-[420px]">
-                      <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
+                      <thead className="bg-surface-hover border-b border-line">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Data</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Fornecedor</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Origem</th>
-                          <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Preço</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Data</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Fornecedor</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Origem</th>
+                          <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-ink-muted">Preço</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#E6ECEF]">
+                      <tbody className="divide-y divide-line-soft">
                         {linhas.map((p, i) => (
                           <tr key={i}>
-                            <td className="px-4 py-2.5 text-sm text-[#2B3C44]">{dataCurta(p.data)}</td>
-                            <td className="px-4 py-2.5 text-sm text-[#16252B]">{p.fornecedor || '—'}</td>
-                            <td className="px-4 py-2.5 text-sm text-[#5B6B73]">{p.origem === 'nota' ? 'Nota' : 'Cotação'}</td>
-                            <td className="px-4 py-2.5 text-sm text-right font-semibold text-[#16252B]">
+                            <td className="px-4 py-2.5 text-sm text-ink-soft">{dataCurta(p.data)}</td>
+                            <td className="px-4 py-2.5 text-sm text-ink">{p.fornecedor || '—'}</td>
+                            <td className="px-4 py-2.5 text-sm text-ink-muted">{p.origem === 'nota' ? 'Nota' : 'Cotação'}</td>
+                            <td className="px-4 py-2.5 text-sm text-right font-semibold text-ink">
                               {moeda(p.preco_unitario)}
                               {p.variacao !== null && (
-                                <span className={'ml-2 text-xs font-medium ' + (p.variacao > 0 ? 'text-[#B3261E]' : p.variacao < 0 ? 'text-[#1E6B3F]' : 'text-[#8FA0A8]')}>
+                                <span className={'ml-2 text-xs font-medium ' + (p.variacao > 0 ? 'text-danger' : p.variacao < 0 ? 'text-success' : 'text-ink-subtle')}>
                                   {pct(p.variacao)}
                                 </span>
                               )}

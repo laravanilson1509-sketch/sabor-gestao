@@ -104,44 +104,44 @@ export default function HistoricoPedido({ supabase, unidadeId, pedidoId, titulo,
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-5">
+    <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
+      <div className="ui-modal-panel p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-bold text-[#16252B]">Impressões e histórico · {titulo}</h2>
-          <button onClick={onFechar} className="text-xl text-[#8FA0A8] hover:text-[#16252B]" aria-label="Fechar">
+          <h2 className="text-lg font-bold text-ink">Impressões e histórico · {titulo}</h2>
+          <button onClick={onFechar} className="text-xl text-ink-subtle hover:text-ink" aria-label="Fechar">
             ✕
           </button>
         </div>
 
         {erro && (
-          <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+          <div role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
             {erro}
           </div>
         )}
-        {aviso && <div className="text-sm text-[#1E6B3F] bg-[#D9F0E3] rounded-lg px-3 py-2">{aviso}</div>}
+        {aviso && <div className="text-sm text-success bg-success-soft rounded-lg px-3 py-2">{aviso}</div>}
 
         {carregando ? (
-          <p className="text-sm text-[#5B6B73] py-6 text-center">Carregando...</p>
+          <p className="text-sm text-ink-muted py-6 text-center">Carregando...</p>
         ) : (
           <>
             <section>
-              <h3 className="text-sm font-semibold text-[#2B3C44] mb-2">Documentos impressos</h3>
+              <h3 className="text-sm font-semibold text-ink-soft mb-2">Documentos impressos</h3>
               {impressoes.length === 0 ? (
-                <p className="text-sm text-[#5B6B73]">Nada impresso ainda.</p>
+                <p className="text-sm text-ink-muted">Nada impresso ainda.</p>
               ) : (
-                <ul className="divide-y divide-[#E6ECEF] border border-[#E6ECEF] rounded-lg">
+                <ul className="divide-y divide-line-soft border border-line-soft rounded-lg">
                   {impressoes.map((i) => (
                     <li key={i.id} className="px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">
                       <div className="flex-1 min-w-[12rem]">
-                        <p className="text-sm font-medium text-[#16252B]">
+                        <p className="text-sm font-medium text-ink">
                           {NOME_DOCUMENTO[i.documento]}
-                          {i.via > 1 && <span className="text-[#7A5A0A]"> · {i.via}ª via</span>}
+                          {i.via > 1 && <span className="text-warning"> · {i.via}ª via</span>}
                         </p>
-                        <p className="text-xs text-[#5B6B73]">
+                        <p className="text-xs text-ink-muted">
                           {i.titulo} · {dataHora(i.criado_em)}
                           {i.solicitado_por ? ' · ' + i.solicitado_por : ''}
                         </p>
-                        {i.erro && <p className="text-xs text-[#B3261E]">{i.erro}</p>}
+                        {i.erro && <p className="text-xs text-danger">{i.erro}</p>}
                       </div>
                       <span className={'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + ROTULO_STATUS[i.status].cor}>
                         {ROTULO_STATUS[i.status].rotulo}
@@ -162,16 +162,16 @@ export default function HistoricoPedido({ supabase, unidadeId, pedidoId, titulo,
 
             {fechamentos.length > 0 && (
               <section>
-                <h3 className="text-sm font-semibold text-[#2B3C44] mb-2">Fechamentos</h3>
-                <ul className="divide-y divide-[#E6ECEF] border border-[#E6ECEF] rounded-lg">
+                <h3 className="text-sm font-semibold text-ink-soft mb-2">Fechamentos</h3>
+                <ul className="divide-y divide-line-soft border border-line-soft rounded-lg">
                   {fechamentos.map((f) => (
                     <li key={f.id} className="px-3 py-2.5 text-sm">
-                      <p className="text-[#16252B]">
+                      <p className="text-ink">
                         <span className="font-medium">{f.versao}º fechamento</span> · {moeda(f.total)} ·{' '}
                         {dataHora(f.fechado_em)} · {f.fechado_por || '-'}
                       </p>
                       {f.reaberto_em && (
-                        <p className="text-xs text-[#B3261E]">
+                        <p className="text-xs text-danger">
                           Reaberto em {dataHora(f.reaberto_em)} por {f.reaberto_por}: {f.reaberto_motivo}
                         </p>
                       )}
@@ -182,18 +182,18 @@ export default function HistoricoPedido({ supabase, unidadeId, pedidoId, titulo,
             )}
 
             <section>
-              <h3 className="text-sm font-semibold text-[#2B3C44] mb-2">Auditoria</h3>
+              <h3 className="text-sm font-semibold text-ink-soft mb-2">Auditoria</h3>
               {auditoria.length === 0 ? (
-                <p className="text-sm text-[#5B6B73]">Nenhuma ação sensível neste pedido.</p>
+                <p className="text-sm text-ink-muted">Nenhuma ação sensível neste pedido.</p>
               ) : (
-                <ul className="divide-y divide-[#E6ECEF] border border-[#E6ECEF] rounded-lg">
+                <ul className="divide-y divide-line-soft border border-line-soft rounded-lg">
                   {auditoria.map((a) => (
                     <li key={a.id} className="px-3 py-2.5 text-sm">
-                      <p className="text-[#16252B]">
+                      <p className="text-ink">
                         <span className="font-medium">{ROTULO_ACAO[a.acao] || a.acao}</span>
                         {resumoDetalhes(a.acao, a.detalhes) && ' · ' + resumoDetalhes(a.acao, a.detalhes)}
                       </p>
-                      <p className="text-xs text-[#5B6B73]">
+                      <p className="text-xs text-ink-muted">
                         {dataHora(a.criado_em)}
                         {a.autorizado_por_nome && ' · autorizado por ' + a.autorizado_por_nome}
                         {a.operador_email && ' · login ' + a.operador_email}

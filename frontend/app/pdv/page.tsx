@@ -52,7 +52,7 @@ import FechamentoConta from '@/components/pdv/FechamentoConta';
 import HistoricoPedido from '@/components/pdv/HistoricoPedido';
 
 const INPUT =
-  'border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
+  'border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent';
 const BTN_PRIMARY =
   'btn btn-primario';
 const BTN_SECONDARY =
@@ -60,9 +60,9 @@ const BTN_SECONDARY =
 
 // etiqueta mostrada nos itens da comanda que já foram para a cozinha
 const SELO_COZINHA = {
-  novo: { rotulo: 'Na cozinha', cor: 'bg-[#FFF0C7] text-[#7A5A0A]' },
-  preparando: { rotulo: 'Preparando', cor: 'bg-[#DCEEF2] text-[#0B4F5E]' },
-  pronto: { rotulo: 'Pronto', cor: 'bg-[#D9F0E3] text-[#1E6B3F]' },
+  novo: { rotulo: 'Na cozinha', cor: 'bg-warning-soft text-warning' },
+  preparando: { rotulo: 'Preparando', cor: 'bg-accent-soft text-accent-ink' },
+  pronto: { rotulo: 'Pronto', cor: 'bg-success-soft text-success' },
 };
 
 const qtd = (v: number) => Number(v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
@@ -541,11 +541,11 @@ export default function PdvPage() {
   const avisoErro = (
     <>
       {erro && (
-        <div role="alert" className="mb-4 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+        <div role="alert" className="mb-4 text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
           {erro}
         </div>
       )}
-      {aviso && <div className="mb-4 text-sm text-[#1E6B3F] bg-[#D9F0E3] rounded-lg px-3 py-2">{aviso}</div>}
+      {aviso && <div className="mb-4 text-sm text-success bg-success-soft rounded-lg px-3 py-2">{aviso}</div>}
     </>
   );
 
@@ -563,18 +563,18 @@ export default function PdvPage() {
               <ConteudoVoltar />
             </button>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-[#16252B]">
+              <h1 className="text-2xl font-bold text-ink">
                 {tituloComanda}
                 {pedido.reaberturas > 0 && (
-                  <span className="ml-2 align-middle rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#FADBD6] text-[#B3261E]">
+                  <span className="ml-2 align-middle rounded-full px-2.5 py-0.5 text-xs font-semibold bg-danger-soft text-danger">
                     Reaberta
                   </span>
                 )}
               </h1>
-              <p className="text-sm text-[#5B6B73]">Toque em um item do cardápio para adicionar</p>
+              <p className="text-sm text-ink-muted">Toque em um item do cardápio para adicionar</p>
             </div>
             {pedido.canal === 'balcao' && (
-              <label className="flex items-center gap-2 text-sm font-medium text-[#2B3C44] bg-white border border-[#DCE3E7] rounded-lg px-3 py-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-ink-soft bg-surface border border-line rounded-lg px-3 py-2">
                 <input
                   type="checkbox"
                   checked={pedido.para_viagem}
@@ -589,7 +589,7 @@ export default function PdvPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
             {/* Cardápio */}
-            <div className="bg-white border border-[#DCE3E7] rounded-xl p-4">
+            <div className="bg-surface border border-line rounded-xl p-4">
               <div className="flex flex-wrap gap-2 mb-3">
                 {FILTROS_CARDAPIO.map((f) => (
                   <button
@@ -598,8 +598,8 @@ export default function PdvPage() {
                     className={
                       'text-sm px-3 py-1.5 rounded-lg font-medium transition border ' +
                       (categoria === f.valor
-                        ? 'bg-[#0E6B7E] text-white border-[#0E6B7E]'
-                        : 'bg-white text-[#2B3C44] border-[#DCE3E7] hover:bg-[#F1F5F7]')
+                        ? 'bg-accent text-accent-contrast border-accent'
+                        : 'bg-surface text-ink-soft border-line hover:bg-surface-hover')
                     }
                   >
                     {f.rotulo}
@@ -616,8 +616,8 @@ export default function PdvPage() {
                         className={
                           'text-xs px-3 py-1 rounded-full font-medium transition border ' +
                           (filtroBebida === valor
-                            ? 'bg-[#DCEEF2] text-[#0B4F5E] border-[#0E6B7E]'
-                            : 'bg-white text-[#5B6B73] border-[#DCE3E7] hover:bg-[#F1F5F7]')
+                            ? 'bg-accent-soft text-accent-ink border-accent'
+                            : 'bg-surface text-ink-muted border-line hover:bg-surface-hover')
                         }
                       >
                         {rotulo}
@@ -634,11 +634,11 @@ export default function PdvPage() {
                 className={INPUT + ' w-full mb-4'}
               />
               {cardapio.length === 0 ? (
-                <p className="text-sm text-[#5B6B73] py-8 text-center">
+                <p className="text-sm text-ink-muted py-8 text-center">
                   Nenhum item com preço de venda. Defina o preço dos pratos na ficha técnica.
                 </p>
               ) : filtrado.length === 0 ? (
-                <p className="text-sm text-[#5B6B73] py-8 text-center">Nada encontrado.</p>
+                <p className="text-sm text-ink-muted py-8 text-center">Nada encontrado.</p>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {filtrado.map((p) => (
@@ -646,21 +646,21 @@ export default function PdvPage() {
                       key={p.id}
                       onClick={() => addProduto(p)}
                       disabled={ocupado}
-                      className="text-left border border-[#DCE3E7] rounded-lg p-3 hover:border-[#0E6B7E] hover:bg-[#F1F8FA] disabled:opacity-60 transition"
+                      className="text-left border border-line rounded-lg p-3 hover:border-accent hover:bg-accent-faint disabled:opacity-60 transition"
                     >
-                      <span className="block text-sm font-medium text-[#16252B]">{p.nome}</span>
-                      <span className="block text-xs text-[#8FA0A8] mt-0.5">
+                      <span className="block text-sm font-medium text-ink">{p.nome}</span>
+                      <span className="block text-xs text-ink-subtle mt-0.5">
                         {p.tipo_produto === 'acabado'
                           ? 'Produto acabado'
                           : p.tipo_produto === 'bebida'
                           ? rotuloCategoria(p.categoria_bebida) || 'Bebida'
                           : 'Prato'}
                       </span>
-                      <span className="block text-sm font-semibold text-[#0E6B7E] mt-1">
+                      <span className="block text-sm font-semibold text-accent mt-1">
                         {moeda(p.preco_venda)}
                       </span>
                       {semEstoque.has(p.id) && (
-                        <span className="inline-block mt-1.5 rounded-full px-2 py-0.5 text-xs font-semibold bg-[#FADBD6] text-[#B3261E]">
+                        <span className="inline-block mt-1.5 rounded-full px-2 py-0.5 text-xs font-semibold bg-danger-soft text-danger">
                           Sem estoque
                         </span>
                       )}
@@ -671,20 +671,20 @@ export default function PdvPage() {
             </div>
 
             {/* Comanda */}
-            <div className="bg-white border border-[#DCE3E7] rounded-xl p-4 h-fit lg:sticky lg:top-6">
-              <h2 className="text-base font-semibold text-[#16252B] mb-3">Comanda</h2>
+            <div className="bg-surface border border-line rounded-xl p-4 h-fit lg:sticky lg:top-6">
+              <h2 className="text-base font-semibold text-ink mb-3">Comanda</h2>
 
               {itens.length === 0 ? (
-                <p className="text-sm text-[#5B6B73] py-6 text-center">Nenhum item ainda.</p>
+                <p className="text-sm text-ink-muted py-6 text-center">Nenhum item ainda.</p>
               ) : (
-                <ul className="divide-y divide-[#E6ECEF] mb-4">
+                <ul className="divide-y divide-line-soft mb-4">
                   {itens.map((i) =>
                     i.cancelado ? (
                       <li key={i.id} className="py-2.5">
-                        <p className="text-sm text-[#8FA0A8] line-through">
+                        <p className="text-sm text-ink-subtle line-through">
                           {i.quantidade}× {i.nome}
                         </p>
-                        <p className="text-xs text-[#B3261E]">
+                        <p className="text-xs text-danger">
                           Cancelado · {i.cancelado_motivo} · {i.cancelado_por}
                         </p>
                       </li>
@@ -696,16 +696,16 @@ export default function PdvPage() {
                             className="flex-1 min-w-0 text-left group"
                             title="Observação, restrição e adicionais"
                           >
-                            <p className="text-sm font-medium text-[#16252B] truncate group-hover:text-[#0E6B7E]">
+                            <p className="text-sm font-medium text-ink truncate group-hover:text-accent">
                               {i.nome}
                             </p>
-                            <p className="text-xs text-[#5B6B73]">
-                              {moeda(i.preco_unitario)} cada · <span className="text-[#0E6B7E]">obs.</span>
+                            <p className="text-xs text-ink-muted">
+                              {moeda(i.preco_unitario)} cada · <span className="text-accent">obs.</span>
                             </p>
                           </button>
                           {i.status_cozinha ? (
                             <span className="flex items-center gap-2">
-                              <span className="w-7 text-center text-sm font-semibold text-[#16252B]">
+                              <span className="w-7 text-center text-sm font-semibold text-ink">
                                 {i.quantidade}
                               </span>
                               <span className={'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + SELO_COZINHA[i.status_cozinha].cor}>
@@ -717,45 +717,45 @@ export default function PdvPage() {
                               <button
                                 onClick={() => mudarQtd(i, -1)}
                                 disabled={ocupado}
-                                className="h-8 w-8 rounded-lg border border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]"
+                                className="h-8 w-8 rounded-lg border border-line text-ink-soft hover:bg-surface-hover"
                                 aria-label="Diminuir"
                               >
                                 −
                               </button>
-                              <span className="w-7 text-center text-sm font-semibold text-[#16252B]">
+                              <span className="w-7 text-center text-sm font-semibold text-ink">
                                 {i.quantidade}
                               </span>
                               <button
                                 onClick={() => mudarQtd(i, 1)}
                                 disabled={ocupado}
-                                className="h-8 w-8 rounded-lg border border-[#DCE3E7] text-[#2B3C44] hover:bg-[#F1F5F7]"
+                                className="h-8 w-8 rounded-lg border border-line text-ink-soft hover:bg-surface-hover"
                                 aria-label="Aumentar"
                               >
                                 +
                               </button>
                             </div>
                           )}
-                          <span className="w-20 text-right text-sm font-semibold text-[#16252B]">
+                          <span className="w-20 text-right text-sm font-semibold text-ink">
                             {i.cortesia ? 'Cortesia' : moeda(valorItem(i))}
                           </span>
                         </div>
                         {i.restricao && (
-                          <p className="mt-1 text-xs font-semibold text-[#B3261E] bg-[#FADBD6] rounded px-2 py-0.5">
+                          <p className="mt-1 text-xs font-semibold text-danger bg-danger-soft rounded px-2 py-0.5">
                             ⚠ {i.restricao}
                           </p>
                         )}
                         {(i.adicionais || []).map((a, k) => (
-                          <p key={k} className="text-xs text-[#2B3C44] mt-0.5">
+                          <p key={k} className="text-xs text-ink-soft mt-0.5">
                             + {a.nome} {Number(a.valor) > 0 && '(' + moeda(a.valor) + ')'}
                           </p>
                         ))}
                         {i.observacao && (
-                          <p className="mt-1 text-xs text-[#7A5A0A] bg-[#FFF0C7] rounded px-2 py-0.5">{i.observacao}</p>
+                          <p className="mt-1 text-xs text-warning bg-warning-soft rounded px-2 py-0.5">{i.observacao}</p>
                         )}
                         {i.status_cozinha && (
                           <button
                             onClick={() => abrirCancelarItem(i)}
-                            className="mt-1 text-xs text-[#8FA0A8] hover:text-[#B3261E]"
+                            className="mt-1 text-xs text-ink-subtle hover:text-danger"
                           >
                             Cancelar item
                           </button>
@@ -766,28 +766,28 @@ export default function PdvPage() {
                 </ul>
               )}
 
-              <div className="border-t border-[#DCE3E7] pt-3 mb-4 space-y-1 text-sm">
+              <div className="border-t border-line pt-3 mb-4 space-y-1 text-sm">
                 {(Number(pedido.desconto) > 0 || Number(pedido.taxa_servico) > 0) && (
-                  <div className="flex justify-between text-[#5B6B73]">
+                  <div className="flex justify-between text-ink-muted">
                     <span>Itens</span>
                     <span>{moeda(pedido.subtotal)}</span>
                   </div>
                 )}
                 {Number(pedido.desconto) > 0 && (
-                  <div className="flex justify-between text-[#5B6B73]">
+                  <div className="flex justify-between text-ink-muted">
                     <span>Desconto</span>
                     <span>- {moeda(pedido.desconto)}</span>
                   </div>
                 )}
                 {Number(pedido.taxa_servico) > 0 && (
-                  <div className="flex justify-between text-[#5B6B73]">
+                  <div className="flex justify-between text-ink-muted">
                     <span>Taxa de serviço {Number(pedido.taxa_servico_pct)}%</span>
                     <span>{moeda(pedido.taxa_servico)}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center">
-                  <span className="font-medium text-[#5B6B73]">Total</span>
-                  <span className="text-xl font-bold text-[#16252B]">{moeda(pedido.total)}</span>
+                  <span className="font-medium text-ink-muted">Total</span>
+                  <span className="text-xl font-bold text-ink">{moeda(pedido.total)}</span>
                 </div>
               </div>
 
@@ -817,7 +817,7 @@ export default function PdvPage() {
               <button
                 onClick={cancelar}
                 disabled={ocupado}
-                className="w-full px-4 py-2.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] text-sm font-medium hover:bg-[#FADBD6] transition"
+                className="w-full px-4 py-2.5 rounded-lg border border-danger-line bg-surface text-danger text-sm font-medium hover:bg-danger-soft transition"
               >
                 Cancelar pedido
               </button>
@@ -861,7 +861,7 @@ export default function PdvPage() {
           >
             {cancelandoItem.quantidade > 1 && (
               <div>
-                <label className="block text-sm font-medium text-[#2B3C44] mb-1">Quantas unidades cancelar?</label>
+                <label className="block text-sm font-medium text-ink-soft mb-1">Quantas unidades cancelar?</label>
                 <select
                   value={qtdCancelar}
                   onChange={(e) => setQtdCancelar(Number(e.target.value))}
@@ -876,7 +876,7 @@ export default function PdvPage() {
               </div>
             )}
             {cancelandoItem.status_cozinha === 'pronto' && (
-              <label className="flex items-start gap-2 text-sm text-[#2B3C44]">
+              <label className="flex items-start gap-2 text-sm text-ink-soft">
                 <input
                   type="checkbox"
                   checked={devolverEstoque}
@@ -932,27 +932,27 @@ export default function PdvPage() {
         )}
 
         {faltas && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div role="alertdialog" className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4">
+          <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
+            <div role="alertdialog" className="ui-modal-panel p-6 w-full max-w-md space-y-4">
               <div>
-                <h2 className="text-lg font-bold text-[#16252B]">Falta estoque no sistema</h2>
-                <p className="text-sm text-[#5B6B73]">
+                <h2 className="text-lg font-bold text-ink">Falta estoque no sistema</h2>
+                <p className="text-sm text-ink-muted">
                   Confira com a cozinha antes de enviar. Se o ingrediente existe e só não foi lançado,
                   dá para enviar mesmo assim, e o gerente confere depois.
                 </p>
               </div>
-              <ul className="divide-y divide-[#E6ECEF] border-y border-[#E6ECEF]">
+              <ul className="divide-y divide-line-soft border-y border-line-soft">
                 {faltas.map((f) => (
                   <li key={f.ingrediente_id} className="py-2.5 text-sm">
-                    <p className="font-medium text-[#16252B]">
+                    <p className="font-medium text-ink">
                       {f.ingrediente_nome}
-                      <span className="font-normal text-[#5B6B73]"> · {f.produtos.join(', ')}</span>
+                      <span className="font-normal text-ink-muted"> · {f.produtos.join(', ')}</span>
                     </p>
-                    <p className="text-[#B3261E]">
+                    <p className="text-danger">
                       Precisa de {qtd(f.necessario)} {f.unidade}, o sistema tem {qtd(f.disponivel)} {f.unidade}
                     </p>
                     {f.naFila > 0 && (
-                      <p className="text-xs text-[#8FA0A8]">
+                      <p className="text-xs text-ink-subtle">
                         {qtd(f.naFila)} {f.unidade} já estão reservados para pedidos na cozinha
                       </p>
                     )}
@@ -966,7 +966,7 @@ export default function PdvPage() {
                 <button
                   onClick={enviarMesmoAssim}
                   disabled={ocupado}
-                  className="flex-1 px-4 py-2.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] text-sm font-medium hover:bg-[#FADBD6] disabled:opacity-50 transition"
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-danger-line bg-surface text-danger text-sm font-medium hover:bg-danger-soft disabled:opacity-50 transition"
                 >
                   {ocupado ? 'Enviando...' : 'Enviar mesmo assim'}
                 </button>
@@ -986,8 +986,8 @@ export default function PdvPage() {
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-[#16252B]">PDV</h1>
-            <p className="text-sm text-[#5B6B73]">Mesas, reservas e vendas no balcão</p>
+            <h1 className="text-2xl font-bold text-ink">PDV</h1>
+            <p className="text-sm text-ink-muted">Mesas, reservas e vendas no balcão</p>
           </div>
           <Link href="/impressao" className={BTN_SECONDARY}>
             Impressão
@@ -1005,7 +1005,7 @@ export default function PdvPage() {
         {problemasFila > 0 && (
           <Link
             href="/impressao"
-            className="mb-4 flex items-center justify-between gap-3 text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2 hover:underline"
+            className="mb-4 flex items-center justify-between gap-3 text-sm text-danger bg-danger-soft rounded-lg px-3 py-2 hover:underline"
           >
             <span>
               {problemasFila === 1 ? '1 impressão com problema' : problemasFila + ' impressões com problema'} (falha, sem
@@ -1018,10 +1018,10 @@ export default function PdvPage() {
         {mostrarNovaMesa && (
           <form
             onSubmit={handleNovaMesa}
-            className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-6 flex flex-wrap gap-2 items-end"
+            className="bg-surface border border-line rounded-xl p-4 mb-6 flex flex-wrap gap-2 items-end"
           >
             <div>
-              <label className="block text-xs font-medium text-[#5B6B73] mb-1">Número</label>
+              <label className="block text-xs font-medium text-ink-muted mb-1">Número</label>
               <input
                 type="number"
                 min="1"
@@ -1032,7 +1032,7 @@ export default function PdvPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#5B6B73] mb-1">Lugares</label>
+              <label className="block text-xs font-medium text-ink-muted mb-1">Lugares</label>
               <input
                 type="number"
                 min="1"
@@ -1048,16 +1048,16 @@ export default function PdvPage() {
         )}
 
         {loading ? (
-          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
+          <p className="text-center py-12 text-ink-muted">Carregando...</p>
         ) : (
           <>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-[#5B6B73] mb-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">
               Mesas
             </h2>
             {mesas.length === 0 ? (
-              <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center mb-8">
-                <p className="text-[#16252B]">Nenhuma mesa cadastrada</p>
-                <p className="text-sm text-[#5B6B73] mt-2">Clique em + Nova mesa para começar.</p>
+              <div className="bg-surface border border-line rounded-xl p-8 text-center mb-8">
+                <p className="text-ink">Nenhuma mesa cadastrada</p>
+                <p className="text-sm text-ink-muted mt-2">Clique em + Nova mesa para começar.</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-8">
@@ -1071,27 +1071,27 @@ export default function PdvPage() {
                       className={
                         'rounded-xl border p-4 transition ' +
                         (p?.pre_conta_em
-                          ? 'bg-[#DCEEF2] border-[#9CCBD6]'
+                          ? 'bg-accent-soft border-accent'
                           : p
-                          ? 'bg-[#FFF0C7] border-[#E8D28A]'
+                          ? 'bg-warning-soft border-warning-line'
                           : reservada
-                          ? 'bg-[#FADBD6] border-[#F2C2BB]'
-                          : 'bg-white border-[#DCE3E7] hover:border-[#0E6B7E]')
+                          ? 'bg-danger-soft border-danger-line'
+                          : 'bg-surface border-line hover:border-accent')
                       }
                     >
                       <button onClick={() => clicarMesa(m)} className="w-full text-left">
-                        <span className="block text-lg font-bold text-[#16252B]">
+                        <span className="block text-lg font-bold text-ink">
                           Mesa {m.numero}
                         </span>
-                        <span className="block text-xs text-[#5B6B73]">{m.capacidade} lugares</span>
+                        <span className="block text-xs text-ink-muted">{m.capacidade} lugares</span>
                         <span
                           className={
                             'inline-block mt-2 rounded-full px-3 py-1 text-xs font-semibold ' +
                             (p
-                              ? 'bg-white text-[#7A5A0A]'
+                              ? 'bg-surface text-warning'
                               : reservada
-                              ? 'bg-white text-[#B3261E]'
-                              : 'bg-[#D9F0E3] text-[#1E6B3F]')
+                              ? 'bg-surface text-danger'
+                              : 'bg-success-soft text-success')
                           }
                         >
                           {p
@@ -1101,7 +1101,7 @@ export default function PdvPage() {
                             : 'Livre'}
                         </span>
                         {reservada && (
-                          <span className="block text-xs text-[#5B6B73] mt-1 truncate">
+                          <span className="block text-xs text-ink-muted mt-1 truncate">
                             {reservaHoje!.nome_cliente}
                           </span>
                         )}
@@ -1110,13 +1110,13 @@ export default function PdvPage() {
                         <div className="flex gap-3 mt-2">
                           <button
                             onClick={() => abrirReserva(m)}
-                            className="text-xs font-medium text-[#0E6B7E] hover:underline"
+                            className="text-xs font-medium text-accent hover:underline"
                           >
                             Reservar
                           </button>
                           <button
                             onClick={() => handleExcluirMesa(m)}
-                            className="text-xs text-[#8FA0A8] hover:text-[#B3261E]"
+                            className="text-xs text-ink-subtle hover:text-danger"
                           >
                             Excluir
                           </button>
@@ -1129,52 +1129,52 @@ export default function PdvPage() {
             )}
 
             {/* Lista de reservas */}
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-[#5B6B73] mb-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">
               Reservas
             </h2>
             {reservas.length === 0 ? (
-              <div className="bg-white border border-[#DCE3E7] rounded-xl p-6 text-center mb-8">
-                <p className="text-sm text-[#5B6B73]">
+              <div className="bg-surface border border-line rounded-xl p-6 text-center mb-8">
+                <p className="text-sm text-ink-muted">
                   Nenhuma reserva. Use o botão Reservar no card da mesa.
                 </p>
               </div>
             ) : (
-              <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto mb-8">
+              <div className="bg-surface border border-line rounded-xl overflow-x-auto mb-8">
                 <table className="w-full">
-                  <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
+                  <thead className="bg-surface-hover border-b border-line">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Quando</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Mesa</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Cliente</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Pessoas</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Ações</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Quando</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Mesa</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Cliente</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-ink-muted">Pessoas</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-ink-muted">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E6ECEF]">
+                  <tbody className="divide-y divide-line-soft">
                     {reservas.map((r) => {
                       const mesa = mesas.find((m) => m.id === r.mesa_id);
                       return (
-                        <tr key={r.id} className="hover:bg-[#F8FAFB]">
-                          <td className="px-4 py-3 text-sm font-medium text-[#16252B]">
+                        <tr key={r.id} className="hover:bg-surface-hover">
+                          <td className="px-4 py-3 text-sm font-medium text-ink">
                             {dataHoraCurta(r.data_hora)}
                           </td>
-                          <td className="px-4 py-3 text-sm text-[#2B3C44]">
+                          <td className="px-4 py-3 text-sm text-ink-soft">
                             Mesa {mesa?.numero ?? '-'}
                           </td>
-                          <td className="px-4 py-3 text-sm text-[#2B3C44]">
+                          <td className="px-4 py-3 text-sm text-ink-soft">
                             {r.nome_cliente}
                             {r.telefone && (
-                              <span className="block text-xs text-[#5B6B73]">{r.telefone}</span>
+                              <span className="block text-xs text-ink-muted">{r.telefone}</span>
                             )}
                             {r.observacao && (
-                              <span className="block text-xs text-[#8FA0A8]">{r.observacao}</span>
+                              <span className="block text-xs text-ink-subtle">{r.observacao}</span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-center text-sm text-[#2B3C44]">{r.pessoas}</td>
+                          <td className="px-4 py-3 text-center text-sm text-ink-soft">{r.pessoas}</td>
                           <td className="px-4 py-3 text-center">
                             <button
                               onClick={() => cancelarReserva(r)}
-                              className="text-sm px-3 py-1.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] hover:bg-[#FADBD6] transition"
+                              className="text-sm px-3 py-1.5 rounded-lg border border-danger-line bg-surface text-danger hover:bg-danger-soft transition"
                             >
                               Cancelar
                             </button>
@@ -1189,7 +1189,7 @@ export default function PdvPage() {
 
             {balcaoAbertos.length > 0 && (
               <>
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-[#5B6B73] mb-3">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3">
                   Vendas no balcão em aberto
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -1197,12 +1197,12 @@ export default function PdvPage() {
                     <button
                       key={p.id}
                       onClick={() => abrirComanda(p)}
-                      className="text-left rounded-xl border border-[#DCE3E7] bg-white p-4 hover:border-[#0E6B7E] transition"
+                      className="text-left rounded-xl border border-line bg-surface p-4 hover:border-accent transition"
                     >
-                      <span className="block text-base font-bold text-[#16252B]">
+                      <span className="block text-base font-bold text-ink">
                         Balcão #{p.numero}
                       </span>
-                      <span className="block text-sm text-[#0E6B7E] font-semibold mt-1">
+                      <span className="block text-sm text-accent font-semibold mt-1">
                         {moeda(p.total)}
                       </span>
                     </button>
@@ -1213,42 +1213,42 @@ export default function PdvPage() {
 
             {fechadasHoje.length > 0 && (
               <>
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-[#5B6B73] mb-3 mt-8">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted mb-3 mt-8">
                   Contas fechadas hoje
                 </h2>
-                <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
+                <div className="bg-surface border border-line rounded-xl overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
+                    <thead className="bg-surface-hover border-b border-line">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Hora</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Conta</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Pagamento</th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Total</th>
-                        <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Ações</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Hora</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Conta</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Pagamento</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-ink-muted">Total</th>
+                        <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-ink-muted">Ações</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#E6ECEF]">
+                    <tbody className="divide-y divide-line-soft">
                       {fechadasHoje.map((c) => (
-                        <tr key={c.id} className="hover:bg-[#F8FAFB]">
-                          <td className="px-4 py-3 text-sm text-[#2B3C44]">{hora(c.fechado_em)}</td>
-                          <td className="px-4 py-3 text-sm font-medium text-[#16252B]">
+                        <tr key={c.id} className="hover:bg-surface-hover">
+                          <td className="px-4 py-3 text-sm text-ink-soft">{hora(c.fechado_em)}</td>
+                          <td className="px-4 py-3 text-sm font-medium text-ink">
                             {tituloConta(c)}
                             {c.reaberturas > 0 && (
-                              <span className="ml-2 text-xs font-normal text-[#B3261E]">reaberta {c.reaberturas}×</span>
+                              <span className="ml-2 text-xs font-normal text-danger">reaberta {c.reaberturas}×</span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-sm text-[#2B3C44]">{rotuloForma(c.forma_pagamento)}</td>
-                          <td className="px-4 py-3 text-sm text-right font-semibold text-[#16252B]">{moeda(c.total)}</td>
+                          <td className="px-4 py-3 text-sm text-ink-soft">{rotuloForma(c.forma_pagamento)}</td>
+                          <td className="px-4 py-3 text-sm text-right font-semibold text-ink">{moeda(c.total)}</td>
                           <td className="px-4 py-3 text-center whitespace-nowrap">
                             <button
                               onClick={() => setHistorico({ id: c.id, titulo: tituloConta(c) })}
-                              className="text-sm px-3 py-1.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] hover:bg-[#F1F5F7] transition mr-2"
+                              className="text-sm px-3 py-1.5 rounded-lg border border-line bg-surface text-ink-soft hover:bg-surface-hover transition mr-2"
                             >
                               Comprovante e histórico
                             </button>
                             <button
                               onClick={() => setReabrindo(c)}
-                              className="text-sm px-3 py-1.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] hover:bg-[#FADBD6] transition"
+                              className="text-sm px-3 py-1.5 rounded-lg border border-danger-line bg-surface text-danger hover:bg-danger-soft transition"
                             >
                               Reabrir
                             </button>
@@ -1288,19 +1288,19 @@ export default function PdvPage() {
 
       {/* Modal: nova reserva */}
       {mesaReserva && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
           <form
             onSubmit={salvarReserva}
-            className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4"
+            className="ui-modal-panel p-6 w-full max-w-md space-y-4"
           >
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-bold text-[#16252B]">
+              <h2 className="text-lg font-bold text-ink">
                 Reservar mesa {mesaReserva.numero}
               </h2>
               <button
                 type="button"
                 onClick={() => setMesaReserva(null)}
-                className="text-xl text-[#8FA0A8] hover:text-[#16252B]"
+                className="text-xl text-ink-subtle hover:text-ink"
                 aria-label="Fechar"
               >
                 ✕
@@ -1308,8 +1308,8 @@ export default function PdvPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#2B3C44] mb-1">
-                Nome do cliente <span className="text-[#B3261E]">*</span>
+              <label className="block text-sm font-medium text-ink-soft mb-1">
+                Nome do cliente <span className="text-danger">*</span>
               </label>
               <input
                 type="text"
@@ -1322,7 +1322,7 @@ export default function PdvPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-[#2B3C44] mb-1">Telefone</label>
+                <label className="block text-sm font-medium text-ink-soft mb-1">Telefone</label>
                 <input
                   type="tel"
                   value={rTelefone}
@@ -1332,8 +1332,8 @@ export default function PdvPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#2B3C44] mb-1">
-                  Pessoas <span className="text-[#B3261E]">*</span>
+                <label className="block text-sm font-medium text-ink-soft mb-1">
+                  Pessoas <span className="text-danger">*</span>
                 </label>
                 <input
                   type="number"
@@ -1346,8 +1346,8 @@ export default function PdvPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#2B3C44] mb-1">
-                Data e hora <span className="text-[#B3261E]">*</span>
+              <label className="block text-sm font-medium text-ink-soft mb-1">
+                Data e hora <span className="text-danger">*</span>
               </label>
               <input
                 type="datetime-local"
@@ -1358,7 +1358,7 @@ export default function PdvPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#2B3C44] mb-1">Observação</label>
+              <label className="block text-sm font-medium text-ink-soft mb-1">Observação</label>
               <input
                 type="text"
                 value={rObs}
@@ -1369,7 +1369,7 @@ export default function PdvPage() {
             </div>
 
             {rErro && (
-              <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+              <div role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
                 {rErro}
               </div>
             )}

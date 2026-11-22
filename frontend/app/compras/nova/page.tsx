@@ -36,7 +36,7 @@ const BEBIDAS: { valor: FiltroBebida; rotulo: string }[] = [
 
 const chip = (ativo: boolean) =>
   'text-sm px-3.5 py-1.5 rounded-full font-medium transition border ' +
-  (ativo ? 'bg-[#0E6B7E] text-white border-[#0E6B7E]' : 'bg-white text-[#5B6B73] border-[#DCE3E7] hover:bg-[#F1F5F7]');
+  (ativo ? 'bg-accent text-accent-contrast border-accent' : 'bg-surface text-ink-muted border-line hover:bg-surface-hover');
 
 export default function NovaSolicitacaoPage() {
   const router = useRouter();
@@ -177,7 +177,7 @@ export default function NovaSolicitacaoPage() {
   if (loading) {
     return (
       <div className="px-4 py-12 text-center">
-        <p className="text-[#5B6B73]">Carregando...</p>
+        <p className="text-ink-muted">Carregando...</p>
       </div>
     );
   }
@@ -187,25 +187,25 @@ export default function NovaSolicitacaoPage() {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <button onClick={() => router.push('/compras')} className="btn-voltar"><ConteudoVoltar /></button>
-          <h1 className="text-2xl font-bold text-[#16252B]">Nova solicitação de compra</h1>
+          <h1 className="text-2xl font-bold text-ink">Nova solicitação de compra</h1>
         </div>
 
-        <form onSubmit={handleSalvar} className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-5">
+        <form onSubmit={handleSalvar} className="bg-surface border border-line rounded-xl p-6 space-y-5">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-              <label className="block text-sm font-medium text-[#2B3C44]">Itens necessários</label>
+              <label className="block text-sm font-medium text-ink-soft">Itens necessários</label>
               <button
                 type="button"
                 onClick={() => preencherPeloEstoque(false)}
-                className="text-sm font-medium text-[#0E6B7E] hover:underline"
+                className="text-sm font-medium text-accent hover:underline"
               >
                 Preencher pelo estoque mínimo
               </button>
             </div>
-            {aviso && <p className="text-sm text-[#1E6B3F] bg-[#D9F0E3] rounded-lg px-3 py-2 mb-3">{aviso}</p>}
+            {aviso && <p className="text-sm text-success bg-success-soft rounded-lg px-3 py-2 mb-3">{aviso}</p>}
 
             {/* Filtros: facilitam achar o item na lista de escolha */}
-            <div className="rounded-lg border border-[#E6ECEF] bg-[#F8FAFB] p-3 mb-3 space-y-2.5">
+            <div className="rounded-lg border border-line-soft bg-surface-hover p-3 mb-3 space-y-2.5">
               <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar item para comprar..." />
               <div className="flex flex-wrap gap-1.5">
                 {TIPOS.map((t) => (
@@ -233,7 +233,7 @@ export default function NovaSolicitacaoPage() {
                   ))}
                 </div>
               )}
-              <p className="text-xs text-[#8FA0A8]">
+              <p className="text-xs text-ink-subtle">
                 {totalFiltrado === 0
                   ? 'Nenhum item com esse filtro.'
                   : totalFiltrado + (totalFiltrado === 1 ? ' item disponível' : ' itens disponíveis') + ' na lista de escolha abaixo. Pratos não aparecem aqui.'}
@@ -245,7 +245,7 @@ export default function NovaSolicitacaoPage() {
                   <select
                     value={item.ingrediente_id}
                     onChange={(e) => atualizarLinha(index, 'ingrediente_id', e.target.value)}
-                    className="flex-1 min-w-0 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+                    className="flex-1 min-w-0 border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
                   >
                     <option value="">Selecione...</option>
                     {opcoesDaLinha(item.ingrediente_id).map((ing) => (
@@ -258,12 +258,12 @@ export default function NovaSolicitacaoPage() {
                     value={item.quantidade}
                     onChange={(e) => atualizarLinha(index, 'quantidade', e.target.value)}
                     placeholder="Qtd"
-                    className="w-24 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+                    className="w-24 border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                   <select
                     value={item.unidade}
                     onChange={(e) => atualizarLinha(index, 'unidade', e.target.value)}
-                    className="w-20 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+                    className="w-20 border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
                   >
                     <option value="kg">kg</option>
                     <option value="g">g</option>
@@ -277,7 +277,7 @@ export default function NovaSolicitacaoPage() {
                     <button
                       type="button"
                       onClick={() => removerLinha(index)}
-                      className="h-10 px-2 text-[#8FA0A8] hover:text-[#B3261E]"
+                      className="h-10 px-2 text-ink-subtle hover:text-danger"
                     >
                       ✕
                     </button>
@@ -288,25 +288,25 @@ export default function NovaSolicitacaoPage() {
             <button
               type="button"
               onClick={adicionarLinha}
-              className="mt-3 text-sm font-medium text-[#0E6B7E] hover:underline"
+              className="mt-3 text-sm font-medium text-accent hover:underline"
             >
               + Adicionar item
             </button>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#2B3C44] mb-1">Observação (opcional)</label>
+            <label className="block text-sm font-medium text-ink-soft mb-1">Observação (opcional)</label>
             <textarea
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
               rows={3}
               placeholder="Ex: urgente, precisa até sexta"
-              className="w-full border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+              className="w-full border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
 
           {erro && (
-            <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">{erro}</div>
+            <div role="alert" className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">{erro}</div>
           )}
 
           <div className="flex gap-3 pt-2">
@@ -320,7 +320,7 @@ export default function NovaSolicitacaoPage() {
             <button
               type="button"
               onClick={() => router.push('/compras')}
-              className="flex-1 px-4 py-2.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] text-sm font-medium hover:bg-[#F1F5F7] transition"
+              className="flex-1 px-4 py-2.5 rounded-lg border border-line bg-surface text-ink-soft text-sm font-medium hover:bg-surface-hover transition"
             >
               Cancelar
             </button>

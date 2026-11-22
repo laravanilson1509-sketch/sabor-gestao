@@ -36,11 +36,11 @@ const FILTROS: { label: string; value: StatusDelivery | 'todos' }[] = [
 
 // Cores dos selos de status (visual claro)
 const COR_STATUS: Record<string, string> = {
-  novo: 'bg-[#DCEEF2] text-[#0B4F5E]',
-  em_preparo: 'bg-[#FFF0C7] text-[#7A5A0A]',
-  saiu_entrega: 'bg-[#E6E4F7] text-[#3F3A8C]',
-  entregue: 'bg-[#D9F0E3] text-[#1E6B3F]',
-  cancelado: 'bg-[#FADBD6] text-[#9B2C1F]',
+  novo: 'bg-accent-soft text-accent-ink',
+  em_preparo: 'bg-warning-soft text-warning',
+  saiu_entrega: 'bg-violet-soft text-violet',
+  entregue: 'bg-success-soft text-success',
+  cancelado: 'bg-danger-soft text-danger',
 };
 
 // Remove emojis/símbolos no começo de textos vindos da lib (ex: "🍳 Iniciar preparo")
@@ -121,12 +121,12 @@ export default function DeliveryPage() {
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-[#16252B]">Delivery</h1>
-            <p className="text-sm text-[#5B6B73] mt-1">Acompanhe os pedidos de entrega</p>
+            <h1 className="text-3xl font-bold text-ink">Delivery</h1>
+            <p className="text-sm text-ink-muted mt-1">Acompanhe os pedidos de entrega</p>
           </div>
           <button
             onClick={carregar}
-            className="px-4 py-2 rounded-lg border border-[#DCE3E7] bg-white text-sm font-medium text-[#2B3C44] hover:bg-[#F1F5F7] transition"
+            className="px-4 py-2 rounded-lg border border-line bg-surface text-sm font-medium text-ink-soft hover:bg-surface-hover transition"
           >
             Atualizar
           </button>
@@ -143,8 +143,8 @@ export default function DeliveryPage() {
               className={
                 'text-sm px-3.5 py-1.5 rounded-full font-medium transition ' +
                 (filtro === f.value
-                  ? 'bg-[#0E6B7E] text-white'
-                  : 'bg-white text-[#5B6B73] border border-[#DCE3E7] hover:bg-[#F1F5F7]')
+                  ? 'bg-accent text-accent-contrast'
+                  : 'bg-surface text-ink-muted border border-line hover:bg-surface-hover')
               }
             >
               {f.label}
@@ -153,12 +153,12 @@ export default function DeliveryPage() {
         </div>
 
         {loading ? (
-          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
+          <p className="text-center py-12 text-ink-muted">Carregando...</p>
         ) : pedidos.length > 0 && pedidosFiltrados.length === 0 ? (
           <NadaEncontrado busca={busca} />
         ) : pedidos.length === 0 ? (
-          <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
-            <p className="text-[#16252B]">Nenhum pedido encontrado</p>
+          <div className="bg-surface border border-line rounded-xl p-8 text-center">
+            <p className="text-ink">Nenhum pedido encontrado</p>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -173,26 +173,26 @@ export default function DeliveryPage() {
               const corStatus = COR_STATUS[pedido.status] || statusInfo.cor;
 
               return (
-                <div key={pedido.id} className="bg-white border border-[#DCE3E7] rounded-xl p-4 md:p-5">
+                <div key={pedido.id} className="bg-surface border border-line rounded-xl p-4 md:p-5">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="flex-1 min-w-[220px]">
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span className={'text-xs font-semibold px-2.5 py-1 rounded-full ' + corStatus}>
                           {limpar(statusInfo.label)}
                         </span>
-                        <span className="text-xs text-[#8FA0A8]">
+                        <span className="text-xs text-ink-subtle">
                           {data} às {hora}
                         </span>
                       </div>
-                      <p className="text-sm font-semibold text-[#16252B]">{pedido.telefone_cliente}</p>
-                      <p className="text-sm text-[#5B6B73]">{pedido.endereco_entrega}</p>
-                      <p className="text-sm text-[#5B6B73] mt-1">
+                      <p className="text-sm font-semibold text-ink">{pedido.telefone_cliente}</p>
+                      <p className="text-sm text-ink-muted">{pedido.endereco_entrega}</p>
+                      <p className="text-sm text-ink-muted mt-1">
                         Pagamento:{' '}
                         {pedido.forma_pagamento.charAt(0).toUpperCase() + pedido.forma_pagamento.slice(1)}
                         {' — '}
                         <span className={pagamentoInfo.cor}>{limpar(pagamentoInfo.label)}</span>
                       </p>
-                      <p className="text-base font-bold text-[#16252B] mt-2">
+                      <p className="text-base font-bold text-ink mt-2">
                         Total: {moeda(Number(pedido.valor_total))}
                       </p>
                     </div>
@@ -200,7 +200,7 @@ export default function DeliveryPage() {
                     <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">
                       <button
                         onClick={() => setPedidoAberto(pedido)}
-                        className="text-sm px-4 py-2 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] hover:bg-[#F1F5F7] transition"
+                        className="text-sm px-4 py-2 rounded-lg border border-line bg-surface text-ink-soft hover:bg-surface-hover transition"
                       >
                         Ver itens
                       </button>
@@ -216,7 +216,7 @@ export default function DeliveryPage() {
                       {pedido.status !== 'cancelado' && pedido.status !== 'entregue' && (
                         <button
                           onClick={() => setParaCancelar(pedido)}
-                          className="text-sm px-4 py-2 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] hover:bg-[#FADBD6] transition"
+                          className="text-sm px-4 py-2 rounded-lg border border-danger-line bg-surface text-danger hover:bg-danger-soft transition"
                         >
                           Cancelar
                         </button>
@@ -232,13 +232,13 @@ export default function DeliveryPage() {
 
       {/* Janela: ver itens */}
       {pedidoAberto && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
+          <div className="ui-modal-panel p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-[#16252B]">Itens do pedido</h2>
+              <h2 className="text-lg font-bold text-ink">Itens do pedido</h2>
               <button
                 onClick={() => setPedidoAberto(null)}
-                className="h-9 w-9 text-xl text-[#5B6B73] hover:text-[#16252B]"
+                className="h-9 w-9 text-xl text-ink-muted hover:text-ink"
                 aria-label="Fechar"
               >
                 ✕
@@ -246,7 +246,7 @@ export default function DeliveryPage() {
             </div>
             <div className="space-y-2 mb-4">
               {pedidoAberto.itens.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm text-[#2B3C44]">
+                <div key={i} className="flex justify-between text-sm text-ink-soft">
                   <span>
                     {item.quantidade}x {item.nome}
                   </span>
@@ -255,12 +255,12 @@ export default function DeliveryPage() {
                   </span>
                 </div>
               ))}
-              <div className="border-t border-[#DCE3E7] pt-2 flex justify-between font-bold text-[#16252B]">
+              <div className="border-t border-line pt-2 flex justify-between font-bold text-ink">
                 <span>Total</span>
                 <span>{moeda(Number(pedidoAberto.valor_total))}</span>
               </div>
             </div>
-            <div className="text-sm text-[#5B6B73] space-y-1 mb-4">
+            <div className="text-sm text-ink-muted space-y-1 mb-4">
               <p>Endereço: {pedidoAberto.endereco_entrega}</p>
               <p>Telefone: {pedidoAberto.telefone_cliente}</p>
               <p>
@@ -285,12 +285,12 @@ export default function DeliveryPage() {
 
       {/* Janela: confirmar cancelamento */}
       {paraCancelar && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-2 text-[#B3261E]">Cancelar pedido?</h2>
-            <p className="text-sm text-[#5B6B73] mb-6">
+        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
+          <div className="ui-modal-panel p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold mb-2 text-danger">Cancelar pedido?</h2>
+            <p className="text-sm text-ink-muted mb-6">
               Tem certeza que quer cancelar o pedido de{' '}
-              <strong className="text-[#16252B]">{paraCancelar.telefone_cliente}</strong>?
+              <strong className="text-ink">{paraCancelar.telefone_cliente}</strong>?
             </p>
             <div className="flex gap-3">
               <button

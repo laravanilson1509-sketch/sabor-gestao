@@ -68,11 +68,11 @@ export type ConfigPdv = {
 };
 
 export const ROTULO_STATUS: Record<StatusImpressao, { rotulo: string; cor: string }> = {
-  pendente: { rotulo: 'Na fila', cor: 'bg-[#FFF0C7] text-[#7A5A0A]' },
-  imprimindo: { rotulo: 'Imprimindo', cor: 'bg-[#DCEEF2] text-[#0B4F5E]' },
-  impresso: { rotulo: 'Impresso', cor: 'bg-[#D9F0E3] text-[#1E6B3F]' },
-  falha: { rotulo: 'Falhou', cor: 'bg-[#FADBD6] text-[#B3261E]' },
-  sem_impressora: { rotulo: 'Sem impressora', cor: 'bg-[#FADBD6] text-[#B3261E]' },
+  pendente: { rotulo: 'Na fila', cor: 'bg-warning-soft text-warning' },
+  imprimindo: { rotulo: 'Imprimindo', cor: 'bg-accent-soft text-accent-ink' },
+  impresso: { rotulo: 'Impresso', cor: 'bg-success-soft text-success' },
+  falha: { rotulo: 'Falhou', cor: 'bg-danger-soft text-danger' },
+  sem_impressora: { rotulo: 'Sem impressora', cor: 'bg-danger-soft text-danger' },
 };
 
 // uma estação que não busca a fila há mais que isso é considerada desligada

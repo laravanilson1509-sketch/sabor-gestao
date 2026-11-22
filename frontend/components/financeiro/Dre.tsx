@@ -23,14 +23,14 @@ function Linha({
     <div
       className={
         'flex justify-between gap-3 px-3 py-2 ' +
-        (destaque ? 'bg-[#F4F7F8] font-bold text-[#16252B]' : 'text-[#2B3C44]') +
+        (destaque ? 'bg-surface-hover font-bold text-ink' : 'text-ink-soft') +
         (recuo ? ' pl-7 text-sm' : '')
       }
     >
       <span>{rotulo}</span>
       <span
         className={
-          'whitespace-nowrap ' + (negativo ? 'text-[#B3261E]' : destaque && valor < 0 ? 'text-[#B3261E]' : '')
+          'whitespace-nowrap ' + (negativo ? 'text-danger' : destaque && valor < 0 ? 'text-danger' : '')
         }
       >
         {negativo ? '− ' : ''}
@@ -67,58 +67,58 @@ export default function Dre() {
   const categorias = CATEGORIAS.pagar;
 
   return (
-    <div className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-4">
+    <div className="bg-surface border border-line rounded-xl p-6 space-y-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-lg font-bold text-[#16252B]">DRE — resultado do mês</h2>
-          <p className="text-sm text-[#5B6B73]">Quanto o restaurante lucrou (ou perdeu) no mês</p>
+          <h2 className="text-lg font-bold text-ink">DRE — resultado do mês</h2>
+          <p className="text-sm text-ink-muted">Quanto o restaurante lucrou (ou perdeu) no mês</p>
         </div>
         <input
           type="month"
           value={mes}
           onChange={(e) => setMes(e.target.value)}
-          className="border border-[#C9D3D8] rounded-lg px-3 py-2 text-sm text-[#16252B] bg-white focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+          className="border border-line-strong rounded-lg px-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
 
-      {erro && <p className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">{erro}</p>}
+      {erro && <p className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">{erro}</p>}
 
       {loading || !dre ? (
-        !erro && <p className="text-sm text-[#5B6B73]">Carregando...</p>
+        !erro && <p className="text-sm text-ink-muted">Carregando...</p>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-            <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
-              <p className="text-xs text-[#5B6B73]">Faturamento</p>
-              <p className="font-bold text-[#16252B]">{formatarReais(dre.faturamento)}</p>
+            <div className="bg-surface-hover border border-line rounded-lg p-3">
+              <p className="text-xs text-ink-muted">Faturamento</p>
+              <p className="font-bold text-ink">{formatarReais(dre.faturamento)}</p>
             </div>
             <div
               className={
                 'border rounded-lg p-3 ' +
-                (dre.lucroLiquido < 0 ? 'bg-[#FADBD6] border-[#F2C2BB]' : 'bg-[#DDF1E4] border-[#B7DFC4]')
+                (dre.lucroLiquido < 0 ? 'bg-danger-soft border-danger-line' : 'bg-success-soft border-success-line')
               }
             >
-              <p className="text-xs text-[#5B6B73]">{dre.lucroLiquido < 0 ? 'Prejuízo' : 'Lucro líquido'}</p>
-              <p className={'font-bold ' + (dre.lucroLiquido < 0 ? 'text-[#B3261E]' : 'text-[#1E6B3A]')}>
+              <p className="text-xs text-ink-muted">{dre.lucroLiquido < 0 ? 'Prejuízo' : 'Lucro líquido'}</p>
+              <p className={'font-bold ' + (dre.lucroLiquido < 0 ? 'text-danger' : 'text-success')}>
                 {formatarReais(dre.lucroLiquido)}
               </p>
             </div>
-            <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
-              <p className="text-xs text-[#5B6B73]">Margem líquida</p>
-              <p className="font-bold text-[#0E6B7E]">
+            <div className="bg-surface-hover border border-line rounded-lg p-3">
+              <p className="text-xs text-ink-muted">Margem líquida</p>
+              <p className="font-bold text-accent">
                 {dre.margemPct === null ? '—' : dre.margemPct.toFixed(1).replace('.', ',') + '%'}
               </p>
             </div>
           </div>
 
-          <div className="border border-[#DCE3E7] rounded-lg divide-y divide-[#E6ECEF]">
+          <div className="border border-line rounded-lg divide-y divide-line-soft">
             <Linha rotulo={`Vendas (${dre.quantidadeVendas} pedidos)`} valor={dre.faturamentoVendas} recuo />
             <Linha rotulo="Outras receitas (contas recebidas)" valor={dre.outrasReceitas} recuo />
             <Linha rotulo="= Faturamento" valor={dre.faturamento} destaque />
             <Linha rotulo="Custo dos produtos vendidos (CMV)" valor={dre.cmv} negativo recuo />
             <Linha rotulo="= Lucro bruto" valor={dre.lucroBruto} destaque />
             {dre.despesas.length === 0 ? (
-              <p className="px-7 py-2 text-sm text-[#8FA0A8]">Nenhuma despesa paga neste mês</p>
+              <p className="px-7 py-2 text-sm text-ink-subtle">Nenhuma despesa paga neste mês</p>
             ) : (
               dre.despesas.map((d) => (
                 <Linha
@@ -133,7 +133,7 @@ export default function Dre() {
             <Linha rotulo="= Lucro líquido" valor={dre.lucroLiquido} destaque />
           </div>
 
-          <div className="text-xs text-[#5B6B73] space-y-1">
+          <div className="text-xs text-ink-muted space-y-1">
             <p>
               <strong>CMV</strong> é o custo dos ingredientes e produtos que saíram do estoque nas vendas, usando o
               custo unitário atual cadastrado no Estoque.

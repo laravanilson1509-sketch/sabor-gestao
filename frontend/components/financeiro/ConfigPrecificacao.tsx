@@ -13,7 +13,7 @@ function Campo(props: {
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-[#2B3C44] mb-1">{props.rotulo}</label>
+      <label className="block text-sm font-medium text-ink-soft mb-1">{props.rotulo}</label>
       <div className="flex items-center gap-2">
         <input
           type="number"
@@ -21,11 +21,11 @@ function Campo(props: {
           min="0"
           value={props.valor}
           onChange={(e) => props.onChange(e.target.value)}
-          className="w-full border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+          className="w-full border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
         />
-        <span className="text-sm text-[#5B6B73]">{props.sufixo}</span>
+        <span className="text-sm text-ink-muted">{props.sufixo}</span>
       </div>
-      <p className="text-xs text-[#8FA0A8] mt-1">{props.dica}</p>
+      <p className="text-xs text-ink-subtle mt-1">{props.dica}</p>
     </div>
   );
 }
@@ -102,14 +102,14 @@ export default function ConfigPrecificacao({ onSalvo }: { onSalvo: () => void })
   }
 
   if (loading) {
-    return <div className="bg-white border border-[#DCE3E7] rounded-xl p-6 text-sm text-[#5B6B73]">Carregando...</div>;
+    return <div className="bg-surface border border-line rounded-xl p-6 text-sm text-ink-muted">Carregando...</div>;
   }
 
   return (
-    <form onSubmit={handleSalvar} className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-4">
+    <form onSubmit={handleSalvar} className="bg-surface border border-line rounded-xl p-6 space-y-4">
       <div>
-        <h2 className="text-lg font-bold text-[#16252B]">Parametros de preco</h2>
-        <p className="text-sm text-[#5B6B73]">
+        <h2 className="text-lg font-bold text-ink">Parametros de preco</h2>
+        <p className="text-sm text-ink-muted">
           Valem para todas as fichas tecnicas. O preco sugerido divide o custo por (1 - soma dos percentuais).
         </p>
       </div>
@@ -127,12 +127,12 @@ export default function ConfigPrecificacao({ onSalvo }: { onSalvo: () => void })
           dica="Usado para ratear os custos fixos entre os pratos" />
       </div>
 
-      <p className={'text-sm font-medium ' + (soma >= 100 ? 'text-[#B3261E]' : 'text-[#2B3C44]')}>
+      <p className={'text-sm font-medium ' + (soma >= 100 ? 'text-danger' : 'text-ink-soft')}>
         Soma dos percentuais: {soma.toFixed(2)}%
       </p>
 
-      {erro && <p className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">{erro}</p>}
-      {msg && <p className="text-sm text-[#1E6B3F] bg-[#D9F0E3] rounded-lg px-3 py-2">{msg}</p>}
+      {erro && <p className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">{erro}</p>}
+      {msg && <p className="text-sm text-success bg-success-soft rounded-lg px-3 py-2">{msg}</p>}
 
       <button
         type="submit"

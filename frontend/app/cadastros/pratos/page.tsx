@@ -18,7 +18,7 @@ type Prato = {
 };
 
 const BTN =
-  'text-sm px-3 py-1.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] hover:bg-[#F1F5F7] transition';
+  'text-sm px-3 py-1.5 rounded-lg border border-line bg-surface text-ink-soft hover:bg-surface-hover transition';
 
 export default function PratosPage() {
   const supabase = createBrowserClient(
@@ -128,8 +128,8 @@ export default function PratosPage() {
             <ConteudoVoltar />
           </Link>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-[#16252B]">Pratos</h1>
-            <p className="text-sm text-[#5B6B73]">Pratos do cardápio e seus preços de venda</p>
+            <h1 className="text-2xl font-bold text-ink">Pratos</h1>
+            <p className="text-sm text-ink-muted">Pratos do cardápio e seus preços de venda</p>
           </div>
           <button
             onClick={() => setShowForm((v) => !v)}
@@ -142,14 +142,14 @@ export default function PratosPage() {
         {showForm && (
           <form
             onSubmit={handleCriar}
-            className="bg-white border border-[#DCE3E7] rounded-xl p-4 mb-6 flex gap-2 flex-wrap"
+            className="bg-surface border border-line rounded-xl p-4 mb-6 flex gap-2 flex-wrap"
           >
             <input
               type="text"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Nome do prato. Ex: Tacacá"
-              className="flex-1 min-w-48 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+              className="flex-1 min-w-48 border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
               autoFocus
             />
             <button
@@ -160,7 +160,7 @@ export default function PratosPage() {
               {salvando ? 'Salvando...' : 'Cadastrar prato'}
             </button>
             {erro && (
-              <p role="alert" className="w-full text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+              <p role="alert" className="w-full text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
                 {erro}
               </p>
             )}
@@ -172,41 +172,41 @@ export default function PratosPage() {
         )}
 
         {loading ? (
-          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
+          <p className="text-center py-12 text-ink-muted">Carregando...</p>
         ) : pratos.length === 0 ? (
-          <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
-            <p className="text-[#16252B]">Nenhum prato cadastrado</p>
-            <p className="text-sm text-[#5B6B73] mt-2">Clique em + Novo prato para começar</p>
+          <div className="bg-surface border border-line rounded-xl p-8 text-center">
+            <p className="text-ink">Nenhum prato cadastrado</p>
+            <p className="text-sm text-ink-muted mt-2">Clique em + Novo prato para começar</p>
           </div>
         ) : pratosFiltrados.length === 0 ? (
           <NadaEncontrado busca={busca} />
         ) : (
-          <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
+          <div className="bg-surface border border-line rounded-xl overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
+              <thead className="bg-surface-hover border-b border-line">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Prato</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Preço de venda</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Status</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-[#5B6B73]">Ações</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Prato</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-ink-muted">Preço de venda</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Status</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-ink-muted">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E6ECEF]">
+              <tbody className="divide-y divide-line-soft">
                 {pratosFiltrados.map((p) => (
-                  <tr key={p.id} className={'hover:bg-[#F8FAFB] ' + (p.ativo ? '' : 'opacity-60')}>
-                    <td className="px-4 py-4 text-sm font-medium text-[#16252B]">{p.nome}</td>
-                    <td className="px-4 py-4 text-right text-sm text-[#2B3C44]">
+                  <tr key={p.id} className={'hover:bg-surface-hover ' + (p.ativo ? '' : 'opacity-60')}>
+                    <td className="px-4 py-4 text-sm font-medium text-ink">{p.nome}</td>
+                    <td className="px-4 py-4 text-right text-sm text-ink-soft">
                       {Number(p.preco_venda) > 0
                         ? moeda(Number(p.preco_venda))
                         : 'Não definido'}
                     </td>
                     <td className="px-4 py-4 text-sm">
                       {p.ativo ? (
-                        <span className="inline-block rounded-full bg-[#D9F0E3] text-[#1E6B3F] px-3 py-1 text-xs font-semibold">
+                        <span className="inline-block rounded-full bg-success-soft text-success px-3 py-1 text-xs font-semibold">
                           Ativo
                         </span>
                       ) : (
-                        <span className="inline-block rounded-full bg-[#FFF0C7] text-[#7A5A0A] px-3 py-1 text-xs font-semibold">
+                        <span className="inline-block rounded-full bg-warning-soft text-warning px-3 py-1 text-xs font-semibold">
                           Pausado
                         </span>
                       )}
@@ -215,7 +215,7 @@ export default function PratosPage() {
                       <div className="flex gap-1.5 justify-center flex-wrap">
                         <Link
                           href={'/cadastros/fichas-tecnicas/' + p.id}
-                          className="text-sm px-3 py-1.5 rounded-lg bg-[#DCEEF2] text-[#0B4F5E] font-medium hover:bg-[#C9E3EA] transition"
+                          className="text-sm px-3 py-1.5 rounded-lg bg-accent-soft text-accent-ink font-medium hover:bg-accent-soft-hover transition"
                         >
                           Ficha técnica
                         </Link>
@@ -227,7 +227,7 @@ export default function PratosPage() {
                         </button>
                         <button
                           onClick={() => excluir(p)}
-                          className="text-sm px-3 py-1.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] hover:bg-[#FADBD6] transition"
+                          className="text-sm px-3 py-1.5 rounded-lg border border-danger-line bg-surface text-danger hover:bg-danger-soft transition"
                         >
                           Excluir
                         </button>

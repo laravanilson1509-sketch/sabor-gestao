@@ -92,56 +92,56 @@ export default function CustosFixos({ versao }: { versao: number }) {
   const resumo = calcularCustoFixoPorPrato(custos, vendas);
 
   if (loading) {
-    return <div className="bg-white border border-[#DCE3E7] rounded-xl p-6 text-sm text-[#5B6B73]">Carregando...</div>;
+    return <div className="bg-surface border border-line rounded-xl p-6 text-sm text-ink-muted">Carregando...</div>;
   }
 
   return (
-    <div className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-4">
+    <div className="bg-surface border border-line rounded-xl p-6 space-y-4">
       <div>
-        <h2 className="text-lg font-bold text-[#16252B]">Custos fixos mensais</h2>
-        <p className="text-sm text-[#5B6B73]">Aluguel, energia, salários, internet...</p>
+        <h2 className="text-lg font-bold text-ink">Custos fixos mensais</h2>
+        <p className="text-sm text-ink-muted">Aluguel, energia, salários, internet...</p>
       </div>
 
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
-          <p className="text-xs text-[#5B6B73]">Total ativo / mês</p>
-          <p className="font-bold text-[#16252B]">{moeda(resumo.total)}</p>
+        <div className="bg-surface-hover border border-line rounded-lg p-3">
+          <p className="text-xs text-ink-muted">Total ativo / mês</p>
+          <p className="font-bold text-ink">{moeda(resumo.total)}</p>
         </div>
-        <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
-          <p className="text-xs text-[#5B6B73]">Vendas previstas</p>
-          <p className="font-bold text-[#16252B]">{vendas}</p>
+        <div className="bg-surface-hover border border-line rounded-lg p-3">
+          <p className="text-xs text-ink-muted">Vendas previstas</p>
+          <p className="font-bold text-ink">{vendas}</p>
         </div>
-        <div className="bg-[#F4F7F8] border border-[#DCE3E7] rounded-lg p-3">
-          <p className="text-xs text-[#5B6B73]">Custo fixo por prato</p>
-          <p className="font-bold text-[#0E6B7E]">{moeda(resumo.porPrato)}</p>
+        <div className="bg-surface-hover border border-line rounded-lg p-3">
+          <p className="text-xs text-ink-muted">Custo fixo por prato</p>
+          <p className="font-bold text-accent">{moeda(resumo.porPrato)}</p>
         </div>
       </div>
       {vendas === 0 && (
-        <p className="text-xs text-[#7A5A0A] bg-[#FFF0C7] border border-[#E8D28A] rounded-lg px-3 py-2">
+        <p className="text-xs text-warning bg-warning-soft border border-warning-line rounded-lg px-3 py-2">
           Defina as vendas previstas por mês nos parâmetros acima para o rateio funcionar.
         </p>
       )}
 
       {custos.length === 0 ? (
-        <p className="text-sm text-[#5B6B73]">Nenhum custo fixo cadastrado</p>
+        <p className="text-sm text-ink-muted">Nenhum custo fixo cadastrado</p>
       ) : (
-        <div className="divide-y divide-[#E6ECEF] border border-[#DCE3E7] rounded-lg">
+        <div className="divide-y divide-line-soft border border-line rounded-lg">
           {custos.map((c) => (
             <div key={c.id} className={'flex items-center justify-between p-3 ' + (c.ativo ? '' : 'opacity-50')}>
               <div>
-                <p className="text-sm font-medium text-[#16252B]">{c.nome}</p>
-                <p className="text-xs text-[#5B6B73]">{moeda(c.valor_mensal)} por mês</p>
+                <p className="text-sm font-medium text-ink">{c.nome}</p>
+                <p className="text-xs text-ink-muted">{moeda(c.valor_mensal)} por mês</p>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => alternarAtivo(c)}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] font-medium hover:bg-[#F1F5F7] transition"
+                  className="text-xs px-3 py-1.5 rounded-lg border border-line bg-surface text-ink-soft font-medium hover:bg-surface-hover transition"
                 >
                   {c.ativo ? 'Pausar' : 'Ativar'}
                 </button>
                 <button
                   onClick={() => excluir(c)}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] font-medium hover:bg-[#FADBD6] transition"
+                  className="text-xs px-3 py-1.5 rounded-lg border border-danger-line bg-surface text-danger font-medium hover:bg-danger-soft transition"
                 >
                   Excluir
                 </button>
@@ -157,13 +157,13 @@ export default function CustosFixos({ versao }: { versao: number }) {
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           placeholder="Ex: Aluguel"
-          className="flex-1 min-w-40 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+          className="flex-1 min-w-40 border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <CampoMoeda
           value={valor}
           onChange={setValor}
           placeholder="Ex: 4.000,00"
-          className="w-36 border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]"
+          className="w-36 border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <button
           type="submit"
@@ -174,7 +174,7 @@ export default function CustosFixos({ versao }: { versao: number }) {
         </button>
       </form>
 
-      {erro && <p className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">{erro}</p>}
+      {erro && <p className="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">{erro}</p>}
     </div>
   );
 }
