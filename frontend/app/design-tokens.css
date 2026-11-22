@@ -1,0 +1,141 @@
+/* =============================================================================
+   Tokens de design — única fonte das cores, espaços, raios e sombras.
+   Componentes novos usam só estas variáveis (via classes do Tailwind mapeadas em
+   tailwind.config.js ou var(--token)). Para trocar a cor de destaque do sistema,
+   altere apenas --accent, --accent-hover e --accent-soft.
+
+   O tema claro é o padrão (e o único em uso). O tema escuro já está definido em
+   [data-theme='dark'], mas o botão de trocar tema só entra quando as telas antigas
+   (que ainda têm cores fixas no código) forem migradas.
+   ============================================================================= */
+
+:root {
+  --text-xs: 12px;  --text-sm: 13px;  --text-base: 14px;
+  --text-md: 16px;  --text-lg: 20px;  --text-xl: 24px;  --text-2xl: 30px;
+
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px;  --space-4: 16px;
+  --space-6: 24px; --space-8: 32px; --space-12: 48px;
+
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-full: 999px;
+
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  --glass-blur: 12px;
+  --z-dropdown: 50; --z-modal: 60; --z-toast: 70;
+}
+
+/* ===== Claro (padrão): mesma paleta azul-petróleo que o sistema já usa ===== */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #eef2f4;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-hover: #f1f5f7;
+  --border: #dce3e7;
+  --border-strong: #c9d3d8;
+
+  --text: #16252b;
+  --text-muted: #5b6b73;
+  --text-subtle: #65757e;
+
+  --accent: #0e6b7e;
+  --accent-hover: #0b5a6a;
+  --accent-soft: #dceef2;
+  --accent-contrast: #ffffff;
+
+  --success: #1e6b3f;  --success-soft: #d9f0e3;
+  --warning: #7a5a0a;  --warning-soft: #fff0c7;
+  --danger:  #b3261e;  --danger-soft:  #fadbd6;
+  --info:    #0b4f5e;  --info-soft:    #dceef2;
+
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(15, 20, 30, 0.08);
+  --overlay: rgba(15, 20, 30, 0.45);
+
+  --shadow-sm: 0 1px 2px rgba(15, 20, 30, 0.06);
+  --shadow-md: 0 4px 16px rgba(15, 20, 30, 0.08);
+  --shadow-lg: 0 12px 32px rgba(15, 20, 30, 0.14);
+
+  --focus-ring: #0e6b7e;
+}
+
+/* ===== Escuro (pronto, ainda não ligado no sistema) ===== */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0b1114;
+  --surface: #121a1e;
+  --surface-elevated: #19232a;
+  --surface-hover: #202c34;
+  --border: #25323a;
+  --border-strong: #34454f;
+
+  --text: #f0f4f5;
+  --text-muted: #a5b3ba;
+  --text-subtle: #8a9aa2;
+
+  --accent: #4fb3c8;
+  --accent-hover: #72c6d8;
+  --accent-soft: rgba(79, 179, 200, 0.16);
+  --accent-contrast: #08161a;
+
+  --success: #3ecf8e;  --success-soft: rgba(62, 207, 142, 0.14);
+  --warning: #f5b544;  --warning-soft: rgba(245, 181, 68, 0.14);
+  --danger:  #ff7b72;  --danger-soft:  rgba(255, 123, 114, 0.14);
+  --info:    #5cb8ff;  --info-soft:    rgba(92, 184, 255, 0.14);
+
+  --glass-bg: rgba(25, 35, 42, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+  --focus-ring: #72c6d8;
+}
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* foco visível em todos os controles novos */
+.ui-focus:focus-visible,
+.ui-table-sort:focus-visible,
+.ui-icon-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ===== Modal: painel de vidro só aqui (elemento pequeno e flutuante) ===== */
+.ui-modal-overlay {
+  background: var(--overlay); /* só cor: o blur fica no painel, não na tela toda */
+  animation: ui-fade var(--duration-base) var(--ease) both;
+}
+.ui-modal-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  animation: ui-pop var(--duration-base) var(--ease) both;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ui-modal-panel { background: var(--surface-elevated); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .ui-modal-panel { background: var(--surface-elevated); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+@keyframes ui-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ui-pop { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: none; } }
+
+/* esqueleto de carregamento (sem animação pesada: só opacidade) */
+.ui-skeleton { background: var(--surface-hover); border-radius: var(--radius-sm); animation: ui-pulse 1.4s ease-in-out infinite; }
+@keyframes ui-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-modal-overlay, .ui-modal-panel, .ui-skeleton { animation: none !important; }
+}

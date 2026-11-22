@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { ConteudoVoltar } from '@/components/BotaoVoltar';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import {
@@ -9,6 +8,8 @@ import {
   criarCadastro,
   atualizarCadastro,
 } from '@/lib/queries/cadastros';
+import PageHeader from '@/components/ui/PageHeader';
+import FormField, { CAMPO } from '@/components/ui/FormField';
 
 type Campo = {
   chave: string;
@@ -24,13 +25,10 @@ type Props = {
   singular: string;
   rota: string;
   campos: Campo[];
+  titulo?: string; // nome da lista, usado na trilha (ex.: "Clientes")
 };
 
-const INPUT =
-  'w-full border border-[#C9D3D8] rounded-lg px-3 py-2.5 text-sm text-[#16252B] bg-white placeholder:text-[#8FA0A8] focus:outline-none focus:ring-2 focus:ring-[#0E6B7E]';
-const LABEL = 'block text-sm font-medium text-[#2B3C44] mb-1';
-
-function FormInner({ tabela, singular, rota, campos }: Props) {
+function FormInner({ tabela, singular, rota, campos, titulo }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
@@ -119,63 +117,72 @@ function FormInner({ tabela, singular, rota, campos }: Props) {
     }
   }
 
+  const erroNome = erro === 'Preencha o nome.' ? erro : null;
+
   function renderCampo(c: Campo) {
     const valor = valores[c.chave] || '';
     return (
-      <div key={c.chave}>
-        <label className={LABEL}>
-          {c.rotulo}
-          {c.chave === 'nome' && <span className="text-[#B3261E]"> *</span>}
-        </label>
-        {c.tipo === 'textarea' ? (
-          <textarea
-            value={valor}
-            onChange={(e) => mudar(c.chave, e.target.value)}
-            rows={3}
-            placeholder={c.placeholder}
-            className={INPUT}
-          />
-        ) : (
-          <input
-            type={c.tipo || 'text'}
-            value={valor}
-            onChange={(e) => mudar(c.chave, c.maiusculo ? e.target.value.toUpperCase() : e.target.value)}
-            placeholder={c.placeholder}
-            className={INPUT}
-          />
-        )}
-      </div>
+      <FormField key={c.chave} label={c.rotulo} obrigatorio={c.chave === 'nome'} erro={c.chave === 'nome' ? erroNome : null}>
+        {(a) =>
+          c.tipo === 'textarea' ? (
+            <textarea
+              {...a}
+              value={valor}
+              onChange={(e) => mudar(c.chave, e.target.value)}
+              rows={3}
+              placeholder={c.placeholder}
+              className={CAMPO}
+            />
+          ) : (
+            <input
+              {...a}
+              type={c.tipo || 'text'}
+              value={valor}
+              onChange={(e) => mudar(c.chave, c.maiusculo ? e.target.value.toUpperCase() : e.target.value)}
+              placeholder={c.placeholder}
+              className={CAMPO}
+            />
+          )
+        }
+      </FormField>
     );
   }
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <p className="text-[#5B6B73]">Carregando...</p>
+      <div className="p-4 md:p-8" aria-busy="true">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <div className="ui-skeleton h-8 w-48" />
+          <div className="rounded-card border border-line bg-surface p-6 space-y-5">
+            {[0, 1, 2, 3].map((k) => (
+              <div key={k} className="space-y-2">
+                <div className="ui-skeleton h-4 w-24" />
+                <div className="ui-skeleton h-10 w-full" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
+  const nomeDaLista = titulo || rota.split('/').filter(Boolean).pop()!.replace(/^./, (l) => l.toUpperCase());
+
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => router.push(rota)}
-            className="btn-voltar"
-            aria-label="Voltar"
-          >
-            <ConteudoVoltar />
-          </button>
-          <h1 className="text-2xl font-bold text-[#16252B]">
-            {editando ? 'Editar ' + singular : 'Novo ' + singular}
-          </h1>
-        </div>
+        <PageHeader
+          trilha={[
+            { rotulo: 'Início', href: '/' },
+            { rotulo: 'Cadastros', href: '/cadastros' },
+            { rotulo: nomeDaLista, href: rota },
+            { rotulo: editando ? 'Editar' : 'Novo' },
+          ]}
+          voltarHref={rota}
+          titulo={editando ? 'Editar ' + singular : 'Novo ' + singular}
+        />
 
-        <form
-          onSubmit={handleSalvar}
-          className="bg-white border border-[#DCE3E7] rounded-xl p-6 space-y-5"
-        >
+        <form onSubmit={handleSalvar} noValidate className="bg-surface border border-line rounded-card shadow-token-sm p-6 space-y-5">
           {linhas.map((linha, i) =>
             linha.length === 2 ? (
               <div key={i} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -186,53 +193,41 @@ function FormInner({ tabela, singular, rota, campos }: Props) {
             )
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-[#2B3C44] mb-2">Status</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setAtivo(true)}
-                className={`py-2.5 rounded-lg border-2 font-medium text-sm transition ${
-                  ativo
-                    ? 'border-[#0E6B7E] bg-[#DCEEF2] text-[#0B4F5E]'
-                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
-                }`}
-              >
-                Ativo
-              </button>
-              <button
-                type="button"
-                onClick={() => setAtivo(false)}
-                className={`py-2.5 rounded-lg border-2 font-medium text-sm transition ${
-                  !ativo
-                    ? 'border-[#B58300] bg-[#FFF0C7] text-[#7A5A0A]'
-                    : 'border-[#DCE3E7] text-[#5B6B73] hover:border-[#C9D3D8]'
-                }`}
-              >
-                Inativo
-              </button>
+          <fieldset>
+            <legend className="block text-sm font-medium text-ink mb-2">Status</legend>
+            <div role="radiogroup" aria-label="Status do cadastro" className="grid grid-cols-2 gap-3">
+              {[
+                { valor: true, rotulo: 'Ativo', ativoCls: 'border-accent bg-accent-soft text-info' },
+                { valor: false, rotulo: 'Inativo', ativoCls: 'border-warning bg-warning-soft text-warning' },
+              ].map((op) => (
+                <button
+                  key={op.rotulo}
+                  type="button"
+                  role="radio"
+                  aria-checked={ativo === op.valor}
+                  onClick={() => setAtivo(op.valor)}
+                  className={
+                    'ui-focus py-2.5 rounded-token border-2 font-medium text-sm transition-colors ' +
+                    (ativo === op.valor ? op.ativoCls : 'border-line text-ink-muted hover:border-line-strong')
+                  }
+                >
+                  {op.rotulo}
+                </button>
+              ))}
             </div>
-          </div>
+          </fieldset>
 
-          {erro && (
-            <div role="alert" className="text-sm text-[#B3261E] bg-[#FADBD6] rounded-lg px-3 py-2">
+          {erro && !erroNome && (
+            <div role="alert" className="text-sm text-danger bg-danger-soft rounded-token px-3 py-2">
               {erro}
             </div>
           )}
 
           <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={salvando}
-              className="btn btn-primario flex-1"
-            >
+            <button type="submit" disabled={salvando} className="btn btn-primario flex-1">
               {salvando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Cadastrar ' + singular}
             </button>
-            <button
-              type="button"
-              onClick={() => router.push(rota)}
-              className="btn btn-secundario flex-1"
-            >
+            <button type="button" onClick={() => router.push(rota)} className="btn btn-secundario flex-1">
               Cancelar
             </button>
           </div>
@@ -247,7 +242,7 @@ export default function FormCadastro(props: Props) {
     <Suspense
       fallback={
         <div className="min-h-[60vh] flex items-center justify-center">
-          <p className="text-[#5B6B73]">Carregando...</p>
+          <p className="text-ink-muted">Carregando...</p>
         </div>
       }
     >

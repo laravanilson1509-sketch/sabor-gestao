@@ -1,212 +1,308 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { ConteudoVoltar } from '@/components/BotaoVoltar';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
-import { combina } from '@/lib/busca';
+import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
+import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import PageHeader from '@/components/ui/PageHeader';
+import DataTable, { type Coluna, type Ordem } from '@/components/ui/DataTable';
+import StatusBadge from '@/components/ui/StatusBadge';
+import Modal from '@/components/ui/Modal';
+import { combina } from '@/lib/busca';
 import { listarCadastros, deletarCadastro } from '@/lib/queries/cadastros';
 import { diaMes, proximoAniversario } from '@/lib/queries/aniversarios';
 
-type Coluna = { chave: string; rotulo: string; tipo?: 'aniversario' };
+type ColunaConfig = { chave: string; rotulo: string; tipo?: 'aniversario' };
 
 type Props = {
   tabela: string;
   titulo: string;
   singular: string;
   rota: string;
-  colunas: Coluna[];
+  colunas: ColunaConfig[];
 };
 
+type Registro = Record<string, any> & { id: string; nome: string; ativo?: boolean };
+type FiltroStatus = 'todos' | 'ativo' | 'inativo';
+
+const POR_PAGINA = 25;
+
+const FILTROS: { valor: FiltroStatus; rotulo: string }[] = [
+  { valor: 'todos', rotulo: 'Todos' },
+  { valor: 'ativo', rotulo: 'Ativos' },
+  { valor: 'inativo', rotulo: 'Inativos' },
+];
+
+// valor usado para ordenar uma coluna (aniversário ordena pelo próximo a chegar)
+function valorOrdenacao(r: Registro, chave: string, tipo?: 'aniversario'): string | number {
+  if (tipo === 'aniversario') return r[chave] ? proximoAniversario(r[chave]).faltam : Number.MAX_SAFE_INTEGER;
+  return String(r[chave] ?? '');
+}
+
+function celulaAniversario(data: string | null) {
+  if (!data) return <span className="text-ink-subtle">—</span>;
+  const { faltam } = proximoAniversario(data);
+  return (
+    <span className="inline-flex items-center gap-2 tabular-nums">
+      {diaMes(data)}
+      {faltam === 0 && <StatusBadge status="warning">Hoje!</StatusBadge>}
+      {faltam > 0 && faltam <= 7 && (
+        <span className="text-xs text-ink-subtle">
+          em {faltam} {faltam === 1 ? 'dia' : 'dias'}
+        </span>
+      )}
+    </span>
+  );
+}
+
 export default function ListaCadastro({ tabela, titulo, singular, rota, colunas }: Props) {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const router = useRouter();
+  const supabase = useMemo(
+    () => createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!),
+    []
   );
   const unidadeId = process.env.NEXT_PUBLIC_UNIDADE_ID!;
 
-  const [itens, setItens] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [paraDeletar, setParaDeletar] = useState<any | null>(null);
-  const [deletando, setDeletando] = useState(false);
+  const [itens, setItens] = useState<Registro[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erroCarga, setErroCarga] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
-  const itensFiltrados = itens.filter((i) => combina(busca, i.nome, ...colunas.map((c) => i[c.chave])));
+  const [status, setStatus] = useState<FiltroStatus>('todos');
+  const [ordem, setOrdem] = useState<Ordem>({ chave: 'nome', direcao: 'asc' });
+  const [pagina, setPagina] = useState(1);
 
-  async function carregar() {
-    setLoading(true);
+  const [paraDeletar, setParaDeletar] = useState<Registro | null>(null);
+  const [deletando, setDeletando] = useState(false);
+  const [erroExcluir, setErroExcluir] = useState<string | null>(null);
+
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    setErroCarga(null);
     try {
-      const data = await listarCadastros(supabase, tabela as any, unidadeId);
-      setItens((data as any[]) || []);
-    } catch (err) {
+      setItens(((await listarCadastros(supabase, tabela as any, unidadeId)) as Registro[]) || []);
+    } catch (err: any) {
       console.error(err);
+      setErroCarga(err?.message || 'Não foi possível carregar a lista.');
     }
-    setLoading(false);
-  }
+    setCarregando(false);
+  }, [supabase, tabela, unidadeId]);
 
   useEffect(() => {
     carregar();
-  }, []);
+  }, [carregar]);
+
+  // filtro, ordenação e página são calculados uma vez por mudança, não a cada tecla
+  const filtrados = useMemo(
+    () =>
+      itens.filter(
+        (i) =>
+          (status === 'todos' || (status === 'ativo' ? !!i.ativo : !i.ativo)) &&
+          combina(busca, i.nome, ...colunas.map((c) => i[c.chave]))
+      ),
+    [itens, busca, status, colunas]
+  );
+
+  const ordenados = useMemo(() => {
+    if (!ordem) return filtrados;
+    const tipo = colunas.find((c) => c.chave === ordem.chave)?.tipo;
+    const sinal = ordem.direcao === 'asc' ? 1 : -1;
+    return [...filtrados].sort((a, b) => {
+      const va = valorOrdenacao(a, ordem.chave, tipo);
+      const vb = valorOrdenacao(b, ordem.chave, tipo);
+      if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * sinal;
+      const aVazio = va === '';
+      const bVazio = vb === '';
+      if (aVazio !== bVazio) return aVazio ? 1 : -1; // vazios sempre no fim
+      return String(va).localeCompare(String(vb), 'pt-BR', { sensitivity: 'base' }) * sinal;
+    });
+  }, [filtrados, ordem, colunas]);
+
+  const visiveis = useMemo(() => ordenados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA), [ordenados, pagina]);
+
+  // mudou busca/filtro/ordem: volta para a primeira página
+  useEffect(() => setPagina(1), [busca, status, ordem]);
+
+  const totais = useMemo(
+    () => ({ todos: itens.length, ativo: itens.filter((i) => i.ativo).length, inativo: itens.filter((i) => !i.ativo).length }),
+    [itens]
+  );
+
+  const abrirEdicao = useCallback((r: Registro) => router.push(rota + '/cadastro?id=' + r.id), [router, rota]);
+
+  const colunasTabela = useMemo<Coluna<Registro>[]>(
+    () => [
+      {
+        chave: 'nome',
+        cabecalho: 'Nome',
+        ordenavel: true,
+        render: (r) => <span className="font-medium text-ink">{r.nome}</span>,
+      },
+      ...colunas.map<Coluna<Registro>>((c) => ({
+        chave: c.chave,
+        cabecalho: c.rotulo,
+        ordenavel: true,
+        className: 'text-ink-muted',
+        render: (r) => (c.tipo === 'aniversario' ? celulaAniversario(r[c.chave]) : r[c.chave] || <span className="text-ink-subtle">—</span>),
+      })),
+      {
+        chave: 'ativo',
+        cabecalho: 'Status',
+        render: (r) => <StatusBadge status={r.ativo ? 'success' : 'warning'}>{r.ativo ? 'Ativo' : 'Inativo'}</StatusBadge>,
+      },
+      {
+        chave: 'acoes',
+        cabecalho: 'Ações',
+        alinhar: 'dir',
+        render: (r) => (
+          // os botões não podem abrir a edição da linha ao serem clicados
+          <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+            <Link href={rota + '/cadastro?id=' + r.id} className="btn btn-secundario !px-3 !py-1.5" aria-label={'Editar ' + r.nome}>
+              <Pencil size={14} aria-hidden /> Editar
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setErroExcluir(null);
+                setParaDeletar(r);
+              }}
+              className="btn btn-perigo !px-3 !py-1.5"
+              aria-label={'Excluir ' + r.nome}
+            >
+              <Trash2 size={14} aria-hidden /> Excluir
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [colunas, rota]
+  );
 
   async function confirmarExclusao() {
     if (!paraDeletar) return;
     setDeletando(true);
+    setErroExcluir(null);
     try {
       await deletarCadastro(supabase, tabela as any, paraDeletar.id);
       setParaDeletar(null);
       await carregar();
     } catch (err: any) {
-      alert('Erro ao excluir: ' + err.message);
+      setErroExcluir('Não foi possível excluir: ' + (err?.message || 'erro desconhecido'));
     } finally {
       setDeletando(false);
     }
   }
 
-  // dia/mês do aniversário, com destaque para hoje e para os próximos 7 dias
-  function celulaAniversario(data: string | null) {
-    if (!data) return '-';
-    const { faltam } = proximoAniversario(data);
-    return (
-      <span>
-        {diaMes(data)}
-        {faltam === 0 && (
-          <span className="ml-2 rounded-full bg-[#FFF0C7] text-[#7A5A0A] px-2.5 py-0.5 text-xs font-semibold">
-            🎂 Hoje!
-          </span>
-        )}
-        {faltam > 0 && faltam <= 7 && (
-          <span className="ml-2 text-xs text-[#8FA0A8]">em {faltam} {faltam === 1 ? 'dia' : 'dias'}</span>
-        )}
-      </span>
-    );
-  }
-
-  const TH = 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#5B6B73]';
+  const semCadastros = !carregando && !erroCarga && itens.length === 0;
 
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <Link
-            href="/cadastros"
-            className="btn-voltar"
-            aria-label="Voltar para Cadastros"
-          >
-            <ConteudoVoltar />
-          </Link>
-          <h1 className="flex-1 text-2xl font-bold text-[#16252B]">{titulo}</h1>
-          <Link
-            href={rota + '/cadastro'}
-            className="btn btn-primario"
-          >
-            + Novo {singular}
-          </Link>
-        </div>
+        <PageHeader
+          trilha={[{ rotulo: 'Início', href: '/' }, { rotulo: 'Cadastros', href: '/cadastros' }, { rotulo: titulo }]}
+          voltarHref="/cadastros"
+          titulo={titulo}
+          descricao={carregando ? ' ' : totais.todos + (totais.todos === 1 ? ' cadastro' : ' cadastros')}
+          acoes={
+            <Link href={rota + '/cadastro'} className="btn btn-primario">
+              <Plus size={16} strokeWidth={2} aria-hidden /> Novo {singular}
+            </Link>
+          }
+        />
 
-        {!loading && itens.length > 0 && (
-          <BarraBusca
-            valor={busca}
-            onChange={setBusca}
-            placeholder={'Buscar ' + singular + ' por nome' + (colunas.length ? ', ' + colunas.map((c) => c.rotulo.toLowerCase()).join(', ') : '') + '...'}
-            className="mb-4"
-          />
+        {erroCarga && (
+          <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-token bg-danger-soft px-4 py-3 text-sm text-danger">
+            <span>{erroCarga}</span>
+            <button type="button" onClick={carregar} className="font-semibold underline">
+              Tentar de novo
+            </button>
+          </div>
         )}
 
-        {loading ? (
-          <p className="text-center py-12 text-[#5B6B73]">Carregando...</p>
-        ) : itens.length === 0 ? (
-          <div className="bg-white border border-[#DCE3E7] rounded-xl p-8 text-center">
-            <p className="text-[#16252B]">Nenhum {singular} cadastrado</p>
-            <p className="text-sm text-[#5B6B73] mt-2">Clique em + Novo {singular} para começar</p>
+        {!semCadastros && (
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <BarraBusca
+              valor={busca}
+              onChange={setBusca}
+              debounce={300}
+              atalho
+              placeholder={'Buscar ' + singular + ' por nome' + (colunas.length ? ', ' + colunas.map((c) => c.rotulo.toLowerCase()).join(', ') : '')}
+              className="flex-1 min-w-[16rem]"
+            />
+            <div role="group" aria-label="Filtrar por situação" className="flex gap-1.5">
+              {FILTROS.map((f) => (
+                <button
+                  key={f.valor}
+                  type="button"
+                  onClick={() => setStatus(f.valor)}
+                  aria-pressed={status === f.valor}
+                  className={
+                    'ui-focus rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ' +
+                    (status === f.valor
+                      ? 'border-accent bg-accent text-accent-contrast'
+                      : 'border-line bg-surface text-ink-muted hover:bg-surface-hover')
+                  }
+                >
+                  {f.rotulo} <span className="tabular-nums opacity-80">{totais[f.valor]}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        ) : itensFiltrados.length === 0 ? (
-          <NadaEncontrado busca={busca} />
+        )}
+
+        {semCadastros ? (
+          <div className="rounded-card border border-dashed border-line-strong bg-surface p-10 text-center">
+            <p className="font-medium text-ink">Nenhum {singular} cadastrado</p>
+            <p className="mt-1 text-sm text-ink-muted">Comece cadastrando o primeiro.</p>
+            <Link href={rota + '/cadastro'} className="btn btn-primario mt-5">
+              <Plus size={16} strokeWidth={2} aria-hidden /> Novo {singular}
+            </Link>
+          </div>
         ) : (
-          <div className="bg-white border border-[#DCE3E7] rounded-xl overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[#F4F7F8] border-b border-[#DCE3E7]">
-                <tr>
-                  <th className={TH}>Nome</th>
-                  {colunas.map((c) => (
-                    <th key={c.chave} className={TH}>
-                      {c.rotulo}
-                    </th>
-                  ))}
-                  <th className={TH}>Status</th>
-                  <th className={TH + ' text-center'}>Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E6ECEF]">
-                {itensFiltrados.map((item) => (
-                  <tr key={item.id} className={'hover:bg-[#F8FAFB] ' + (item.ativo ? '' : 'opacity-60')}>
-                    <td className="px-4 py-4 text-sm font-medium text-[#16252B]">{item.nome}</td>
-                    {colunas.map((c) => (
-                      <td key={c.chave} className="px-4 py-4 text-sm text-[#2B3C44]">
-                        {c.tipo === 'aniversario' ? celulaAniversario(item[c.chave]) : item[c.chave] || '-'}
-                      </td>
-                    ))}
-                    <td className="px-4 py-4 text-sm">
-                      {item.ativo ? (
-                        <span className="inline-block rounded-full bg-[#D9F0E3] text-[#1E6B3F] px-3 py-1 text-xs font-semibold">
-                          Ativo
-                        </span>
-                      ) : (
-                        <span className="inline-block rounded-full bg-[#FFF0C7] text-[#7A5A0A] px-3 py-1 text-xs font-semibold">
-                          Inativo
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex gap-1.5 justify-center">
-                        <Link
-                          href={rota + '/cadastro?id=' + item.id}
-                          className="text-sm px-3 py-1.5 rounded-lg border border-[#DCE3E7] bg-white text-[#2B3C44] hover:bg-[#F1F5F7] transition"
-                        >
-                          Editar
-                        </Link>
-                        <button
-                          onClick={() => setParaDeletar(item)}
-                          className="text-sm px-3 py-1.5 rounded-lg border border-[#F2C2BB] bg-white text-[#B3261E] hover:bg-[#FADBD6] transition"
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            descricao={'Lista de ' + titulo.toLowerCase()}
+            colunas={colunasTabela}
+            linhas={visiveis}
+            chaveLinha={(r) => r.id}
+            carregando={carregando}
+            aoClicarLinha={abrirEdicao}
+            ordem={ordem}
+            aoMudarOrdem={setOrdem}
+            pagina={pagina}
+            porPagina={POR_PAGINA}
+            total={ordenados.length}
+            aoMudarPagina={setPagina}
+            vazio={busca ? <NadaEncontrado busca={busca} /> : <p className="p-8 text-center text-sm text-ink-muted">Nenhum cadastro nesta situação.</p>}
+          />
         )}
       </div>
 
-      {paraDeletar && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-2 text-[#B3261E]">Excluir {singular}?</h2>
-            <p className="text-sm text-[#5B6B73] mb-6">
-              Tem certeza que quer excluir{' '}
-              <strong className="text-[#16252B]">{paraDeletar.nome}</strong>? Essa ação não pode ser
-              desfeita.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={confirmarExclusao}
-                disabled={deletando}
-                className="btn btn-perigo-cheio flex-1"
-              >
-                {deletando ? 'Excluindo...' : 'Sim, excluir'}
-              </button>
-              <button
-                onClick={() => setParaDeletar(null)}
-                className="btn btn-secundario flex-1"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        aberto={!!paraDeletar}
+        onFechar={() => !deletando && setParaDeletar(null)}
+        titulo={'Excluir ' + singular + '?'}
+        tamanho="sm"
+        rodape={
+          <>
+            <button type="button" onClick={() => setParaDeletar(null)} disabled={deletando} className="btn btn-secundario">
+              Cancelar
+            </button>
+            <button type="button" onClick={confirmarExclusao} disabled={deletando} className="btn btn-perigo-cheio">
+              {deletando ? 'Excluindo...' : 'Sim, excluir'}
+            </button>
+          </>
+        }
+      >
+        <p>
+          Tem certeza que quer excluir <strong className="text-ink">{paraDeletar?.nome}</strong>? Essa ação não pode ser desfeita.
+        </p>
+        {erroExcluir && (
+          <p role="alert" className="mt-3 rounded-token bg-danger-soft px-3 py-2 text-danger">
+            {erroExcluir}
+          </p>
+        )}
+      </Modal>
     </div>
   );
 }

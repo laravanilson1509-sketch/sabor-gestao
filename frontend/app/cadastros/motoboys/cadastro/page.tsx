@@ -6,6 +6,7 @@ export default function CadastroMotoboyPage() {
       tabela="motoboys"
       singular="motoboy"
       rota="/cadastros/motoboys"
+      titulo="Motoboys"
       campos={[
         { chave: 'nome', rotulo: 'Nome', placeholder: 'Ex: João Silva' },
         { chave: 'telefone', rotulo: 'Telefone', placeholder: '(44) 99999-9999', meia: true },

@@ -6,6 +6,7 @@ export default function CadastroFornecedorPage() {
       tabela="fornecedores"
       singular="fornecedor"
       rota="/cadastros/fornecedores"
+      titulo="Fornecedores"
       campos={[
         { chave: 'nome', rotulo: 'Nome', placeholder: 'Ex: Distribuidora São Paulo' },
         { chave: 'telefone', rotulo: 'Telefone', placeholder: '(44) 99999-9999', meia: true },

@@ -6,6 +6,7 @@ export default function CadastroClientePage() {
       tabela="clientes"
       singular="cliente"
       rota="/cadastros/clientes"
+      titulo="Clientes"
       campos={[
         { chave: 'nome', rotulo: 'Nome', placeholder: 'Ex: Maria Silva' },
         { chave: 'telefone', rotulo: 'Telefone', placeholder: '(44) 99999-9999', meia: true },

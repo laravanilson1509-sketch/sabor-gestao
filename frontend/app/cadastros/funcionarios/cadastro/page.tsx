@@ -6,6 +6,7 @@ export default function CadastroFuncionarioPage() {
       tabela="funcionarios"
       singular="funcionário"
       rota="/cadastros/funcionarios"
+      titulo="Funcionários"
       campos={[
         { chave: 'nome', rotulo: 'Nome', placeholder: 'Ex: João Pereira' },
         { chave: 'cargo', rotulo: 'Cargo', placeholder: 'Ex: Cozinheiro, Garçom', meia: true },

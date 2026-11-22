@@ -8,6 +8,7 @@ import { contarPendenciasAbertas, EVENTO_PENDENCIAS } from '@/lib/queries/penden
 import Logo from '@/components/Logo';
 import TelaAbertura from '@/components/TelaAbertura';
 import TelaInicio from '@/components/TelaInicio';
+import './design-tokens.css';
 import './globals.css';
 
 const LINKS = [
