@@ -26,6 +26,7 @@ type Props<T> = {
   carregando?: boolean;
   vazio?: React.ReactNode;
   aoClicarLinha?: (linha: T) => void;
+  classeLinha?: (linha: T) => string; // ex.: esmaecer linhas inativas
   ordem?: Ordem;
   aoMudarOrdem?: (ordem: Ordem) => void;
   pagina?: number; // começa em 1
@@ -36,7 +37,7 @@ type Props<T> = {
 
 const ALINHAR = { esq: 'text-left', dir: 'text-right tabular-nums', centro: 'text-center' };
 
-function LinhaBase<T>({ linha, colunas, aoClicar }: { linha: T; colunas: Coluna<T>[]; aoClicar?: (l: T) => void }) {
+function LinhaBase<T>({ linha, colunas, aoClicar, classe }: { linha: T; colunas: Coluna<T>[]; aoClicar?: (l: T) => void; classe?: string }) {
   return (
     <tr
       onClick={aoClicar ? () => aoClicar(linha) : undefined}
@@ -51,7 +52,7 @@ function LinhaBase<T>({ linha, colunas, aoClicar }: { linha: T; colunas: Coluna<
           : undefined
       }
       tabIndex={aoClicar ? 0 : undefined}
-      className={'ui-focus transition-colors hover:bg-surface-hover ' + (aoClicar ? 'cursor-pointer' : '')}
+      className={'ui-focus transition-colors hover:bg-surface-hover ' + (aoClicar ? 'cursor-pointer ' : '') + (classe || '')}
     >
       {colunas.map((c) => (
         <td key={c.chave} className={'px-4 py-3.5 text-sm text-ink ' + ALINHAR[c.alinhar || 'esq'] + ' ' + (c.className || '')}>
@@ -71,6 +72,7 @@ export default function DataTable<T>({
   carregando,
   vazio,
   aoClicarLinha,
+  classeLinha,
   ordem,
   aoMudarOrdem,
   pagina = 1,
@@ -137,7 +139,7 @@ export default function DataTable<T>({
                     ))}
                   </tr>
                 ))
-              : linhas.map((l) => <Linha key={chaveLinha(l)} linha={l} colunas={colunas} aoClicar={aoClicarLinha} />)}
+              : linhas.map((l) => <Linha key={chaveLinha(l)} linha={l} colunas={colunas} aoClicar={aoClicarLinha} classe={classeLinha?.(l)} />)}
           </tbody>
         </table>
         {!carregando && linhas.length === 0 && (vazio || <p className="p-8 text-center text-sm text-ink-muted">Nada por aqui.</p>)}

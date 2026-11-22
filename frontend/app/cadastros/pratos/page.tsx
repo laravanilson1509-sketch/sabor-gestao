@@ -1,14 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { moeda } from '@/lib/numeros';
-import { ConteudoVoltar } from '@/components/BotaoVoltar';
-import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
-import { combina } from '@/lib/busca';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import { Plus, X } from 'lucide-react';
+import { moeda } from '@/lib/numeros';
+import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
+import PageHeader from '@/components/ui/PageHeader';
+import DataTable, { type Coluna, type Ordem } from '@/components/ui/DataTable';
+import StatusBadge from '@/components/ui/StatusBadge';
+import { combina } from '@/lib/busca';
 import { listarPratos } from '@/lib/queries/fichasTecnicas';
 import { criarPratoSimples, deletarIngrediente } from '@/lib/queries/estoque';
+
+const POR_PAGINA = 25;
 
 type Prato = {
   id: string;
@@ -34,7 +40,22 @@ export default function PratosPage() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
-  const pratosFiltrados = pratos.filter((p) => combina(busca, p.nome));
+  const [ordem, setOrdem] = useState<Ordem>({ chave: 'nome', direcao: 'asc' });
+  const [pagina, setPagina] = useState(1);
+  const router = useRouter();
+
+  const pratosFiltrados = useMemo(() => {
+    const lista = pratos.filter((p) => combina(busca, p.nome));
+    if (!ordem) return lista;
+    const sinal = ordem.direcao === 'asc' ? 1 : -1;
+    return [...lista].sort((a, b) =>
+      ordem.chave === 'preco'
+        ? (Number(a.preco_venda) - Number(b.preco_venda)) * sinal
+        : a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }) * sinal
+    );
+  }, [pratos, busca, ordem]);
+  const visiveis = useMemo(() => pratosFiltrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA), [pratosFiltrados, pagina]);
+  useEffect(() => setPagina(1), [busca, ordem]);
 
   async function carregar() {
     setLoading(true);
@@ -116,128 +137,115 @@ export default function PratosPage() {
     }
   }
 
-  return (
-    <div className="p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <Link
-            href="/cadastros"
-            className="btn-voltar"
-            aria-label="Voltar para Cadastros"
-          >
-            <ConteudoVoltar />
+  const abrirFicha = useCallback((p: Prato) => router.push('/cadastros/fichas-tecnicas/' + p.id), [router]);
+
+  const colunas: Coluna<Prato>[] = [
+    { chave: 'nome', cabecalho: 'Prato', ordenavel: true, render: (p) => <span className="font-medium text-ink">{p.nome}</span> },
+    {
+      chave: 'preco',
+      cabecalho: 'Preço de venda',
+      alinhar: 'dir',
+      ordenavel: true,
+      render: (p) => (Number(p.preco_venda) > 0 ? moeda(Number(p.preco_venda)) : <span className="text-ink-subtle">Não definido</span>),
+    },
+    {
+      chave: 'status',
+      cabecalho: 'Status',
+      render: (p) => <StatusBadge status={p.ativo ? 'success' : 'warning'}>{p.ativo ? 'Ativo' : 'Pausado'}</StatusBadge>,
+    },
+    {
+      chave: 'acoes',
+      cabecalho: 'Ações',
+      alinhar: 'dir',
+      render: (p) => (
+        // os botões não podem abrir a ficha da linha ao serem clicados
+        <div className="flex flex-wrap justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+          <Link href={'/cadastros/fichas-tecnicas/' + p.id} className="btn btn-secundario !px-3 !py-1.5">
+            Ficha técnica
           </Link>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-ink">Pratos</h1>
-            <p className="text-sm text-ink-muted">Pratos do cardápio e seus preços de venda</p>
-          </div>
-          <button
-            onClick={() => setShowForm((v) => !v)}
-            className="btn btn-primario"
-          >
-            {showForm ? 'Cancelar' : '+ Novo prato'}
+          <button onClick={() => renomear(p)} className="btn btn-secundario !px-3 !py-1.5">
+            Renomear
+          </button>
+          <button onClick={() => alternarAtivo(p)} className="btn btn-secundario !px-3 !py-1.5">
+            {p.ativo ? 'Pausar' : 'Ativar'}
+          </button>
+          <button onClick={() => excluir(p)} className="btn btn-perigo !px-3 !py-1.5">
+            Excluir
           </button>
         </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="p-4 md:p-8">
+      <div className="max-w-5xl mx-auto">
+        <PageHeader
+          trilha={[{ rotulo: 'Início', href: '/' }, { rotulo: 'Cadastros', href: '/cadastros' }, { rotulo: 'Pratos' }]}
+          voltarHref="/cadastros"
+          titulo="Pratos"
+          descricao={loading ? ' ' : pratos.length + (pratos.length === 1 ? ' prato' : ' pratos') + ' · cardápio e preços de venda'}
+          acoes={
+            <button onClick={() => setShowForm((v) => !v)} className={showForm ? 'btn btn-secundario' : 'btn btn-primario'}>
+              {showForm ? (
+                <>
+                  <X size={16} aria-hidden /> Cancelar
+                </>
+              ) : (
+                <>
+                  <Plus size={16} strokeWidth={2} aria-hidden /> Novo prato
+                </>
+              )}
+            </button>
+          }
+        />
 
         {showForm && (
-          <form
-            onSubmit={handleCriar}
-            className="bg-surface border border-line rounded-xl p-4 mb-6 flex gap-2 flex-wrap"
-          >
+          <form onSubmit={handleCriar} className="bg-surface border border-line rounded-card shadow-token-sm p-4 mb-6 flex gap-2 flex-wrap">
             <input
               type="text"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Nome do prato. Ex: Tacacá"
-              className="flex-1 min-w-48 border border-line-strong rounded-lg px-3 py-2.5 text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
+              aria-label="Nome do prato"
+              className="flex-1 min-w-48 border border-line-strong rounded-token px-3 py-2.5 text-sm text-ink bg-surface placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
               autoFocus
             />
-            <button
-              type="submit"
-              disabled={salvando}
-              className="btn btn-primario"
-            >
+            <button type="submit" disabled={salvando} className="btn btn-primario">
               {salvando ? 'Salvando...' : 'Cadastrar prato'}
             </button>
             {erro && (
-              <p role="alert" className="w-full text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
+              <p role="alert" className="w-full text-sm text-danger bg-danger-soft rounded-token px-3 py-2">
                 {erro}
               </p>
             )}
           </form>
         )}
 
-        {!loading && pratos.length > 0 && (
-          <BarraBusca valor={busca} onChange={setBusca} placeholder="Buscar prato..." className="mb-4" />
-        )}
+        {!loading && pratos.length > 0 && <BarraBusca valor={busca} onChange={setBusca} debounce={300} atalho placeholder="Buscar prato..." className="mb-4" />}
 
-        {loading ? (
-          <p className="text-center py-12 text-ink-muted">Carregando...</p>
-        ) : pratos.length === 0 ? (
-          <div className="bg-surface border border-line rounded-xl p-8 text-center">
-            <p className="text-ink">Nenhum prato cadastrado</p>
-            <p className="text-sm text-ink-muted mt-2">Clique em + Novo prato para começar</p>
+        {!loading && pratos.length === 0 ? (
+          <div className="rounded-card border border-dashed border-line-strong bg-surface p-10 text-center">
+            <p className="font-medium text-ink">Nenhum prato cadastrado</p>
+            <p className="mt-1 text-sm text-ink-muted">Clique em “Novo prato” para começar.</p>
           </div>
-        ) : pratosFiltrados.length === 0 ? (
-          <NadaEncontrado busca={busca} />
         ) : (
-          <div className="bg-surface border border-line rounded-xl overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-surface-hover border-b border-line">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Prato</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-ink-muted">Preço de venda</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Status</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-ink-muted">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line-soft">
-                {pratosFiltrados.map((p) => (
-                  <tr key={p.id} className={'hover:bg-surface-hover ' + (p.ativo ? '' : 'opacity-60')}>
-                    <td className="px-4 py-4 text-sm font-medium text-ink">{p.nome}</td>
-                    <td className="px-4 py-4 text-right text-sm text-ink-soft">
-                      {Number(p.preco_venda) > 0
-                        ? moeda(Number(p.preco_venda))
-                        : 'Não definido'}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      {p.ativo ? (
-                        <span className="inline-block rounded-full bg-success-soft text-success px-3 py-1 text-xs font-semibold">
-                          Ativo
-                        </span>
-                      ) : (
-                        <span className="inline-block rounded-full bg-warning-soft text-warning px-3 py-1 text-xs font-semibold">
-                          Pausado
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex gap-1.5 justify-center flex-wrap">
-                        <Link
-                          href={'/cadastros/fichas-tecnicas/' + p.id}
-                          className="text-sm px-3 py-1.5 rounded-lg bg-accent-soft text-accent-ink font-medium hover:bg-accent-soft-hover transition"
-                        >
-                          Ficha técnica
-                        </Link>
-                        <button onClick={() => renomear(p)} className={BTN}>
-                          Renomear
-                        </button>
-                        <button onClick={() => alternarAtivo(p)} className={BTN}>
-                          {p.ativo ? 'Pausar' : 'Ativar'}
-                        </button>
-                        <button
-                          onClick={() => excluir(p)}
-                          className="text-sm px-3 py-1.5 rounded-lg border border-danger-line bg-surface text-danger hover:bg-danger-soft transition"
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            descricao="Lista de pratos"
+            colunas={colunas}
+            linhas={visiveis}
+            chaveLinha={(p) => p.id}
+            carregando={loading}
+            aoClicarLinha={abrirFicha}
+            classeLinha={(p) => (p.ativo ? '' : 'opacity-60')}
+            ordem={ordem}
+            aoMudarOrdem={setOrdem}
+            pagina={pagina}
+            porPagina={POR_PAGINA}
+            total={pratosFiltrados.length}
+            aoMudarPagina={setPagina}
+            vazio={<NadaEncontrado busca={busca} />}
+          />
         )}
       </div>
     </div>
