@@ -4,7 +4,11 @@ import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import { moeda } from '@/lib/numeros';
 import CampoMoeda from '@/components/CampoMoeda';
 import { combina } from '@/lib/busca';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import PageHeader from '@/components/ui/PageHeader';
+import DataTable, { type Coluna, type Ordem } from '@/components/ui/DataTable';
+import StatusBadge from '@/components/ui/StatusBadge';
+import Modal from '@/components/ui/Modal';
+import { useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import {
   buscarCaixaAberto,
@@ -112,6 +116,8 @@ export default function CaixaPage() {
   const [buscaVenda, setBuscaVenda] = useState('');
   const [aberta, setAberta] = useState<string | null>(null);
   const [itensAbertos, setItensAbertos] = useState<ItemPdv[]>([]);
+  const [ordemVenda, setOrdemVenda] = useState<Ordem>(null);
+  const [paginaVenda, setPaginaVenda] = useState(1);
 
   async function carregarCaixa() {
     const [c, f] = await Promise.all([
@@ -233,11 +239,8 @@ export default function CaixaPage() {
     }, 'Erro ao fechar o caixa');
   }
 
-  async function alternarVenda(v: Venda) {
-    if (aberta === v.id) {
-      setAberta(null);
-      return;
-    }
+  // abre a janela com os itens do pedido
+  async function abrirVenda(v: Venda) {
     setAberta(v.id);
     setItensAbertos([]);
     if (!v.itensDelivery) {
@@ -250,28 +253,71 @@ export default function CaixaPage() {
     }
   }
 
+  const vendasFiltradas = useMemo(
+    () => vendasDia.filter((v) => combina(buscaVenda, v.titulo, rotuloForma(v.forma), v.valor.toFixed(2).replace('.', ','), hora(v.quando))),
+    [vendasDia, buscaVenda]
+  );
+  const vendasOrdenadas = useMemo(() => {
+    if (!ordemVenda) return vendasFiltradas;
+    const sinal = ordemVenda.direcao === 'asc' ? 1 : -1;
+    const chave = (v: Venda) =>
+      ordemVenda.chave === 'valor' ? v.valor : ordemVenda.chave === 'forma' ? rotuloForma(v.forma) : ordemVenda.chave === 'pedido' ? v.titulo : v.quando;
+    return [...vendasFiltradas].sort((x, y) => {
+      const a = chave(x), b = chave(y);
+      return (typeof a === 'number' && typeof b === 'number' ? a - b : String(a).localeCompare(String(b), 'pt-BR')) * sinal;
+    });
+  }, [vendasFiltradas, ordemVenda]);
+  const vendasVisiveis = useMemo(() => vendasOrdenadas.slice((paginaVenda - 1) * 25, paginaVenda * 25), [vendasOrdenadas, paginaVenda]);
+  useEffect(() => setPaginaVenda(1), [buscaVenda, ordemVenda, vendasDia]);
+  const vendaAberta = vendasDia.find((v) => v.id === aberta) || null;
+
+  const colunasVenda: Coluna<Venda>[] = [
+    { chave: 'quando', cabecalho: 'Hora', ordenavel: true, className: 'text-ink-soft', render: (v) => hora(v.quando) },
+    {
+      chave: 'pedido',
+      cabecalho: 'Pedido',
+      ordenavel: true,
+      render: (v) => (
+        <>
+          <span className={'rounded-full px-2 py-0.5 text-xs font-semibold mr-2 ' + COR_ORIGEM[v.origem]}>{ROTULO_ORIGEM[v.origem]}</span>
+          <span className="font-medium text-ink">{v.titulo}</span>
+        </>
+      ),
+    },
+    { chave: 'forma', cabecalho: 'Pagamento', ordenavel: true, className: 'text-ink-soft', render: (v) => rotuloForma(v.forma) },
+    { chave: 'valor', cabecalho: 'Valor', alinhar: 'dir', ordenavel: true, render: (v) => <span className="font-semibold text-ink">{moeda(v.valor)}</span> },
+  ];
+
   const resumoCaixa = resumirVendas(vendasCaixa);
   const dinheiro = caixa ? calcularDinheiroEsperado(caixa, vendasCaixa, movs) : null;
   const resumoDia = resumirVendas(vendasDia);
-  const vendasFiltradas = vendasDia.filter((v) =>
-    combina(buscaVenda, v.titulo, rotuloForma(v.forma), v.valor.toFixed(2).replace('.', ','), hora(v.quando))
-  );
   const maiorForma = Math.max(1, ...resumoDia.porForma.map((f) => f.valor));
   const contadoNum = parseFloat(valorContado.replace(',', '.'));
   const diferenca = dinheiro && !isNaN(contadoNum) ? contadoNum - dinheiro.esperado : null;
   const ehHoje = data === hojeLocal();
 
   if (loading) {
-    return <p className="text-center py-12 text-ink-muted">Carregando...</p>;
+    return (
+      <div className="p-4 md:p-8" aria-busy="true">
+        <div className="max-w-6xl mx-auto space-y-4">
+          <div className="ui-skeleton h-8 w-40" />
+          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
+            <div className="ui-skeleton h-64 rounded-xl" />
+            <div className="ui-skeleton h-96 rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-ink">Caixa</h1>
-          <p className="text-sm text-ink-muted">Abertura, fechamento e vendas do dia</p>
-        </div>
+        <PageHeader
+          trilha={[{ rotulo: 'Início', href: '/' }, { rotulo: 'Caixa' }]}
+          titulo="Caixa"
+          descricao="Abertura, fechamento e vendas do dia"
+        />
 
         {erro && (
           <div role="alert" className="mb-4 text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
@@ -286,9 +332,7 @@ export default function CaixaPage() {
               <form onSubmit={handleAbrir} className="bg-surface border border-line rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-semibold text-ink">Caixa</h2>
-                  <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-line text-ink-muted">
-                    Fechado
-                  </span>
+                  <StatusBadge status="neutral">Fechado</StatusBadge>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-ink-soft mb-1">Troco inicial (R$)</label>
@@ -309,9 +353,7 @@ export default function CaixaPage() {
                 <div className="bg-surface border border-line rounded-xl p-4">
                   <div className="flex items-center justify-between mb-1">
                     <h2 className="text-base font-semibold text-ink">Caixa</h2>
-                    <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-success-soft text-success">
-                      Aberto
-                    </span>
+                    <StatusBadge status="success">Aberto</StatusBadge>
                   </div>
                   <p className="text-sm text-ink-muted mb-4">Aberto em {dataHora(caixa.aberto_em)}</p>
 
@@ -532,7 +574,7 @@ export default function CaixaPage() {
               )}
             </div>
 
-            <div className="bg-surface border border-line rounded-xl overflow-x-auto">
+            <div className="bg-surface border border-line rounded-xl overflow-hidden">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-ink-muted px-4 pt-4 pb-3">
                 Histórico de pedidos
               </h3>
@@ -541,94 +583,61 @@ export default function CaixaPage() {
                   <BarraBusca valor={buscaVenda} onChange={setBuscaVenda} placeholder="Buscar por mesa, pedido, forma de pagamento ou valor..." />
                 </div>
               )}
-              {carregandoDia ? (
-                <p className="text-sm text-ink-muted py-8 text-center">Carregando...</p>
-              ) : vendasDia.length === 0 ? (
+              {vendasDia.length === 0 && !carregandoDia ? (
                 <p className="text-sm text-ink-muted py-8 text-center">Nenhum pedido fechado neste dia.</p>
               ) : (
-                <table className="w-full min-w-[520px]">
-                  <thead className="bg-surface-hover border-y border-line">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Hora</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Pedido</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">Pagamento</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-ink-muted">Valor</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-line-soft">
-                    {vendasFiltradas.length === 0 && (
-                      <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center text-sm text-ink-muted">
-                          Nada encontrado para “{buscaVenda}”.
-                        </td>
-                      </tr>
-                    )}
-                    {vendasFiltradas.map((v) => (
-                      <Fragment key={v.id}>
-                        <tr
-                          onClick={() => alternarVenda(v)}
-                          className="hover:bg-surface-hover cursor-pointer"
-                        >
-                          <td className="px-4 py-3 text-sm text-ink-soft">{hora(v.quando)}</td>
-                          <td className="px-4 py-3 text-sm">
-                            <span className={'rounded-full px-2 py-0.5 text-xs font-semibold mr-2 ' + COR_ORIGEM[v.origem]}>
-                              {ROTULO_ORIGEM[v.origem]}
-                            </span>
-                            <span className="font-medium text-ink">{v.titulo}</span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-ink-soft">{rotuloForma(v.forma)}</td>
-                          <td className="px-4 py-3 text-sm text-right font-semibold text-ink">
-                            {moeda(v.valor)}
-                            <span className="ml-2 text-ink-subtle">{aberta === v.id ? '▴' : '▾'}</span>
-                          </td>
-                        </tr>
-                        {aberta === v.id && (
-                          <tr className="bg-surface-hover">
-                            <td colSpan={4} className="px-4 py-3">
-                              {(v.itensDelivery || itensAbertos).length === 0 ? (
-                                <p className="text-sm text-ink-muted">Carregando itens...</p>
-                              ) : (
-                                <ul className="text-sm space-y-1">
-                                  {(v.itensDelivery || itensAbertos).map((i, idx) => (
-                                    <li key={idx} className="flex justify-between gap-3">
-                                      <span className="text-ink-soft">
-                                        {i.quantidade}× {i.nome}
-                                      </span>
-                                      <span className="text-ink-muted">
-                                        {moeda(i.quantidade * Number(i.preco_unitario))}
-                                      </span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    ))}
-                  </tbody>
-                </table>
+                <DataTable
+                  descricao="Histórico de pedidos do dia"
+                  colunas={colunasVenda}
+                  linhas={vendasVisiveis}
+                  chaveLinha={(v) => v.id}
+                  carregando={carregandoDia}
+                  aoClicarLinha={abrirVenda}
+                  ordem={ordemVenda}
+                  aoMudarOrdem={setOrdemVenda}
+                  pagina={paginaVenda}
+                  porPagina={25}
+                  total={vendasOrdenadas.length}
+                  aoMudarPagina={setPaginaVenda}
+                  vazio={<NadaEncontrado busca={buscaVenda} />}
+                  cartaoMobile={(v) => (
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-ink">
+                          <span className={'rounded-full px-2 py-0.5 text-xs font-semibold mr-2 ' + COR_ORIGEM[v.origem]}>{ROTULO_ORIGEM[v.origem]}</span>
+                          {v.titulo}
+                        </p>
+                        <p className="mt-1 text-sm text-ink-muted">
+                          {hora(v.quando)} · {rotuloForma(v.forma)}
+                        </p>
+                      </div>
+                      <span className="shrink-0 font-semibold text-ink tabular-nums">{moeda(v.valor)}</span>
+                    </div>
+                  )}
+                />
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {mostrarFechamento && caixa && dinheiro && (
-        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-50 p-4">
-          <form onSubmit={handleFechar} role="dialog" aria-modal="true" className="ui-modal-panel p-6 w-full max-w-md space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-ink">Fechar caixa</h2>
-              <button
-                type="button"
-                onClick={() => setMostrarFechamento(false)}
-                className="text-xl text-ink-subtle hover:text-ink"
-                aria-label="Fechar"
-              >
-                ×
-              </button>
-            </div>
-
+      <Modal
+        aberto={mostrarFechamento && !!caixa && !!dinheiro}
+        onFechar={() => !ocupado && setMostrarFechamento(false)}
+        titulo="Fechar caixa"
+        rodape={
+          <>
+            <button type="button" onClick={() => setMostrarFechamento(false)} className={BTN_SECONDARY}>
+              Cancelar
+            </button>
+            <button type="submit" form="form-fechar-caixa" disabled={ocupado} className={BTN_PRIMARY}>
+              {ocupado ? 'Fechando...' : 'Confirmar fechamento'}
+            </button>
+          </>
+        }
+      >
+        {caixa && dinheiro && (
+          <form id="form-fechar-caixa" onSubmit={handleFechar} className="space-y-4">
             {pendenciasEstoque > 0 && (
               <div className="text-sm text-warning bg-warning-soft border border-warning-line rounded-lg px-3 py-2">
                 {pendenciasEstoque === 1
@@ -693,17 +702,42 @@ export default function CaixaPage() {
               />
             </div>
 
-            <div className="flex gap-3">
-              <button type="submit" disabled={ocupado} className={BTN_PRIMARY + ' flex-1'}>
-                {ocupado ? 'Fechando...' : 'Confirmar fechamento'}
-              </button>
-              <button type="button" onClick={() => setMostrarFechamento(false)} className={BTN_SECONDARY + ' flex-1'}>
-                Cancelar
-              </button>
-            </div>
           </form>
-        </div>
-      )}
+        )}
+      </Modal>
+
+      <Modal
+        aberto={!!vendaAberta}
+        onFechar={() => setAberta(null)}
+        titulo={vendaAberta ? vendaAberta.titulo + ' · ' + hora(vendaAberta.quando) : ''}
+        rodape={
+          <button type="button" onClick={() => setAberta(null)} className={BTN_SECONDARY}>
+            Fechar
+          </button>
+        }
+      >
+        {vendaAberta &&
+          ((vendaAberta.itensDelivery || itensAbertos).length === 0 ? (
+            <p>Carregando itens...</p>
+          ) : (
+            <>
+              <ul className="space-y-1.5">
+                {(vendaAberta.itensDelivery || itensAbertos).map((i, idx) => (
+                  <li key={idx} className="flex justify-between gap-3">
+                    <span className="text-ink-soft">
+                      {i.quantidade}× {i.nome}
+                    </span>
+                    <span className="text-ink-muted tabular-nums">{moeda(i.quantidade * Number(i.preco_unitario))}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 flex justify-between border-t border-line pt-3 font-semibold text-ink">
+                <span>{rotuloForma(vendaAberta.forma)}</span>
+                <span className="tabular-nums">{moeda(vendaAberta.valor)}</span>
+              </p>
+            </>
+          ))}
+      </Modal>
     </div>
   );
 }

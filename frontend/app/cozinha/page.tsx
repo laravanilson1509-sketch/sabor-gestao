@@ -14,6 +14,8 @@ import {
 import MenuCartao from '@/components/cozinha/MenuCartao';
 import ModalFichaPrato from '@/components/fichas/ModalFichaPrato';
 import HistoricoPedido from '@/components/pdv/HistoricoPedido';
+import PageHeader from '@/components/ui/PageHeader';
+import Modal from '@/components/ui/Modal';
 import PedidosProntos from '@/components/cozinha/PedidosProntos';
 import PedidosFinalizados from '@/components/cozinha/PedidosFinalizados';
 
@@ -193,17 +195,16 @@ export default function CozinhaPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-ink">Cozinha</h1>
-            <p className="text-sm text-ink-muted">
-              Pedidos do PDV e do delivery{atualizadoEm ? ' · atualizado às ' + hora(new Date(atualizadoEm).toISOString()) : ''}
-            </p>
-          </div>
-          <button onClick={carregar} className={BTN_SECONDARY}>
-            Atualizar
-          </button>
-        </div>
+        <PageHeader
+          trilha={[{ rotulo: 'Início', href: '/' }, { rotulo: 'Cozinha' }]}
+          titulo="Cozinha"
+          descricao={'Pedidos do PDV e do delivery' + (atualizadoEm ? ' · atualizado às ' + hora(new Date(atualizadoEm).toISOString()) : '')}
+          acoes={
+            <button onClick={carregar} className={BTN_SECONDARY}>
+              Atualizar
+            </button>
+          }
+        />
 
         {erro && (
           <div role="alert" className="mb-4 text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">
@@ -244,7 +245,11 @@ export default function CozinhaPage() {
         {aba === 'finalizados' ? (
           <PedidosFinalizados supabase={supabase} />
         ) : loading ? (
-          <p className="text-center py-12 text-ink-muted">Carregando...</p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2" aria-busy="true">
+            {[0, 1].map((i) => (
+              <div key={i} className="ui-skeleton h-56 rounded-xl" />
+            ))}
+          </div>
         ) : aba === 'prontos' ? (
           <PedidosProntos
             cartoes={prontos}
@@ -380,26 +385,22 @@ export default function CozinhaPage() {
         />
       )}
 
-      {detalhes && (
-        <div className="fixed inset-0 ui-modal-overlay flex items-center justify-center z-[60] p-4" onClick={() => setDetalhes(null)}>
-          <div
-            role="dialog"
-            aria-label={'Detalhes do pedido ' + detalhes.titulo}
-            className="ui-modal-panel p-6 w-full max-w-md space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-bold text-ink">{detalhes.titulo}</h2>
-                <p className="text-sm text-ink-muted">
-                  {ROTULO_ORIGEM[detalhes.origem]}
-                  {detalhes.subtitulo ? ' · ' + detalhes.subtitulo : ''}
-                </p>
-              </div>
-              <button onClick={() => setDetalhes(null)} className="text-xl text-ink-subtle hover:text-ink h-9 w-9" aria-label="Fechar">
-                ✕
-              </button>
-            </div>
+      <Modal
+        aberto={!!detalhes}
+        onFechar={() => setDetalhes(null)}
+        titulo={detalhes ? 'Pedido ' + detalhes.titulo + (detalhes.codigo ? ' · ' + detalhes.codigo : '') : ''}
+        rodape={
+          <button onClick={() => setDetalhes(null)} className="btn btn-primario">
+            Fechar
+          </button>
+        }
+      >
+        {detalhes && (
+          <div className="space-y-4">
+            <p className="text-sm text-ink-muted">
+              {ROTULO_ORIGEM[detalhes.origem]}
+              {detalhes.subtitulo ? ' · ' + detalhes.subtitulo : ''}
+            </p>
             <dl className="grid grid-cols-2 gap-3 text-sm">
               <div className="bg-surface-hover rounded-lg p-3">
                 <dt className="text-xs text-ink-muted">Situação</dt>
@@ -431,12 +432,9 @@ export default function CozinhaPage() {
                 Este pedido está parado há mais de um dia. Confira se ele ainda é necessário e, se já foi entregue, marque como pronto para sair da fila.
               </p>
             )}
-            <button onClick={() => setDetalhes(null)} className="btn btn-primario w-full">
-              Fechar
-            </button>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }
