@@ -150,7 +150,7 @@ export async function listarPedidosAbertos(supabase: SupabaseClient, unidadeId: 
 
 export async function abrirPedido(
   supabase: SupabaseClient,
-  params: { unidadeId: string; canal: 'mesa' | 'balcao'; mesaId?: string; paraViagem?: boolean }
+  params: { unidadeId: string; canal: 'mesa' | 'balcao'; mesaId?: string; paraViagem?: boolean; nomeCliente?: string }
 ) {
   const { data, error } = await supabase
     .from('pdv_pedidos')
@@ -159,6 +159,7 @@ export async function abrirPedido(
       canal: params.canal,
       mesa_id: params.mesaId ?? null,
       para_viagem: params.paraViagem ?? false,
+      nome_cliente: params.nomeCliente ?? null,
     })
     .select(CAMPOS_PEDIDO)
     .single();

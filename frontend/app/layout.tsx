@@ -9,6 +9,7 @@ import { SCRIPT_TEMA, ThemeProvider } from '@/components/ThemeProvider';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 import TelaAbertura from '@/components/TelaAbertura';
+import AlertasRetirada from '@/components/AlertasRetirada';
 import TelaInicio from '@/components/TelaInicio';
 import TemasPorData from '@/components/TemasPorData';
 import { EVENTO_ABRIR_TEMAS } from '@/lib/temasPreferencia';
@@ -112,6 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <>
               <TelaAbertura ativa />
               <TemasPorData aberto={temasAberto} onFechar={() => setTemasAberto(false)} />
+              <AlertasRetirada supabase={supabase} email={email} />
               <div
                 className="min-h-screen md:flex"
                 style={{ '--sidebar-w': recolhida ? '64px' : '240px', '--navbar-h': '56px' } as React.CSSProperties}

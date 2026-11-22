@@ -250,7 +250,8 @@ export default function PdvPage() {
     }
 
     try {
-      const novo = await abrirPedido(supabase, { unidadeId, canal: 'mesa', mesaId: m.id });
+      // o nome de quem reservou passa para o pedido (assim dá para pesquisar depois)
+      const novo = await abrirPedido(supabase, { unidadeId, canal: 'mesa', mesaId: m.id, nomeCliente: reservaHoje?.nome_cliente });
       setAbertos((prev) => [...prev, novo]);
       await abrirComanda(novo);
     } catch (e: any) {

@@ -5,12 +5,19 @@ import { createBrowserClient } from '@supabase/ssr';
 import {
   listarFilaCozinha,
   mudarStatusCartao,
+  enviarAlerta,
+  confirmarRetirada,
+  retiradaDisponivel,
   type CartaoCozinha,
   type StatusCozinha,
 } from '@/lib/queries/cozinha';
 import MenuCartao from '@/components/cozinha/MenuCartao';
 import ModalFichaPrato from '@/components/fichas/ModalFichaPrato';
 import HistoricoPedido from '@/components/pdv/HistoricoPedido';
+import PedidosProntos from '@/components/cozinha/PedidosProntos';
+import PedidosFinalizados from '@/components/cozinha/PedidosFinalizados';
+
+type Aba = 'producao' | 'prontos' | 'finalizados';
 
 const BTN_PRIMARY =
   'btn btn-primario';
@@ -108,6 +115,10 @@ export default function CozinhaPage() {
   const [ficha, setFicha] = useState<{ produtoId: string; nome: string } | null>(null);
   const [detalhes, setDetalhes] = useState<CartaoCozinha | null>(null);
   const [impressoes, setImpressoes] = useState<CartaoCozinha | null>(null);
+  const [aba, setAba] = useState<Aba>('producao');
+  const [email, setEmail] = useState('');
+  const [retiradaOk, setRetiradaOk] = useState(true); // false = SQL 0022 ainda não foi rodado
+  const [aviso, setAviso] = useState<string | null>(null);
 
   async function carregar() {
     try {
@@ -121,6 +132,8 @@ export default function CozinhaPage() {
   }
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email || ''));
+    retiradaDisponivel(supabase).then(setRetiradaOk);
     carregar();
     const timer = setInterval(carregar, INTERVALO_ATUALIZACAO_MS);
     return () => clearInterval(timer);
@@ -137,6 +150,45 @@ export default function CozinhaPage() {
     }
     setOcupado(null);
   }
+
+  async function alertar(c: CartaoCozinha) {
+    if (ocupado) return;
+    setOcupado(c.chave);
+    try {
+      await enviarAlerta(supabase, c, email);
+      setAviso('Alerta enviado para ' + (c.enviadoPor || 'o colaborador') + '.');
+      await carregar();
+    } catch (e: any) {
+      setErro(e.message || 'Erro ao enviar o alerta');
+    }
+    setOcupado(null);
+  }
+
+  async function retirado(c: CartaoCozinha) {
+    if (ocupado) return;
+    setOcupado(c.chave);
+    try {
+      await confirmarRetirada(supabase, c.itemIds, email);
+      setAviso('Pedido ' + c.titulo + ' finalizado.');
+      await carregar();
+    } catch (e: any) {
+      setErro(e.message || 'Erro ao confirmar a retirada');
+    }
+    setOcupado(null);
+  }
+
+  useEffect(() => {
+    if (!aviso) return;
+    const t = setTimeout(() => setAviso(null), 5000);
+    return () => clearTimeout(t);
+  }, [aviso]);
+
+  const prontos = cartoes.filter((c) => c.status === 'pronto');
+  const ABAS: { id: Aba; rotulo: string; qtd?: number }[] = [
+    { id: 'producao', rotulo: 'Em produção', qtd: cartoes.length - prontos.length },
+    { id: 'prontos', rotulo: 'Pedidos prontos', qtd: prontos.length },
+    { id: 'finalizados', rotulo: 'Finalizados' },
+  ];
 
   return (
     <div className="p-4 md:p-8">
@@ -159,11 +211,52 @@ export default function CozinhaPage() {
           </div>
         )}
 
-        {loading ? (
+        {!retiradaOk && (
+          <div role="alert" className="mb-4 text-sm text-warning bg-warning-soft rounded-lg px-3 py-2">
+            Para usar alerta e retirada, rode o SQL <strong>0022_cozinha_retirada</strong> no Supabase (SQL Editor).
+          </div>
+        )}
+        {aviso && (
+          <div role="status" className="mb-4 text-sm text-success bg-success-soft rounded-lg px-3 py-2">
+            {aviso}
+          </div>
+        )}
+
+        <div role="tablist" aria-label="Telas da cozinha" className="mb-5 flex gap-2 overflow-x-auto pb-1">
+          {ABAS.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              role="tab"
+              aria-selected={aba === a.id}
+              onClick={() => setAba(a.id)}
+              className={
+                'ui-focus whitespace-nowrap rounded-lg border px-4 py-2 text-sm font-medium transition ' +
+                (aba === a.id ? 'border-accent bg-accent text-accent-contrast' : 'border-line bg-surface text-ink-soft hover:bg-surface-hover')
+              }
+            >
+              {a.rotulo}
+              {a.qtd !== undefined && !loading && <span className="ml-2 tabular-nums opacity-80">{a.qtd}</span>}
+            </button>
+          ))}
+        </div>
+
+        {aba === 'finalizados' ? (
+          <PedidosFinalizados supabase={supabase} />
+        ) : loading ? (
           <p className="text-center py-12 text-ink-muted">Carregando...</p>
+        ) : aba === 'prontos' ? (
+          <PedidosProntos
+            cartoes={prontos}
+            agora={atualizadoEm}
+            ocupado={ocupado}
+            onAlerta={alertar}
+            onRetirada={retirado}
+            onVoltar={(c) => mudarStatus(c, 'preparando')}
+          />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-            {COLUNAS.map((col) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            {COLUNAS.filter((c) => c.status !== 'pronto').map((col) => {
               const daColuna = cartoes.filter((c) => c.status === col.status);
               return (
                 <section key={col.status} className="bg-surface-hover border border-line rounded-xl p-3">
@@ -190,6 +283,7 @@ export default function CozinhaPage() {
                               <div className="min-w-0">
                                 <p className="text-lg font-bold text-ink">{c.titulo}</p>
                                 <p className="text-xs text-ink-muted truncate">
+                                  {c.codigo && <span className="font-semibold tabular-nums text-ink-soft">{c.codigo} · </span>}
                                   {ROTULO_ORIGEM[c.origem]}
                                   {c.subtitulo ? ' · ' + c.subtitulo : ''}
                                 </p>
