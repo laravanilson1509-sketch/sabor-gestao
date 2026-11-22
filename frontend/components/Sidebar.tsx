@@ -67,7 +67,7 @@ export default function Sidebar({ atual, recolhida, onAlternar, gavetaAberta, on
                       <span
                         className={
                           'rounded-full bg-warning-soft px-2 py-0.5 text-xs font-semibold text-warning ' +
-                          (recolhida ? 'md:absolute md:right-1.5 md:top-1 md:px-1.5 md:py-0 ' : 'ml-auto ')
+                          (recolhida ? 'md:absolute md:right-0.5 md:top-0.5 md:px-1 md:py-0 md:text-[10px] md:leading-4 ' : 'ml-auto ')
                         }
                         title="Conferências de estoque pendentes"
                       >

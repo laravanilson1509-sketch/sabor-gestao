@@ -312,21 +312,21 @@ export default function EstoquePage() {
             className={'text-left rounded-xl border p-4 transition bg-surface hover:border-accent ' + (situacao === 'todas' ? 'border-accent ring-1 ring-accent' : 'border-line')}
           >
             <span className="block text-xs font-medium text-ink-muted">Produtos</span>
-            <span className="block text-2xl font-bold text-ink mt-1">{resumo.total}</span>
+            <span className="block text-xl sm:text-2xl font-bold whitespace-nowrap text-ink mt-1">{resumo.total}</span>
           </button>
           <button
             onClick={() => setSituacao(situacao === 'baixo' ? 'todas' : 'baixo')}
             className={'text-left rounded-xl border p-4 transition hover:border-gold ' + (situacao === 'baixo' ? 'border-gold ring-1 ring-gold bg-warning-faint' : 'border-line bg-surface')}
           >
             <span className="block text-xs font-medium text-ink-muted">Abaixo do mínimo</span>
-            <span className={'block text-2xl font-bold mt-1 ' + (resumo.baixos > 0 ? 'text-warning' : 'text-ink')}>{resumo.baixos}</span>
+            <span className={'block text-xl sm:text-2xl font-bold whitespace-nowrap mt-1 ' + (resumo.baixos > 0 ? 'text-warning' : 'text-ink')}>{resumo.baixos}</span>
           </button>
           <button
             onClick={() => setSituacao(situacao === 'zerado' ? 'todas' : 'zerado')}
             className={'text-left rounded-xl border p-4 transition hover:border-danger ' + (situacao === 'zerado' ? 'border-danger ring-1 ring-danger bg-danger-faint' : 'border-line bg-surface')}
           >
             <span className="block text-xs font-medium text-ink-muted">Sem estoque</span>
-            <span className={'block text-2xl font-bold mt-1 ' + (resumo.zerados > 0 ? 'text-danger' : 'text-ink')}>{resumo.zerados}</span>
+            <span className={'block text-xl sm:text-2xl font-bold whitespace-nowrap mt-1 ' + (resumo.zerados > 0 ? 'text-danger' : 'text-ink')}>{resumo.zerados}</span>
           </button>
           <div className="rounded-xl border border-line bg-surface p-4">
             <span className="block text-xs font-medium text-ink-muted">
@@ -336,7 +336,7 @@ export default function EstoquePage() {
                   : 'Valor dos ' + marcados.length + ' selecionados'
                 : 'Valor em estoque'}
             </span>
-            <span className="block text-2xl font-bold text-accent mt-1">{brl(valorCard)}</span>
+            <span className="block text-xl sm:text-2xl font-bold whitespace-nowrap text-accent mt-1">{brl(valorCard)}</span>
             {marcados.length > 0 && (
               <button
                 onClick={() => {

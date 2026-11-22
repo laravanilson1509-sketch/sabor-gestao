@@ -103,7 +103,7 @@ export default function CozinhaPage() {
   const [cartoes, setCartoes] = useState<CartaoCozinha[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-  const [atualizadoEm, setAtualizadoEm] = useState<number>(Date.now());
+  const [atualizadoEm, setAtualizadoEm] = useState<number>(0); // preenchido ao carregar (evita diferença entre servidor e navegador)
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [ficha, setFicha] = useState<{ produtoId: string; nome: string } | null>(null);
   const [detalhes, setDetalhes] = useState<CartaoCozinha | null>(null);
@@ -145,7 +145,7 @@ export default function CozinhaPage() {
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-ink">Cozinha</h1>
             <p className="text-sm text-ink-muted">
-              Pedidos do PDV e do delivery · atualizado às {hora(new Date(atualizadoEm).toISOString())}
+              Pedidos do PDV e do delivery{atualizadoEm ? ' · atualizado às ' + hora(new Date(atualizadoEm).toISOString()) : ''}
             </p>
           </div>
           <button onClick={carregar} className={BTN_SECONDARY}>

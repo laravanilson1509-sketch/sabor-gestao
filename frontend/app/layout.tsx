@@ -125,7 +125,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
                   <main className="relative flex-1 min-w-0">
                     {/* a tela inicial fica sempre aqui; as outras abrem por cima */}
-                    <TelaInicio supabase={supabase} />
+                    <div
+                      aria-hidden={!naInicio || undefined}
+                      {...(!naInicio ? ({ inert: '' } as object) : {})}
+                      className={'transition-opacity duration-150 ' + (!naInicio ? 'opacity-25 select-none' : '')}
+                    >
+                      <TelaInicio supabase={supabase} />
+                    </div>
                     {!naInicio && (
                       <div
                         className={
