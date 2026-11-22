@@ -33,6 +33,7 @@ type Props<T> = {
   porPagina?: number;
   total?: number;
   aoMudarPagina?: (pagina: number) => void;
+  cartaoMobile?: (linha: T) => React.ReactNode; // celular (< 768px): lista de cartões no lugar da tabela
 };
 
 const ALINHAR = { esq: 'text-left', dir: 'text-right tabular-nums', centro: 'text-center' };
@@ -79,6 +80,7 @@ export default function DataTable<T>({
   porPagina = 25,
   total,
   aoMudarPagina,
+  cartaoMobile,
 }: Props<T>) {
   const totalLinhas = total ?? linhas.length;
   const ultimaPagina = Math.max(1, Math.ceil(totalLinhas / porPagina));
@@ -94,7 +96,7 @@ export default function DataTable<T>({
 
   return (
     <div className="bg-surface border border-line rounded-card overflow-hidden">
-      <div className="overflow-auto max-h-[calc(100vh-21rem)]">
+      <div className={(cartaoMobile ? 'hidden md:block ' : '') + 'overflow-auto max-h-[calc(100vh-21rem)]'}>
         <table className="w-full min-w-[560px]" aria-label={descricao} aria-busy={carregando || undefined}>
           <thead className="sticky top-0 z-10 bg-surface-hover border-b border-line">
             <tr>
@@ -142,8 +144,29 @@ export default function DataTable<T>({
               : linhas.map((l) => <Linha key={chaveLinha(l)} linha={l} colunas={colunas} aoClicar={aoClicarLinha} classe={classeLinha?.(l)} />)}
           </tbody>
         </table>
-        {!carregando && linhas.length === 0 && (vazio || <p className="p-8 text-center text-sm text-ink-muted">Nada por aqui.</p>)}
       </div>
+
+      {cartaoMobile && (
+        <ul className="md:hidden divide-y divide-line" aria-label={descricao}>
+          {carregando
+            ? Array.from({ length: 4 }, (_, i) => (
+                <li key={i} className="space-y-2 p-4">
+                  <div className="ui-skeleton h-4 w-2/3" />
+                  <div className="ui-skeleton h-3 w-1/2" />
+                </li>
+              ))
+            : linhas.map((l) => (
+                <li
+                  key={chaveLinha(l)}
+                  onClick={aoClicarLinha ? () => aoClicarLinha(l) : undefined}
+                  className={'p-4 ' + (aoClicarLinha ? 'cursor-pointer active:bg-surface-hover ' : '') + (classeLinha?.(l) || '')}
+                >
+                  {cartaoMobile(l)}
+                </li>
+              ))}
+        </ul>
+      )}
+      {!carregando && linhas.length === 0 && (vazio || <p className="p-8 text-center text-sm text-ink-muted">Nada por aqui.</p>)}
 
       {aoMudarPagina && totalLinhas > porPagina && (
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-line text-sm text-ink-muted">

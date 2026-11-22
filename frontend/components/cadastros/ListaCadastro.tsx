@@ -4,14 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Power, RotateCcw } from 'lucide-react';
 import BarraBusca, { NadaEncontrado } from '@/components/BarraBusca';
 import PageHeader from '@/components/ui/PageHeader';
 import DataTable, { type Coluna, type Ordem } from '@/components/ui/DataTable';
 import StatusBadge from '@/components/ui/StatusBadge';
 import Modal from '@/components/ui/Modal';
 import { combina } from '@/lib/busca';
-import { listarCadastros, deletarCadastro } from '@/lib/queries/cadastros';
+import { listarCadastros, atualizarCadastro } from '@/lib/queries/cadastros';
 import { diaMes, proximoAniversario } from '@/lib/queries/aniversarios';
 
 type ColunaConfig = { chave: string; rotulo: string; tipo?: 'aniversario' };
@@ -74,9 +74,10 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
   const [pagina, setPagina] = useState(1);
   const paginaDaUrl = useRef<number | null>(null);
 
-  const [paraDeletar, setParaDeletar] = useState<Registro | null>(null);
-  const [deletando, setDeletando] = useState(false);
-  const [erroExcluir, setErroExcluir] = useState<string | null>(null);
+  const [paraInativar, setParaInativar] = useState<Registro | null>(null);
+  const [salvandoStatus, setSalvandoStatus] = useState(false);
+  const [erroStatus, setErroStatus] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<{ texto: string; desfazer?: Registro } | null>(null);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -167,6 +168,22 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
 
   const abrirEdicao = useCallback((r: Registro) => router.push(rota + '/cadastro?id=' + r.id), [router, rota]);
 
+  // Inativar não apaga: o cadastro some das novas escolhas, mas o histórico continua e dá para reativar.
+  const mudarStatus = useCallback(async (r: Registro, ativo: boolean) => {
+    setSalvandoStatus(true);
+    setErroStatus(null);
+    try {
+      await atualizarCadastro(supabase, tabela as any, r.id, { ativo });
+      setItens((l) => l.map((x) => (x.id === r.id ? { ...x, ativo } : x)));
+      setParaInativar(null);
+      setAviso({ texto: r.nome + (ativo ? ' reativado.' : ' inativado.'), desfazer: ativo ? undefined : r });
+    } catch (err: any) {
+      setErroStatus('Não foi possível ' + (ativo ? 'reativar' : 'inativar') + ': ' + (err?.message || 'erro desconhecido'));
+    } finally {
+      setSalvandoStatus(false);
+    }
+  }, [supabase, tabela]);
+
   const colunasTabela = useMemo<Coluna<Registro>[]>(
     () => [
       {
@@ -197,38 +214,28 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
             <Link href={rota + '/cadastro?id=' + r.id} className="btn btn-secundario !px-3 !py-1.5" aria-label={'Editar ' + r.nome}>
               <Pencil size={14} aria-hidden /> Editar
             </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setErroExcluir(null);
-                setParaDeletar(r);
-              }}
-              className="btn btn-perigo !px-3 !py-1.5"
-              aria-label={'Excluir ' + r.nome}
-            >
-              <Trash2 size={14} aria-hidden /> Excluir
-            </button>
+            {r.ativo ? (
+              <button type="button" onClick={() => { setErroStatus(null); setParaInativar(r); }} className="btn btn-perigo !px-3 !py-1.5" aria-label={'Inativar ' + r.nome}>
+                <Power size={14} aria-hidden /> Inativar
+              </button>
+            ) : (
+              <button type="button" onClick={() => mudarStatus(r, true)} className="btn btn-secundario !px-3 !py-1.5" aria-label={'Reativar ' + r.nome}>
+                <RotateCcw size={14} aria-hidden /> Reativar
+              </button>
+            )}
           </div>
         ),
       },
     ],
-    [colunas, rota]
+    [colunas, rota, mudarStatus]
   );
 
-  async function confirmarExclusao() {
-    if (!paraDeletar) return;
-    setDeletando(true);
-    setErroExcluir(null);
-    try {
-      await deletarCadastro(supabase, tabela as any, paraDeletar.id);
-      setParaDeletar(null);
-      await carregar();
-    } catch (err: any) {
-      setErroExcluir('Não foi possível excluir: ' + (err?.message || 'erro desconhecido'));
-    } finally {
-      setDeletando(false);
-    }
-  }
+  // o aviso some sozinho depois de 6 segundos
+  useEffect(() => {
+    if (!aviso) return;
+    const t = setTimeout(() => setAviso(null), 6000);
+    return () => clearTimeout(t);
+  }, [aviso]);
 
   const semCadastros = !carregando && !erroCarga && itens.length === 0;
 
@@ -256,6 +263,26 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
           </div>
         )}
 
+        {!semCadastros && !erroCarga && (
+          <div role="group" aria-label="Filtrar por situação" className="mb-4 grid grid-cols-3 gap-3">
+            {FILTROS.map((f) => (
+              <button
+                key={f.valor}
+                type="button"
+                onClick={() => setStatus(f.valor)}
+                aria-pressed={status === f.valor}
+                className={
+                  'ui-focus rounded-card border p-3 text-left transition-colors sm:p-4 ' +
+                  (status === f.valor ? 'border-accent bg-accent-soft' : 'border-line bg-surface hover:bg-surface-hover')
+                }
+              >
+                <span className="block text-xs font-medium text-ink-muted sm:text-sm">{f.rotulo}</span>
+                <span className="mt-1 block text-xl font-semibold tabular-nums text-ink sm:text-2xl">{carregando ? '–' : totais[f.valor]}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {!semCadastros && (
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <BarraBusca
@@ -266,24 +293,6 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
               placeholder={'Buscar ' + singular + ' por nome' + (colunas.length ? ', ' + colunas.map((c) => c.rotulo.toLowerCase()).join(', ') : '')}
               className="flex-1 min-w-[16rem]"
             />
-            <div role="group" aria-label="Filtrar por situação" className="flex gap-1.5">
-              {FILTROS.map((f) => (
-                <button
-                  key={f.valor}
-                  type="button"
-                  onClick={() => setStatus(f.valor)}
-                  aria-pressed={status === f.valor}
-                  className={
-                    'ui-focus rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ' +
-                    (status === f.valor
-                      ? 'border-accent bg-accent text-accent-contrast'
-                      : 'border-line bg-surface text-ink-muted hover:bg-surface-hover')
-                  }
-                >
-                  {f.rotulo} <span className="tabular-nums opacity-80">{totais[f.valor]}</span>
-                </button>
-              ))}
-            </div>
           </div>
         )}
 
@@ -309,36 +318,76 @@ export default function ListaCadastro({ tabela, titulo, singular, rota, colunas 
             porPagina={POR_PAGINA}
             total={ordenados.length}
             aoMudarPagina={setPagina}
+            classeLinha={(r) => (r.ativo ? '' : 'opacity-70')}
+            cartaoMobile={(r) => (
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-medium text-ink">{r.nome}</p>
+                  <StatusBadge status={r.ativo ? 'success' : 'warning'}>{r.ativo ? 'Ativo' : 'Inativo'}</StatusBadge>
+                </div>
+                {colunas.map((c) => (
+                  <p key={c.chave} className="flex justify-between gap-3 text-sm">
+                    <span className="text-ink-muted">{c.rotulo}</span>
+                    <span className="text-right text-ink">{c.tipo === 'aniversario' ? celulaAniversario(r[c.chave]) : r[c.chave] || '—'}</span>
+                  </p>
+                ))}
+                <div className="flex gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
+                  <Link href={rota + '/cadastro?id=' + r.id} className="btn btn-secundario flex-1 !min-h-[44px]">
+                    <Pencil size={14} aria-hidden /> Editar
+                  </Link>
+                  {r.ativo ? (
+                    <button type="button" onClick={() => { setErroStatus(null); setParaInativar(r); }} className="btn btn-perigo flex-1 !min-h-[44px]">
+                      <Power size={14} aria-hidden /> Inativar
+                    </button>
+                  ) : (
+                    <button type="button" onClick={() => mudarStatus(r, true)} className="btn btn-secundario flex-1 !min-h-[44px]">
+                      <RotateCcw size={14} aria-hidden /> Reativar
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
             vazio={busca ? <NadaEncontrado busca={busca} /> : <p className="p-8 text-center text-sm text-ink-muted">Nenhum cadastro nesta situação.</p>}
           />
         )}
       </div>
 
       <Modal
-        aberto={!!paraDeletar}
-        onFechar={() => !deletando && setParaDeletar(null)}
-        titulo={'Excluir ' + singular + '?'}
+        aberto={!!paraInativar}
+        onFechar={() => !salvandoStatus && setParaInativar(null)}
+        titulo={'Inativar ' + singular + '?'}
         tamanho="sm"
         rodape={
           <>
-            <button type="button" onClick={() => setParaDeletar(null)} disabled={deletando} className="btn btn-secundario">
+            <button type="button" onClick={() => setParaInativar(null)} disabled={salvandoStatus} className="btn btn-secundario">
               Cancelar
             </button>
-            <button type="button" onClick={confirmarExclusao} disabled={deletando} className="btn btn-perigo-cheio">
-              {deletando ? 'Excluindo...' : 'Sim, excluir'}
+            <button type="button" onClick={() => paraInativar && mudarStatus(paraInativar, false)} disabled={salvandoStatus} className="btn btn-perigo-cheio">
+              {salvandoStatus ? 'Inativando...' : 'Inativar'}
             </button>
           </>
         }
       >
         <p>
-          Tem certeza que quer excluir <strong className="text-ink">{paraDeletar?.nome}</strong>? Essa ação não pode ser desfeita.
+          Inativar <strong className="text-ink">{paraInativar?.nome}</strong>? Não vai aparecer nas novas escolhas, mas o histórico continua guardado e você pode reativar quando quiser.
         </p>
-        {erroExcluir && (
+        {erroStatus && (
           <p role="alert" className="mt-3 rounded-token bg-danger-soft px-3 py-2 text-danger">
-            {erroExcluir}
+            {erroStatus}
           </p>
         )}
       </Modal>
+
+      {aviso && (
+        <div role="status" className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-token border border-line bg-surface px-4 py-3 text-sm text-ink shadow-token-lg">
+          <span>{aviso.texto}</span>
+          {aviso.desfazer && (
+            <button type="button" onClick={() => mudarStatus(aviso.desfazer!, true)} className="font-semibold text-accent underline">
+              Desfazer
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
