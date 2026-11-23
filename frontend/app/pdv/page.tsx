@@ -14,6 +14,8 @@ import {
   listarPedidosAbertos,
   abrirPedido,
   listarItens,
+  contarAlevarPorPedido,
+  confirmarEntregaItens,
   adicionarItem,
   alterarQuantidade,
   buscarPedido,
@@ -115,6 +117,8 @@ export default function PdvPage() {
   const [abertos, setAbertos] = useState<PedidoPdv[]>([]);
   const [cardapio, setCardapio] = useState<ProdutoCardapio[]>([]);
   const [reservas, setReservas] = useState<Reserva[]>([]);
+  const [alevar, setAlevar] = useState<Record<string, number>>({}); // pedido -> itens a levar
+  const [emailLogado, setEmailLogado] = useState('');
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -202,7 +206,31 @@ export default function PdvPage() {
 
   useEffect(() => {
     carregarInicio();
+    supabase.auth.getUser().then(({ data }) => setEmailLogado(data.user?.email || ''));
   }, []);
+
+  // bebida/acabado "a levar": marca em vermelho no card da mesa; busca de novo a cada 15 s
+  // (assim outro garçom também vê)
+  const chavePedidos = abertos.map((p) => p.id).join(',');
+  const recarregarAlevar = () => contarAlevarPorPedido(supabase, abertos.map((p) => p.id)).then(setAlevar);
+  useEffect(() => {
+    recarregarAlevar();
+    const t = setInterval(recarregarAlevar, 15000);
+    return () => clearInterval(t);
+  }, [chavePedidos]);
+
+  async function levarItens(ids: string[]) {
+    if (!pedido || ids.length === 0 || ocupado) return;
+    setOcupado(true);
+    try {
+      await confirmarEntregaItens(supabase, ids, emailLogado);
+      await recarregarComanda(pedido);
+      recarregarAlevar();
+    } catch (e: any) {
+      setErro(e.message || 'Erro ao confirmar a entrega');
+    }
+    setOcupado(false);
+  }
 
   async function recarregarComanda(p: PedidoPdv) {
     // total, desconto e taxa são calculados no banco
@@ -450,6 +478,15 @@ export default function PdvPage() {
     if (naoEnviados > 0 && !window.confirm('Há ' + naoEnviados + ' item(ns) que não foram enviados para a produção. Fechar a conta mesmo assim?')) {
       return;
     }
+    const faltaLevar = itensValidos.filter((i) => i.entrega_status === 'a_levar').length;
+    if (
+      faltaLevar > 0 &&
+      !window.confirm(
+        faltaLevar + ' item(ns) de bebida/produto ainda não foram marcados como levados à mesa. A conta fecha normal e fica registrado para conferir no inventário. Fechar mesmo assim?'
+      )
+    ) {
+      return;
+    }
     setErro(null);
     setMostrarFechamento(true);
   }
@@ -536,6 +573,7 @@ export default function PdvPage() {
     : '';
 
   const naoEnviados = itensValidos.filter((i) => !i.status_cozinha).length;
+  const itensALevar = itens.filter((i) => !i.cancelado && i.entrega_status === 'a_levar');
   const tituloConta = (c: { canal: string; mesa_id: string | null; numero: number }) =>
     c.canal === 'mesa' ? 'Mesa ' + (mesas.find((m) => m.id === c.mesa_id)?.numero ?? '') : 'Balcão #' + c.numero;
 
@@ -675,6 +713,15 @@ export default function PdvPage() {
             <div className="bg-surface border border-line rounded-xl p-4 h-fit lg:sticky lg:top-6">
               <h2 className="text-base font-semibold text-ink mb-3">Comanda</h2>
 
+              {itensALevar.length > 0 && (
+                <div role="alert" className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+                  <span className="font-semibold">{itensALevar.length === 1 ? '1 item a levar à mesa' : itensALevar.length + ' itens a levar à mesa'}</span>
+                  <button type="button" onClick={() => levarItens(itensALevar.map((i) => i.id))} disabled={ocupado} className="btn btn-perigo !px-3 !py-1.5">
+                    Levei tudo
+                  </button>
+                </div>
+              )}
+
               {itens.length === 0 ? (
                 <p className="text-sm text-ink-muted py-6 text-center">Nenhum item ainda.</p>
               ) : (
@@ -690,7 +737,7 @@ export default function PdvPage() {
                         </p>
                       </li>
                     ) : (
-                      <li key={i.id} className="py-3">
+                      <li key={i.id} className={'py-3 ' + (i.entrega_status === 'a_levar' ? 'rounded-lg bg-danger-soft px-2 -mx-2' : '')}>
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() => setEditando(i)}
@@ -709,9 +756,15 @@ export default function PdvPage() {
                               <span className="w-7 text-center text-sm font-semibold text-ink">
                                 {i.quantidade}
                               </span>
-                              <span className={'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + SELO_COZINHA[i.status_cozinha].cor}>
-                                {SELO_COZINHA[i.status_cozinha].rotulo}
-                              </span>
+                              {i.entrega_status ? (
+                                <span className={'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + (i.entrega_status === 'a_levar' ? 'bg-danger-soft text-danger' : 'bg-success-soft text-success')}>
+                                  {i.entrega_status === 'a_levar' ? 'A levar' : 'Levado'}
+                                </span>
+                              ) : (
+                                <span className={'rounded-full px-2.5 py-0.5 text-xs font-semibold ' + SELO_COZINHA[i.status_cozinha].cor}>
+                                  {SELO_COZINHA[i.status_cozinha].rotulo}
+                                </span>
+                              )}
                             </span>
                           ) : (
                             <div className="flex items-center gap-1">
@@ -752,6 +805,17 @@ export default function PdvPage() {
                         ))}
                         {i.observacao && (
                           <p className="mt-1 text-xs text-warning bg-warning-soft rounded px-2 py-0.5">{i.observacao}</p>
+                        )}
+                        {i.entrega_status === 'a_levar' && (
+                          <button type="button" onClick={() => levarItens([i.id])} disabled={ocupado} className="btn btn-perigo mt-2 w-full !min-h-[40px]">
+                            Levei à mesa
+                          </button>
+                        )}
+                        {i.entrega_status === 'entregue' && i.entrega_em && (
+                          <p className="mt-1 text-xs text-ink-subtle">
+                            Levado às {hora(i.entrega_em)}
+                            {i.entrega_por ? ' por ' + i.entrega_por.split('@')[0] : ''}
+                          </p>
                         )}
                         {i.status_cozinha && (
                           <button
@@ -1071,7 +1135,9 @@ export default function PdvPage() {
                       key={m.id}
                       className={
                         'rounded-xl border p-4 transition ' +
-                        (p?.pre_conta_em
+                        (p && alevar[p.id] > 0
+                          ? 'bg-danger-soft border-danger'
+                          : p?.pre_conta_em
                           ? 'bg-accent-soft border-accent'
                           : p
                           ? 'bg-warning-soft border-warning-line'
@@ -1101,6 +1167,11 @@ export default function PdvPage() {
                             ? 'Reservada · ' + hora(reservaHoje!.data_hora)
                             : 'Livre'}
                         </span>
+                        {p && alevar[p.id] > 0 && (
+                          <span className="mt-2 block text-xs font-bold text-danger">
+                            ● {alevar[p.id]} {alevar[p.id] === 1 ? 'item a levar' : 'itens a levar'}
+                          </span>
+                        )}
                         {reservada && (
                           <span className="block text-xs text-ink-muted mt-1 truncate">
                             {reservaHoje!.nome_cliente}

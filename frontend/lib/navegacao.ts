@@ -41,6 +41,10 @@ export const MENU: ItemMenu[] = [
     href: '/estoque',
     rotulo: 'Estoque',
     icone: Package,
+    filhos: [
+      { href: '/estoque', rotulo: 'Lista do estoque' },
+      { href: '/estoque/entregas', rotulo: 'Entregas (bebidas e acabados)' },
+    ],
   },
   {
     href: '/pdv',

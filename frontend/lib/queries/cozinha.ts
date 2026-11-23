@@ -26,7 +26,7 @@ export type CartaoCozinha = {
 const faltaColuna = (e: any) => e && (e.code === '42703' || /column .* does not exist|Could not find the .* column/i.test(e.message || ''));
 
 const COLUNAS_ITEM = 'id, pedido_id, produto_id, nome, quantidade, observacao, restricao, adicionais, status_cozinha, enviado_cozinha_em, iniciado_em, pronto_em, sem_estoque';
-const COLUNAS_ITEM_NOVAS = COLUNAS_ITEM + ', enviado_por, alerta_em, alerta_por, retirado_em';
+const COLUNAS_ITEM_NOVAS = COLUNAS_ITEM + ', enviado_por, alerta_em, alerta_por, retirado_em, entrega_status';
 
 // por quanto tempo um pedido pronto continua aparecendo na coluna "Pronto"
 const MINUTOS_PRONTO_VISIVEL = 30;
@@ -75,15 +75,21 @@ export async function listarFilaCozinha(
 
   let itensPdv: any[] = [];
   if (pedidos.length > 0) {
-    const { data, error } = await supabase
-      .from('pdv_pedido_itens')
-      .select(migrado ? COLUNAS_ITEM_NOVAS : COLUNAS_ITEM)
-      .in('pedido_id', pedidos.map((p) => p.id))
-      .not('status_cozinha', 'is', null)
-      .eq('cancelado', false);
+    const buscarItens = (colunas: string) =>
+      supabase
+        .from('pdv_pedido_itens')
+        .select(colunas)
+        .in('pedido_id', pedidos.map((p) => p.id))
+        .not('status_cozinha', 'is', null)
+        .eq('cancelado', false);
+    // tenta com todas as colunas novas (SQL 0022 e 0023) e vai recuando se algum SQL ainda não rodou
+    let { data, error } = await buscarItens(migrado ? COLUNAS_ITEM_NOVAS : COLUNAS_ITEM);
+    if (faltaColuna(error) && migrado) ({ data, error } = await buscarItens(COLUNAS_ITEM_NOVAS.replace(', entrega_status', '')));
+    if (faltaColuna(error)) ({ data, error } = await buscarItens(COLUNAS_ITEM));
     if (error) throw error;
     // quem já foi retirado sai da fila (vai para os finalizados)
-    itensPdv = ((data as any[]) || []).filter((i) => !i.retirado_em);
+    // (bebida e acabado não passam pela cozinha: ficam "a levar" no PDV)
+    itensPdv = ((data as any[]) || []).filter((i) => !i.retirado_em && !i.entrega_status);
   }
 
   const cartoes: CartaoCozinha[] = [];

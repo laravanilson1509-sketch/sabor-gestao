@@ -276,6 +276,9 @@ export default function EstoquePage() {
             <Link href="/compras" className="btn btn-secundario">
               Compras
             </Link>
+            <Link href="/estoque/entregas" className="btn btn-secundario">
+              Entregas
+            </Link>
           </div>
         </div>
 

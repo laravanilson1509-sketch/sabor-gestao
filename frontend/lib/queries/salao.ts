@@ -47,6 +47,10 @@ export type ItemPdv = {
   cancelado: boolean;
   cancelado_motivo: string | null;
   cancelado_por: string | null;
+  // bebida/acabado: 'a_levar' (vermelho) até o garçom confirmar; null para pratos
+  entrega_status?: 'a_levar' | 'entregue' | null;
+  entrega_em?: string | null;
+  entrega_por?: string | null;
 };
 
 // valor cobrado de uma linha da comanda (igual a pdv_valor_item no banco)
@@ -167,14 +171,46 @@ export async function abrirPedido(
   return data as PedidoPdv;
 }
 
+const COLUNAS_ITEM = 'id, pedido_id, produto_id, nome, quantidade, preco_unitario, observacao, status_cozinha, restricao, adicionais, cortesia, cancelado, cancelado_motivo, cancelado_por';
+
+// SQL 0023 ainda não rodado: a coluna entrega_status não existe e o PDV segue como antes
+const faltaEntrega = (e: any) => !!e && /entrega_status|entrega_em|entrega_por/.test(e.message || '');
+
 export async function listarItens(supabase: SupabaseClient, pedidoId: string) {
+  let { data, error } = (await supabase
+    .from('pdv_pedido_itens')
+    .select(COLUNAS_ITEM + ', entrega_status, entrega_em, entrega_por')
+    .eq('pedido_id', pedidoId)
+    .order('criado_em')) as { data: any[] | null; error: any };
+  if (faltaEntrega(error)) {
+    ({ data, error } = (await supabase.from('pdv_pedido_itens').select(COLUNAS_ITEM).eq('pedido_id', pedidoId).order('criado_em')) as { data: any[] | null; error: any });
+  }
+  if (error) throw error;
+  return (data || []) as unknown as ItemPdv[];
+}
+
+// quantos itens de bebida/acabado ainda estão "a levar" em cada pedido aberto
+export async function contarAlevarPorPedido(supabase: SupabaseClient, pedidoIds: string[]) {
+  const mapa: Record<string, number> = {};
+  if (pedidoIds.length === 0) return mapa;
   const { data, error } = await supabase
     .from('pdv_pedido_itens')
-    .select('id, pedido_id, produto_id, nome, quantidade, preco_unitario, observacao, status_cozinha, restricao, adicionais, cortesia, cancelado, cancelado_motivo, cancelado_por')
-    .eq('pedido_id', pedidoId)
-    .order('criado_em');
+    .select('pedido_id, quantidade')
+    .in('pedido_id', pedidoIds)
+    .eq('entrega_status', 'a_levar')
+    .eq('cancelado', false);
+  if (error) return mapa; // sem a coluna (SQL 0023) ou sem rede: simplesmente não marca nada
+  for (const i of data || []) mapa[i.pedido_id] = (mapa[i.pedido_id] || 0) + Number(i.quantidade || 1);
+  return mapa;
+}
+
+// o garçom confirma que levou o item à mesa
+export async function confirmarEntregaItens(supabase: SupabaseClient, itemIds: string[], porEmail: string) {
+  const { error } = await supabase
+    .from('pdv_pedido_itens')
+    .update({ entrega_status: 'entregue', entrega_em: new Date().toISOString(), entrega_por: porEmail })
+    .in('id', itemIds);
   if (error) throw error;
-  return (data || []) as ItemPdv[];
 }
 
 export async function adicionarItem(
